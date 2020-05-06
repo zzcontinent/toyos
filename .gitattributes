@@ -1,0 +1,4 @@
+*.pdf !text !filter !merge !diff
+*.ps|txt !text !filter !merge !diff
+*.ps !text !filter !merge !diff
+*.txt !text !filter !merge !diff
