@@ -43,8 +43,23 @@
 		-> 直接内存访问(只读数据区或者bss等直接地址访问)错误
 		-> 堆和栈的使用不受影响,但是可能会覆盖程序、数据区域
 		-> 动态链接库：可以存在Link地址和Load地址不一样
-10. 函数堆栈
-	1. 编译器
+10. 函数堆栈(CDECL为例)
+	1. CALL指令：压入入参+return address
+	2. 编译器加入：
+		push1 %ebp
+		movl %esp %ebp
+11. 中断和异常
+	1. 中断(interrupt) == 异步中断(asynchronous interrupt) == 外部中断
+		CPU外部设备引起的事件：I/O中断、时钟中断
+	2. 异常(exception) == 同步中断(synchronous interrupt)  == 内部中断
+		CPU执行指令周期检测到的不正常或非法的条件(除零错误、地址访问越界)引起的内部事件
+	3. 中断描述符表
+		3.1 与GDT同样是8字节的描述符数组，但IDT的第一项可以包含一个描述符
+		3.2 CPU把中断(异常)乘以8作为IDT的索引
+		3.3 加载IDT:LIDT(Load,ring0) & 存储IDT:SIDT(store,ring0-3)
+		3.4 最多256个 interrupt/exception vectors. [0,31]被exception & NMI使用
+		3.5 Task-gate descriptor + interrupt-gate descriptor + trap-gate descriptor
+		
 ```
 ----
 # lab2
