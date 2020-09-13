@@ -18,5 +18,6 @@
 
 
 ## 笔记
-- [段页内存管理](https://github.com/zzcontinent/toyos/tree/dev/seg_page.md)
+- [1.段页内存管理](https://github.com/zzcontinent/toyos/tree/dev/seg_page.md)
+- [2.地址空间布局](https://github.com/zzcontinent/toyos/tree/dev/address.md)
 - [问题](https://github.com/zzcontinent/toyos/tree/dev/ask.md)
