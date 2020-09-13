@@ -10,7 +10,7 @@
 3. bootloader设置进入保护模式
 	3.1 开启A20
 	3.2 初始化GDT表
-4. bootloader加载ELF格式的OS
+4. bootloader加载ELF格式的OS过程
 	4.1 读取硬盘扇区
 	4.2 加载ELF格式的OS
 5. 函数调用堆栈跟踪
@@ -32,6 +32,19 @@
 	->主引导(MBR:Master Boot Record)扇区或启动扇区: 引导程序(440Bytes) -> widnows磁盘签名(4Bytes) -> 分区表(64Bytes) -> 结束标志(0x55AA)
 	-> 8086(16bit) : EPROM被编址在1MB内存空间的最高64KB中.PC加点后,CS=0xF000,IP=0xFFF0 -> JMP F000:E05B ->开启BIOS执行过程
 	-> 80386(32bit): BIOS ROM被编址在4GB地址的最后64KB中 -> CS=0xF000,shadhow register base=0xFFFF0000,EIP=0xF000 -> 0xFFFFFFF0执行JMP F000:E05B -> BIOS ROM被映射到RAM的1MB以内空间里
+8. ELF格式(一种目标文件object file)
+	1. 类型：可执行文件(executable file) + 可重定位文件(relocatable file) + 共享目标文件(shared object file)
+	2. ELF header (program header)
+9. Link Address & Load Address
+	1. Link Address: 编译器指定代码和数据所需要放置的内存地址
+	2. Load Address: 程序加载器ld配置的实际被加载内存的位置
+	3. Link Address 和Load Address不同会导致?
+		-> 直接跳转位置错误
+		-> 直接内存访问(只读数据区或者bss等直接地址访问)错误
+		-> 堆和栈的使用不受影响,但是可能会覆盖程序、数据区域
+		-> 动态链接库：可以存在Link地址和Load地址不一样
+10. 函数堆栈
+	1. 编译器
 ```
 ----
 # lab2
