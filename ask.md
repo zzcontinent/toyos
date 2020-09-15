@@ -64,5 +64,18 @@
 ----
 # lab2
 ```
-1.
+1.自映射解决什么问题?
+	0. 定义:把页目录表(1024*4Bytes)+页表(1024*1024*4Bytes)放到一个连续的4MB虚拟地址空间中,address_cnt=1024*1024
+		map: virtual addr(KERNBASE ~ KERNBASE+KMEMSIZE) = physical_addr(0 ~ KMEMSIZE)
+	1. vpt=0xFAC00000(10:1003,0,0); vpd=0xFAFEB000=PGADDR(PDX(VPT),PDX(VPT),0) (10:1003,1003,0)
+	2. KERNBASE=0xC0000000; KMEMSIZE=0x38000000(896MB); KERNTOP=KERNBASE+KMEMSIZE=0xF8000000; 
+	3. KERNTOP的页目录虚地址: vpd + KERNTOP/4M*4 = vpd + 0xF8000000/0x400000*4 = 0xFAFEB000 + 0xF80 = 0xFAFEBF80 
+	4. KERNTOP的页表项虚地址: vpt + KERNTOP/4K*4 = vpt + 0xF8000000/0x1000*4 = 0xFAC00000 + 0x3E0000 = 0xFAFE0000
+		KERNTOP/4M*4中x4是因为页表的位宽32bits, 所以offset 转换为地址 offset*4
+	5. 页表的虚拟地址空间为0xFAC00000 - 0xFB000000, size=4MB, address_cnt=1024*1024 (10bits * 10bits)
+2. 实现用户空间的自映射(之前在内核空间)
+	1. pmm_init: boot_pgdir[PDX(VPT)] = PADDR(boot_pgdir}| PTE_P | PTE_W
+	2. pgdir[UVPT] = PADDR(pgdir}| PTE_P | PTE_U (不能给写权限,pgdir是每个进程的page table)
+	3. print_pgdir: 遍历自己的页表结构
 ```
+
