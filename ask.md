@@ -87,7 +87,7 @@
 # lab3 虚拟内存管理
 ```
 1. 给未被映射的地址映射上物理页
-	1. do_pgfault考虑: 访问权限(页面所在VMA的权限 + 内存控制结构所指定的也表,不是内核的也表)
+	1. do_pgfault考虑: 访问权限(页面所在VMA的权限 + 内存控制结构所指定的页表,不是内核的页表)
 	2. 页目录项PDE和页表项PTE对实现页替换算法的潜在作用
 	3. 如果且页服务例程在执行过程中访问内存,发生了页访问异常,此时硬件要做哪些事情?
 2. FIFO页替换算法
@@ -102,14 +102,49 @@
 
 # lab4 内核线程管理
 ```
-1.
+1. 分配并初始化一个进程控制块
+	1. alloc_proc()分配返回struct proc_struct结构,存储新建立的内核线程管理信息
+	2. proc_struct 中的struct context context 和 struct trapframe *tf含义和作用
+2. 为新创建的内核线程分配资源
+	1. kernel_thread() -> do_fork()
+	2. do_fork步骤
+		2.1 调用alloc_proc,获得一块用户信息块
+		2.2 为进程分配一个内核栈
+		2.3 复制原进程的内存管理信息到新进程(内核线程不必做此事)
+		2.4 复制原进程上下文到新进程
+		2.5 将新进程添加到进程列表
+		2.6 唤醒新进程
+		2.7 返回新进程号(如何保证唯一的id的?)
+3. proc_run函数如何完成进程切换?
+	1. 创建且运行了几个内核线程
+	2. local_intr_save(intr_flag)
+	3. local_intr_restore(intr_flag)
+4. 支持任意大小的内存分配算法
+	1. first-fit
+	2. best-fit
+	3. worst-fit
+	4. buddy
+	5. linux-> SLOB SLAB
 ```
 
 ----
 
 # lab5 用户进程管理
 ```
-1.
+1. 加载应用程序并执行
+	1. do_execv() 
+	2. load_icode()
+		2.1 解析内存中的ELF->建立用户内存空间来放置应用程序的代码段、数据段
+		2.2 设置好proc_struct中的trapframe,确保能够从应用设定的起始地址执行
+	3. 如何被CPU执行(RUNNING 态)
+2. 父进程复制自己的内存空间给子进程
+	1. do_fork()执行中拷贝当前进程的用户内存地址空间中的合法内容到新进程中(子进程)
+		1.1 copy_range() kern/mm/pmm.c
+	2. 如何实现 "Copy on Write"机制
+3. fork/exec/wait/exit/syscall实现
+	1. fork/exec/wait/exit如何影响进程执行状态的?
+	2. 用户态进程的执行状态生命周期: 执行状态+ 执行状态之间变换关系 + 变换的事件或函数调用
+
 ```
 
 ----
