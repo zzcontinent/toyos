@@ -1,5 +1,7 @@
 ----
-# lab1
+
+# lab1 系统软件启动过程
+
 ```
 1. make生成文件过程:
 	1.1 生成ucore.img
@@ -59,10 +61,11 @@
 		3.3 加载IDT:LIDT(Load,ring0) & 存储IDT:SIDT(store,ring0-3)
 		3.4 最多256个 interrupt/exception vectors. [0,31]被exception & NMI使用
 		3.5 Task-gate descriptor + interrupt-gate descriptor + trap-gate descriptor
-		
 ```
+
 ----
-# lab2
+
+# lab2 物理内存管理
 ```
 1.自映射解决什么问题?
 	0. 定义:把页目录表(1024*4Bytes)+页表(1024*1024*4Bytes)放到一个连续的4MB虚拟地址空间中,address_cnt=1024*1024
@@ -75,7 +78,58 @@
 	5. 页表的虚拟地址空间为0xFAC00000 - 0xFB000000, size=4MB, address_cnt=1024*1024 (10bits * 10bits)
 2. 实现用户空间的自映射(之前在内核空间)
 	1. pmm_init: boot_pgdir[PDX(VPT)] = PADDR(boot_pgdir}| PTE_P | PTE_W
-	2. pgdir[UVPT] = PADDR(pgdir}| PTE_P | PTE_U (不能给写权限,pgdir是每个进程的page table)
+	2. pgdir[UVPT] = PADDR(pgdir)| PTE_P | PTE_U (不能给写权限,pgdir是每个进程的page table)
 	3. print_pgdir: 遍历自己的页表结构
+```
+
+----
+
+# lab3 虚拟内存管理
+```
+1. 给未被映射的地址映射上物理页
+	1. do_pgfault考虑: 访问权限(页面所在VMA的权限 + 内存控制结构所指定的也表,不是内核的也表)
+	2. 页目录项PDE和页表项PTE对实现页替换算法的潜在作用
+	3. 如果且页服务例程在执行过程中访问内存,发生了页访问异常,此时硬件要做哪些事情?
+2. FIFO页替换算法
+	1. swap_manager的作用
+	2. swap_fifo.c -> map_swappable + swap_out_victim
+	3. 被换出的页有什么特征,如何判断,何时换入和换出
+3. 识别dirty bit的extended clock页替换算法
+4. LRU页替换算法
+```
+
+----
+
+# lab4 内核线程管理
+```
+1.
+```
+
+----
+
+# lab5 用户进程管理
+```
+1.
+```
+
+----
+
+# lab6 调度器
+```
+1.
+```
+
+----
+
+# lab7 同步互斥
+```
+1.
+```
+
+----
+
+# lab8 文件系统
+```
+1.
 ```
 
