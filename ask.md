@@ -151,7 +151,65 @@
 
 # lab6 调度器
 ```
-1.
+1. 使用round robin调度算法
+	1. 分析sched_class中各个函数指针的用法，描述调度过程
+	2. 如何设计实现'多级反馈队列调度算法'
+2. 实现stride scheduling调度算法
+	1. google 'stride scheduling'
+3. 实现Linux的CFS调度算法
+4. 设计尽可能多的各种基本调度算法(FIFO SJF ...),并设计测试用例，定量分析各种指标上的差异,说明调度算法的适用范围
+5. idle进程的概念
+	1. 没有进程可执行的时候，系统如何工作?
+	2. lab5中ucore内核不断遍历进程池，直到找到第一个runnable状态的process.即idle是cpu轮询进程池
+	3. 进程调度和idle进程是两个不同概念
+	4. kern/process/proc.c-> idleproc单独进程作为idle进程
+6. 关注：
+	1. 何时或者何事件发生后需要调度
+	2. 何时或者何事件发生后需要调整实现调度算法所涉及的参数
+	3. 如何基于调度框架设计具体的调度算法
+	4. 如何灵活应用链表等数据结构管理进程调度
+7. 进程状态,进程生命周期
+	1. cpu初始化或者sys_fork时被创建->分配进程控制块->进入uninit态
+	2. 完成初始化，进入runnable态
+	3. 到达调度点，由调度器sched_class根据运行队列rq的内容来判断一个进程是否应该被运行,runnable->running ，占用CPU
+	4. running -> wait -> sleeping态
+	5. sleeping -> wakeup -> runnable态
+	6. running -> exit -> zombine态，由父进程释放其资源，子进程的进程控制块变成unused
+	7. 所有从runnable变成其他状态的进程都要出运行队列，反之被放入某个运行队列中
+8. 内核抢占点
+	1. ucore 内核不可抢占(non-preemptive),但也有例外
+		1.1 进行同步互斥操作，比如争抢一个信号量、锁
+		1.2 进行磁盘读写等异步操作时，ucore调用schedule让其他就绪进程执行
+		1.3 proc.c::do_exit + do_wait + init_main + cpu_idle; sync.h:lock; trap.c::trap
+	2. trap实现
+		if (!in_kernel) {
+			...
+			if (current->need_resched) {
+				schedule();
+			}
+		}
+		这表示：只有当进程在用户态执行到’任意‘某处用户代码位置发生中断，且当前进程控制块成员变量need_resched为1，表示需要调度时,才会执行schedule函数.这实际上体现了对用户进程的可抢占性.
+		如果把if(!in_kernel)去掉，则可以体现对内核代码的可抢占性，但是要实现对ucore中所有全局变量的互斥操作，放置race condition.
+9. 进程切换过程
+	1. proc A -> trap(interrupt) -> 内核态 -> save A trapframe
+	2. 内核态 -> schedule() -> proc B -> proc_run() -> switch_to() -> proc B 内核态
+	3. 继续proc B 上次内核态操作,调用iret -> proc B 用户空间
+	4. proc B user space -> trap(interrupt) -> 内核态 -> save B trapframe
+	5. 内核态 -> schedule() -> proc A -> proc_run() -> switch_to() -> proc A 内核态
+	6. 继续proc A上次中断处理流程 -> 执行完毕后，交给proc A 用户代码CPU执行权
+10. 内核在第一个程序运行时，需要进行哪些操作
+	1. 进程启动的内核态 -> 切换到该用户进程的内核态
+	2. forkret -> 该用户进程在用户态的起始入口
+11. 调度框架和调度算法
+	1. 设计思路
+	2. 数据结构
+	3. 调度点相关关键函数
+12. RR调度算法实现
+13. stride scheduling
+14. 使用有线队列实现Stride Scheduling
+
+
+
 ```
 
 ----
