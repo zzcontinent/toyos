@@ -205,8 +205,42 @@
 	2. 数据结构
 	3. 调度点相关关键函数
 12. RR调度算法实现
+	1. RR_enqueue(struct run_queue *rq, struct proc_struct *proc)
+	2. FCFS_pick_next(struct run_queue *rq)
+	3. FCFS_dequeue(struct run_queue *rq, struct proc_struct *proc)
+	4. RR_proc_tick(struct run_queue *rq, struct proc_struct *proc)
 13. stride scheduling
-14. 使用有线队列实现Stride Scheduling
+	1. init()
+	2. enqueue()
+	3. dequeue
+	4. pick next 
+		-> find minimum stride proc
+		-> update stride 
+			-> pass = BIG_STRIDE / P->priority(>1)
+			-> P->stride += pass
+	5. proc tick:
+		检查当前进程是否用完时间片，如果用完设置进程结构里的相关标记引起进程切换
+		一个process最多连续运行rq.max_time_slice个时间片
+	6. stride溢出比较
+		STRIDE_MAX - STRIDE_MIN <= PASS_MAX
+		无符号16bits:
+		step1:
+			proc_a: 65534_stride : 100_pass
+			proc_b: 65535_stride : 50_pass
+		step2:
+			proc_a: 98_stride(65534_stride+100_pass=98) : 100_pass
+			proc_b: 65535_stride : 50_pass
+		step3:
+			根据STRIDE_MAX - STRIDE_MIN <= PASS_MAX原则，带符号的16bit表示98-65535=99,知道98(proc_a) > 65535(proc_b)
+	7. stride采用无符号的32-bit整数表示,那么BIG_STRIDE 应该取多少? (练习)
+		proc_a+pass保证溢出后不能追上proc_b
+		即
+		STRIDE_MAX - STRIDE_MIN <= PASS_MAX (未溢出)
+		STRIDE_MIN - (STRIDE_MAX - 2^32) > PASS_MAX (溢出)
+			-> STRIDE_MAX - STRIDE_MIN < 2^31
+			-> BIG_STRIDE/ 2 < 2^31
+			-> BIG_STRIDE < 2^30
+14. 使用优先队列实现Stride Scheduling
 
 
 
