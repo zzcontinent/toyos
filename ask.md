@@ -130,6 +130,7 @@
 ----
 
 # lab5 用户进程管理
+
 ```
 1. 加载应用程序并执行
 	1. do_execv() 
@@ -150,6 +151,7 @@
 ----
 
 # lab6 调度器
+
 ```
 1. 使用round robin调度算法
 	1. 分析sched_class中各个函数指针的用法，描述调度过程
@@ -212,7 +214,7 @@
 13. stride scheduling
 	1. init()
 	2. enqueue()
-	3. dequeue
+	3. dequeue()
 	4. pick next 
 		-> find minimum stride proc
 		-> update stride 
@@ -238,25 +240,66 @@
 		STRIDE_MAX - STRIDE_MIN <= PASS_MAX (未溢出)
 		STRIDE_MIN - (STRIDE_MAX - 2^32) > PASS_MAX (溢出)
 			-> STRIDE_MAX - STRIDE_MIN < 2^31
+			-> max(STRIDE_MAX - STRIDE_MIN) < 2^31
 			-> BIG_STRIDE/ 2 < 2^31
 			-> BIG_STRIDE < 2^30
+
 14. 使用优先队列实现Stride Scheduling
-
-
+	1. 基于列表扫描的stride调度 pick_next()
+	2. 优先队列(已排序好)libs/skew_heap.h
+		- typedef struct skew_heap_entry skew_heap_entry_t;
+		- void skew_heap_init(skew_heap_entry_t *a);
+		- skew_heap_entry_t *skew_heap_insert(skew_heap_entry_t *a,
+							skew_heap_entry_t *b,
+							compare_f comp);
+		- skew_heap_entry_t *skew_heap_remove(skew_heap_entry_t *a,
+							skew_heap_entry_t *b,
+							compare_f comp);
+	3. pseudo code
+		2.1 init(rq)
+			- initialize rq->run_list
+			- set rq->lab6_run_poll to NULL
+			- set rq->proc_num to 0
+		2.2 enqueue(rq,proc)
+			- initialize proc->time_slice
+			- insert proc->lab6_run_poll into rq->lab6_run_poll
+			- rq->proc_num ++
+		2.3 dequeue(rq,proc)
+			- remove proc->lab6_run_poll from rq->lab6_run_poll
+			- rq->proc_num --
+		2.4 pick_next(rq)
+			- if rq->lab6_run_poll == NULL, return NULL
+			- find the proc corresponding to the pointer rq->lab6_run_poll
+			- proc->lab6_stride += BIG_STRIDE/proc->lab6_priority
+			- return proc
+		2.5 proc_tick(rq,proc)
+			- if proc->time_slice >0, proc->time_slice--
+			- if proc->time_slice == 0, set the flag proc->need_resched
 
 ```
 
 ----
 
 # lab7 同步互斥
+
 ```
-1.
+1. 底层支持技术:禁用中断、定时器、等待队列
+	- 保证 读内存-修改值-写回内存的原子性
+	- 定时器、屏蔽/使能中断、等待队列wait_queue支持test_set_bit等原子操作机器指令，实现进程等待、同步互斥
+2. 同步互斥设计
+3. 理解信号量(semaphore)
+4. 管程机制(monitor),增加基于monitor的条件变量(condition variable)的支持
+5. 经典进程同步问题
+6. 实现简化的思索和冲入探测机制
+7. 实现Linux的简化RCU机制
 ```
 
 ----
 
 # lab8 文件系统
 ```
-1.
+1. 文件系统的系统调用实现方法
+2. 基于索引节点组织方式的simple fs文件系统的设计与实现
+3. 文件系统抽象层-vfs的设计与实现
 ```
 
