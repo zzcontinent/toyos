@@ -44,7 +44,7 @@ interrupted procedure's and handler's stack
 
 ```
 
-# stack usage with no privillege-level changed
+# stack usage with privillege-level changed
 ----
 
 ```
