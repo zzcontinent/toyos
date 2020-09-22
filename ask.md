@@ -130,6 +130,7 @@
 ----
 
 # lab5 用户进程管理
+
 ```
 1. 加载应用程序并执行
 	1. do_execv() 
@@ -150,6 +151,7 @@
 ----
 
 # lab6 调度器
+
 ```
 1. 使用round robin调度算法
 	1. 分析sched_class中各个函数指针的用法，描述调度过程
@@ -240,9 +242,9 @@
 			-> STRIDE_MAX - STRIDE_MIN < 2^31
 			-> BIG_STRIDE/ 2 < 2^31
 			-> BIG_STRIDE < 2^30
+
 14. 使用优先队列实现Stride Scheduling
-
-
+	1. 基于列表扫描的stride调度 pick_next()
 
 ```
 
