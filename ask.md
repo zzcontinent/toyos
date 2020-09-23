@@ -288,9 +288,27 @@
 	- 定时器、屏蔽/使能中断、等待队列wait_queue支持test_set_bit等原子操作机器指令，实现进程等待、同步互斥
 2. 同步互斥设计
 3. 理解信号量(semaphore)
+	- 内核级信号量的实现以及基于内核级信号量的哲学家就餐问题
+4. 内核级条件变量和基于内核级条件变量的哲学家就餐问题
+5. kern/schedule/{sched.h, sched.c}
+	- 增加定时器Timer机制，用于进程/线程的do_sleep功能
+6. kern/sync/sync.h
+	- 去除lock实现，因为这对于不抢占内核没有用
+7. kern/sync/wait.[ch]
+	- 定义了等待队列wait_queue结构和等待entry的wait结构.这是信号量semophore机制和条件变量机制的基础
+8. kern/sync/sem.[ch]
+	- 定义了内核级信号量相关的数据结构和函数
+9. user/libs/{syscall.[ch], ulib.[ch]}与kern/sync/syscall.c
+	- 实现了进程sleep相关的参数传递和调用关系
+10. kern/sync/monitor.[ch]
+	- 基于管程的条件变量的实现程序
+11. kern/sync/check_sync.c
+	- 基于管程的哲学家就餐问题
+12. kern/mm/vmm.[ch]
+	- 用信号量mm_sem取代mm_struct中原有的mm_lock
 4. 管程机制(monitor),增加基于monitor的条件变量(condition variable)的支持
 5. 经典进程同步问题
-6. 实现简化的思索和冲入探测机制
+6. 实现简化的死锁和重入探测机制
 7. 实现Linux的简化RCU机制
 ```
 
