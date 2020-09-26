@@ -306,15 +306,22 @@
 	- 基于管程的哲学家就餐问题
 12. kern/mm/vmm.[ch]
 	- 用信号量mm_sem取代mm_struct中原有的mm_lock
-4. 管程机制(monitor),增加基于monitor的条件变量(condition variable)的支持
-5. 经典进程同步问题
-6. 实现简化的死锁和重入探测机制
-7. 实现Linux的简化RCU机制
+13. 管程机制(monitor),增加基于monitor的条件变量(condition variable)的支持
+14. 经典进程同步问题
+15. 实现简化的死锁和重入探测机制
+16. 实现Linux的简化RCU机制
 ```
+17. 调用关系:
+
+	![wait_current_set](https://github.com/zzcontinent/toyos/blob/dev/wait_current_set.png)
+	![wakeup_wait](https://github.com/zzcontinent/toyos/blob/dev/wakeup_wait.png)
+	![down](https://github.com/zzcontinent/toyos/blob/dev/__down.png)
+	![up](https://github.com/zzcontinent/toyos/blob/dev/__up.png)
 
 ----
 
 # lab8 文件系统
+
 ```
 1. 文件系统的系统调用实现方法
 2. 基于索引节点组织方式的simple fs文件系统的设计与实现
