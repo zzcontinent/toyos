@@ -334,25 +334,37 @@
 	- sh ls hello
 	- UNIX的硬链接和软链接机制
 6. 代码
-	6.1 文件系统测试用例
+	1 文件系统测试用例
 		user/*.c
-	6.2 通用文件系统接口
+	2 通用文件系统接口
 		- user/libs/file.[ch],dir.[ch], syscall.c: 与文件系统操作相关的用户库
 		- kern/syscall.[ch]:文件中包含文件系统相关的内核态系统调用接口
 		- kern/fs/sysfile.[ch], file.[ch]: 通用文件系统接口
-	6.3 文件系统抽象层-vfs
+	3 文件系统抽象层-vfs
 		- kern/fs/vfs/*.[ch]: 虚拟文件系统接口
-	6.4 Simple FS文件系统
+	4 Simple FS文件系统
 		- kern/fs/sfs/*.[ch]: SimpleFS
-	6.5 文件系统的硬盘IO接口
+	5 文件系统的硬盘IO接口
 		- kern/fs/devs/dev.[ch], dev_disk0.c: disk0硬盘设备提供给文件系统的I/O访问接口
-	6.6 辅助工具
+	6 辅助工具
 		- tools/mksfs.c: 创建一个SimpleFS文件系统格式的硬盘镜像
-	6.7 对内核其他模块的扩充
+	7 对内核其他模块的扩充
 		- kern/process/proc.[ch]
 			增加成员变量struct fs_struct *fs_struct,用于支持进程对文件的访问;重写do_execve_load_icode等函数，支持执行文件系统中的文件
 		- kern/init/init.c
 			增加调用初始化文件系统的函数fs_init
+7. 总体介绍
+	1. UNIX四个文件系统抽象概念：文件(file)、目录项(dentry)、索引节点(inode)、安装点(mount point)
+	2. ucore的文件系统架构
+		1. 通用文件系统访问接口层：从用户空间到文件系统的标准访问接口
+		2. 文件系统抽象层：向上提供一个一致的接口给内核访问.向下提供一个同样的抽象函数指针列表和数据结构屏蔽不同的文件系统的实现细节.
+		3. simple FS 文件系统层：基于索引方式的简单文件系统.向上提供对应文件系统抽象层的抽象函数,向下访问外设接口.
+		4. 外设接口层：向上提供device访问接口，屏蔽不同硬件细节.向下实现外设驱动的接口(disk设备接口/串口设备接口/键盘设备接口)
+	3. ucore文件系统架构的数据结构
+		1. 超级块(SuperBlock),描述文件系统的全局信息，作用范围：整个OS空间
+		2. 索引节点(inode),作用范围：整个OS空间
+		3. 目录项(dentry),作用范围：整个OS空间
+		4. 文件(file),作用范围：某一具体进程
 		
 ```
 
