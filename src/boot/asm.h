@@ -1,7 +1,8 @@
 #ifndef __TOYOS_ASM_H__
 #define __TOYOS_ASM_H__
 
-/*INTEL 80386 PROGRAMMER'S REFERENCE MANUAL 1986: Figure 6-1 */
+/*pdf = "INTEL 80386 PROGRAMMER'S REFERENCE MANUAL 1986" 
+ *pdf 108: Figure 6-1 */
 
 #define SEG_NULLASM \
     .word 0, 0;     \
