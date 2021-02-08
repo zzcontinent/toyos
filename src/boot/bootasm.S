@@ -66,6 +66,7 @@ spin:
 
 
 # bootstrap GDT
+# p2align == power-of-two bytes alignment (2*2=4-bytes boundary)
 .p2align 2
 gdt:
     SEG_NULLASM
