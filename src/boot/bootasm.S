@@ -31,7 +31,7 @@ seta20.2:
     mov $0xdf, %al
     outb %al, $0x60
 
-    #switch from real to protected mode, using a bootstrap GDT
+    # switch from real to protected mode, using a bootstrap GDT
     # and segment translation that makes virtual addresses
     # identical to physical addresses, so that the
     # effective memory map does not change during the switch.
@@ -40,13 +40,13 @@ seta20.2:
     orl %CR0_PE_ON, %eax
     movl $eax, $cr0
 
-    #jump to next instruction, but in 32-bit code segment.
+    # jump to next instruction, but in 32-bit code segment.
     # switches processor into 32-bit mode.
     ljmp $PROT_MODE_CSEG, $protcseg
 
 .code32
 protcseg:
-    #set up the protedted-mode data segment registers
+    # set up the protedted-mode data segment registers
     movw $PROT_MODE_DSEG, %ax
     movw %ax,%ds
     movw %ax,%es
@@ -60,7 +60,7 @@ protcseg:
     movl $start %esp
     call bootmain
 
-    if bootmain returns(it shouldn't) , loop
+    # if bootmain returns(it shouldn't) , loop
 spin:
     jmp spin
 
