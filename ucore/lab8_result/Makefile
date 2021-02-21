@@ -168,7 +168,7 @@ KINCLUDE	+= kern/debug/ \
 			   kern/fs/swap/ \
 			   kern/fs/vfs/ \
 			   kern/fs/devs/ \
-			   kern/fs/sfs/ 
+			   kern/fs/sfs/
 
 
 KSRCDIR		+= kern/init \
@@ -305,7 +305,7 @@ TARGETS: $(TARGETS)
 
 .DEFAULT_GOAL := TARGETS
 
-QEMUOPTS = -hda $(UCOREIMG) -drive file=$(SWAPIMG),media=disk,cache=writeback -drive file=$(SFSIMG),media=disk,cache=writeback 
+QEMUOPTS = -hda $(UCOREIMG) -drive file=$(SWAPIMG),media=disk,cache=writeback -drive file=$(SFSIMG),media=disk,cache=writeback
 
 .PHONY: qemu qemu-nox debug debug-nox monitor
 qemu-mon: $(UCOREIMG) $(SWAPIMG) $(SFSIMG)
@@ -348,7 +348,7 @@ run-nox-%: build-%
 	$(V)$(QEMU) -serial mon:stdio $(QEMUOPTS) -nographic
 
 build-%: touch
-	$(V)$(MAKE) $(MAKEOPTS) "DEFS+=-DTEST=$*" 
+	$(V)$(MAKE) $(MAKEOPTS) "DEFS+=-DTEST=$*"
 
 script-%: touch
 	$(V)$(MAKE) $(MAKEOPTS) "DEFS+=-DTEST=sh -DTESTSCRIPT=/script/$*"
