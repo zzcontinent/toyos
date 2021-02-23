@@ -31,7 +31,7 @@ TARGETS :=
 # +++ user program out +++
 USER_PREFIX := __user_
 USER_BINS :=
-UOBJS := $(call read_packet,ulibs,libs)
+UOBJS := $(call read_packet,ulibs)
 
 # +++ kernel include +++
 INCLUDE += libs/
@@ -40,6 +40,8 @@ LIBDIR += libs
 KSRCDIR += $(shell find kern * -type d)
 KINCLUDE = $(KSRCDIR)
 KCFLAGS += $(addprefix -I,$(KINCLUDE))
+kernel = $(call totarget,kernel)
+KOBJS = $(call read_packet,kernel libs)
 
 
 # +++ user include +++
@@ -72,15 +74,40 @@ filename = $(basename $(notdir $(1)))
 ubinfile = $(call outfile,$(addprefix $(USER_PREFIX),$(call filename,$(1))))
 
 match = $(shell echo $(2) | awk '{for(i=1;i<NF;i++){if(match("$(1)","^"$$(i)"$$")){exit 1;}}}'; echo $$?)
+
+define user_prog_ld
+__user_bin__ := $$(call ubinfile,$(1))
+USER_BINS += $$(__user_bin__)
+$$(__user_bin__): tools/user.ld
+$$(__user_bin__): $$(UOBJS)
+$$(__user_bin__): $(1) | $$$$(dir $$$$@)
+	$(V)$(LD) $(LDFLAGS) -T tools/user.ld -o $$@ $$(UOBJS) $(1)
+	@$(OBJDUMP) -S $$@ > $$(call swaptype,$$<,o,asm)
+	@$(OBJDUMP) -t $$@ | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$$$/d' > $$(call swaptype,$$<,o,sym)
+endef
+
 ################ function end ################
 
 ################ build rules start ################
-# +++ kernel +++
-$(call add_files_cc,$(call listf_cc,$(LIBDIR)),libs)
-
 # +++ user +++
 $(call add_files_cc,$(call listf_cc,$(ULIBDIR)),ulibs,$(UCFLAGS))
 $(call add_files_cc,$(call listf_cc,$(USRCDIR)),uprog,$(UCFLAGS))
+$(foreach p,$(call read_packet,uprog),$(eval $(call user_prog_ld,$(p))))
+
+# +++ kernel +++
+$(call add_files_cc,$(call listf_cc,$(LIBDIR)),libs)
+$(kernel): tools/kernel.ld
+
+$(kernel): $(KOBJS)
+	@echo +ld $@
+	$(V)$(LD) $(LDFLAGS) -T tools/kernel.ld -o $@ $(KOBJS)
+	@$(OBJDUMP) -S $@ > $(call asmfile,kernel)
+	@$(OBJDUMP) -t $@ | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > $(call symfile,kernel)
+
+$(call create_target,kernel)
+
+# +++ bootblock +++
+
 
 ################ build rules end ################
 
