@@ -1,3 +1,4 @@
+
 ################ variables start ################
 # +++ cc +++
 GCCPREFIX := ''
@@ -56,7 +57,28 @@ UCFLAGS += $(addprefix -I,$(UINCLUDE))
 # +++ boot +++
 bootfiles = $(call listf_cc,boot)
 bootblock = $(call totarget,bootblock)
+
+# +++ ucore.img +++
+UCOREIMG := $(call totarget,ucore.img)
+
+# +++ sfs.img +++
+SFSROOT := disk0
+SFSIMG := $(call totarget,sfs.img)
+SFSBINS :=
+SFSIMG := $(call totarget,sfs.img)
+
+# +++ swap.img +++ 
+SWAPIMG := $(call totarget,swap.img)
+
+# +++ qemu +++
+QEMUOPTS = -hda $(UCOREIMG) -drive file=$(SWAPIMG),media=disk,cache=writeback -drive file=$(SFSIMG),media=disk,cache=writeback
+
+# +++ terminal +++
+TERMINAL := gnome-terminal
+
 ################ variables end ################
+
+
 
 ################ function start ################
 include tools/function.mk
@@ -92,7 +114,17 @@ $$(__user_bin__): $(1) | $$$$(dir $$$$@)
 	@$(OBJDUMP) -t $$@ | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$$$/d' > $$(call swaptype,$$<,o,sym)
 endef
 
+# +++ sfs copy +++
+define fscopy
+__fs_bin__ := $(2)$(SLASH)$(patsubst $(USER_PREFIX)%,%,$(basename $(notdir $(1))))
+SFSBINS += $$(__fs_bin__)
+$$(__fs_bin__): $(1) | $$$$(dir $@)
+	@cp $$< $$@
+endef
+
 ################ function end ################
+
+
 
 ################ build rules start ################
 # +++ user +++
@@ -122,6 +154,67 @@ $(bootblock): $(call toobj,boot/bootasm.S) $(call toobj,$(bootfiles)) | $(call t
 	@$(OBJCOPY) -S -O binary $(call objfile,bootblock) $(call outfile,bootblock)
 	$(call totarget,sign) $(call outfile,bootblock) $(bootblock)
 
+$(call create_target,bootblock)
+
+# +++ sign tools +++
+$(call add_files_host,tools/sign.c,sign,sign)
+$(call create_target_host,sign,sign)
+
+# +++ mkfs tools +++
+$(call add_files_host,tools/mksfs.c,mksfs,mksfs)
+$(call create_target_host,mksfs,mksfs)
+
+# +++ create ucore.img +++
+$(UCOREIMG): $(kernel) $(bootblock)
+	$(V)dd if=/dev/zero of=$@ count=10000 bs=512
+	$(V)dd if=$(bootblock) of=$@ conv=notrunc
+	$(V)dd if=$(kernel) of=$@ seek=1 conv=notrunc
+
+$(call create_target,ucore.img)
+
+# +++ create swap.img +++
+$(SWAPIMG):
+	$(V)dd if=/dev/zero of=$@ bs=1M count=128
+	
+$(call create_target,swap.img)
+
+# +++ create sfs.img +++
+$(foreach p,$(USER_BINS),$(eval $(call fscopy,$(p),$(SLASH))))
+
+$(SFSROOT):
+	$(V)mkdir $@
+
+$(SFSIMG): $(SFSROOT) $(SFSBINS) | $(call totarget,mksfs)
+	$(V)dd if=/dev/zero os=$@ bs=1M count=128
+	@$(call totarget,mksfs) $@ $(SFSROOT)
+
+$(call create_target,sfs.img)
+
+# +++ finish +++
+$(call finish_all)
+
+# +++ qemu +++
+.PHONY: qemu qemu-nox debug debug-nox monitor
+)
+qemu: $(UCOREIMG) $(SWAPIMG) $(SFSIMG)
+	$(V)$(QEMU) -serial stdio $(QEMUOPTS) -serial null
+
+qemu-nox: $(UCOREIMG) $(SWAPIMG) $(SFSIMG)
+	$(V)$(QEMU) -serial mon:stdio $(QEMUOPTS) -nographic
+
+debug: $(UCOREIMG) $(SWAPIMG) $(SFSIMG)
+	$(V)$(QEMU) -S -s -parallel stdio $(QEMUOPTS) -serial null &
+	$(V)sleep 2
+	$(V)$(TERMINAL) -e "$(GDB) -q -x tools/gdbinit"
+
+debug-nox: $(UCOREIMG) $(SWAPIMG) $(SFSIMG)
+	$(V)$(QEMU) -S -s -parallel stdio $(QEMUOPTS) -nographic &
+	$(V)sleep 2
+	$(V)$(TERMINAL) -e "$(GDB) -q -x tools/gdbinit"
+
+clean:
+	$(V)rm $(SFSBINS)
+	-rm -r $(OBJDIR) $(BINDIR)
 
 ################ build rules end ################
 
