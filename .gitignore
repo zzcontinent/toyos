@@ -13,3 +13,4 @@ tags
 *.img
 *bin
 *obj
+*disk0
