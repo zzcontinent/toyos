@@ -24,6 +24,8 @@ OBJCOPY := $(GCCPREFIX)objcopy
 OBJDUMP := $(GCCPREFIX)objdump
 
 # +++ compile out targets +++
+BINDIR := bin
+OBJDIR := obj
 ALLOBJS :=
 ALLDEPS :=
 TARGETS :=
@@ -50,6 +52,10 @@ UINCLUDE += user/include/ \
 USRCDIR += user
 ULIBDIR += user/libs
 UCFLAGS += $(addprefix -I,$(UINCLUDE))
+
+# +++ boot +++
+bootfiles = $(call listf_cc,boot)
+bootblock = $(call totarget,bootblock)
 ################ variables end ################
 
 ################ function start ################
@@ -107,8 +113,20 @@ $(kernel): $(KOBJS)
 $(call create_target,kernel)
 
 # +++ bootblock +++
+$(foreach f,$(bootfiles),$(call cc_compile,$(f),$(CC),$(CFLAGS),-Os -nostdinc))
+
+$(bootblock): $(call toobj,boot/bootasm.S) $(call toobj,$(bootfiles)) | $(call totarget,sign)
+	@echo + ld @
+	$(V)$(LD) $(LDFLAGS) -N -T tools/boot.ld $^ -o$(call toobj,bootblock)
+	@$(OBJDUMP) -S $(call objfile,bootblock) > $(call asmfile,bootblock)
+	@$(OBJCOPY) -S -O binary $(call objfile,bootblock) $(call outfile,bootblock)
+	$(call totarget,sign) $(call outfile,bootblock) $(bootblock)
 
 
 ################ build rules end ################
+
+
+
+
 
 
