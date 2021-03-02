@@ -37,8 +37,8 @@ seta20.2:
     # effective memory map does not change during the switch.
     lgdt gdtdesc
     movl %cr0, %eax
-    orl %CR0_PE_ON, %eax
-    movl $eax, $cr0
+    orl $CR0_PE_ON, %eax
+    movl %eax, %cr0
 
     # jump to next instruction, but in 32-bit code segment.
     # switches processor into 32-bit mode.
@@ -57,10 +57,9 @@ protcseg:
     # set up the stack pointer and call into C.
     # the stack region is from 0-start(0x7c00)
     movl $0x0, %ebp
-    movl $start %esp
+    movl $start, %esp
     call bootmain
 
-    # if bootmain returns(it shouldn't) , loop
 spin:
     jmp spin
 

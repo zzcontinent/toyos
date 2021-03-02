@@ -3,7 +3,9 @@
 # +++ cc +++
 GCCPREFIX := ''
 QEMU := qemu-system-i386
+
 .SUFFIXES: .c .S .h
+.DELETE_ON_ERROR:
 
 HOSTCC := gcc
 ## for mksfs program, -D_FILE_OFFSET_BITS=64 can guarantee sizeof(off_t)==8,  sizeof(ino_t) ==8
@@ -67,7 +69,7 @@ SFSIMG := $(call totarget,sfs.img)
 SFSBINS :=
 SFSIMG := $(call totarget,sfs.img)
 
-# +++ swap.img +++ 
+# +++ swap.img +++
 SWAPIMG := $(call totarget,swap.img)
 
 # +++ qemu +++
@@ -90,7 +92,7 @@ create_target_cc = $(call create_target,$(1),$(2),$(3),$(CC),$(CFLAGS))
 
 # for hostcc
 add_files_host = $(call add_files,$(1),$(HOSTCC),$(HOSTCFLAGS),$(2),$(3))
-create_target_host = $(call create_target,$(1),$(2),$(3),$(HOSTCC),$(HOSTCFLAGS)))
+create_target_host = $(call create_target,$(1),$(2),$(3),$(HOSTCC),$(HOSTCFLAGS))
 
 # generate out files functions
 swaptype = $(patsubst %.$(2),%.$(3),$(1))
@@ -145,11 +147,11 @@ $(kernel): $(KOBJS)
 $(call create_target,kernel)
 
 # +++ bootblock +++
-$(foreach f,$(bootfiles),$(call cc_compile,$(f),$(CC),$(CFLAGS),-Os -nostdinc))
+$(foreach f,$(bootfiles),$(call cc_compile,$(f),$(CC),$(CFLAGS) -Os -nostdinc))
 
 $(bootblock): $(call toobj,boot/bootasm.S) $(call toobj,$(bootfiles)) | $(call totarget,sign)
 	@echo + ld @
-	$(V)$(LD) $(LDFLAGS) -N -T tools/boot.ld $^ -o$(call toobj,bootblock)
+	$(V)$(LD) $(LDFLAGS) -N -T tools/boot.ld $^ -o $(call toobj,bootblock)
 	@$(OBJDUMP) -S $(call objfile,bootblock) > $(call asmfile,bootblock)
 	@$(OBJCOPY) -S -O binary $(call objfile,bootblock) $(call outfile,bootblock)
 	$(call totarget,sign) $(call outfile,bootblock) $(bootblock)
@@ -175,7 +177,7 @@ $(call create_target,ucore.img)
 # +++ create swap.img +++
 $(SWAPIMG):
 	$(V)dd if=/dev/zero of=$@ bs=1M count=128
-	
+
 $(call create_target,swap.img)
 
 # +++ create sfs.img +++
@@ -195,7 +197,7 @@ $(call finish_all)
 
 # +++ qemu +++
 .PHONY: qemu qemu-nox debug debug-nox monitor
-)
+
 qemu: $(UCOREIMG) $(SWAPIMG) $(SFSIMG)
 	$(V)$(QEMU) -serial stdio $(QEMUOPTS) -serial null
 

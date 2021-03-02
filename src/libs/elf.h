@@ -1,4 +1,4 @@
-#ifdef __LIBS_ELF_H__
+#ifndef __LIBS_ELF_H__
 #define __LIBS_ELF_H__
 #include <defs.h>
 
@@ -39,6 +39,6 @@ struct proghdr {
     uint32_t p_memsz;  // size of segment in memory (bigger if contains bss)
     uint32_t p_flags;  // read/write/execut bits
     uint32_t p_align;  // required alignment, invariably hardware page size
-}
+};
 
 #endif
