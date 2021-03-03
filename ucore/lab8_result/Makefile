@@ -388,3 +388,6 @@ packall: clean
 	@$(RM) -f $(HANDIN)
 	@tar -czf $(HANDIN) `find . -type f -o -type d | grep -v '^\.*$$' | grep -vF '$(HANDIN)'`
 
+lines:
+	@find -type f | grep -E 'c$$|h$$|S$$'| xargs wc | sort -k1 -n 
+
