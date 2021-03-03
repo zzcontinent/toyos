@@ -27,8 +27,8 @@ OBJCOPY := $(GCCPREFIX)objcopy
 OBJDUMP := $(GCCPREFIX)objdump
 
 # +++ compile out targets +++
-BINDIR := bin
-OBJDIR := obj
+BINDIR := out/bin
+OBJDIR := out/obj
 ALLOBJS :=
 ALLDEPS :=
 TARGETS :=
@@ -215,13 +215,8 @@ debug-nox: $(UCOREIMG) $(SWAPIMG) $(SFSIMG)
 	$(V)$(TERMINAL) -e "$(GDB) -q -x tools/gdbinit"
 
 clean:
-	$(V)rm $(SFSBINS)
+	-rm -r $(SFSBINS)
 	-rm -r $(OBJDIR) $(BINDIR)
 
 ################ build rules end ################
-
-
-
-
-
 
