@@ -197,7 +197,7 @@ $(call create_target,sfs.img)
 $(call finish_all)
 
 # +++ qemu +++
-.PHONY: qemu qemu-nox debug debug-nox monitor
+.PHONY: qemu qemu-nox debug debug-nox monitor lines
 
 qemu: $(UCOREIMG) $(SWAPIMG) $(SFSIMG)
 	$(V)$(QEMU) -serial stdio $(QEMUOPTS) -serial null
@@ -219,6 +219,9 @@ debug-nox: $(UCOREIMG) $(SWAPIMG) $(SFSIMG)
 	$(V)$(QEMU) -S -s -parallel stdio $(QEMUOPTS) -nographic &
 	$(V)sleep 2
 	$(V)$(TERMINAL) -e "$(GDB) -q -x tools/gdbinit"
+
+lines:
+	@find -type f | grep -E 'c$$|h$$|S$$'| xargs wc | sort -k1 -n
 
 clean:
 	-rm -r $(OBJDIR) $(BINDIR)
