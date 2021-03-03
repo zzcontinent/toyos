@@ -76,7 +76,8 @@ SWAPIMG := $(call totarget,swap.img)
 QEMUOPTS = -hda $(UCOREIMG) -drive file=$(SWAPIMG),media=disk,cache=writeback -drive file=$(SFSIMG),media=disk,cache=writeback
 
 # +++ terminal +++
-TERMINAL := gnome-terminal
+#TERMINAL := gnome-terminal
+TERMINAL := terminator
 
 ################ variables end ################
 
@@ -150,7 +151,7 @@ $(call create_target,kernel)
 $(foreach f,$(bootfiles),$(call cc_compile,$(f),$(CC),$(CFLAGS) -Os -nostdinc))
 
 $(bootblock): $(call toobj,boot/bootasm.S) $(call toobj,$(bootfiles)) | $(call totarget,sign)
-	@echo + ld @
+	@echo + ld $@ : $^
 	$(V)$(LD) $(LDFLAGS) -N -T tools/boot.ld $^ -o $(call toobj,bootblock)
 	@$(OBJDUMP) -S $(call objfile,bootblock) > $(call asmfile,bootblock)
 	@$(OBJCOPY) -S -O binary $(call objfile,bootblock) $(call outfile,bootblock)
@@ -209,13 +210,17 @@ debug: $(UCOREIMG) $(SWAPIMG) $(SFSIMG)
 	$(V)sleep 2
 	$(V)$(TERMINAL) -e "$(GDB) -q -x tools/gdbinit"
 
+debug-bootblock: $(bootblock)
+	$(V)$(QEMU) -S -s -serial mon:stdio -hda out/bin/bootblock -nographic &
+	sleep 1
+	$(TERMINAL) -e "gdb -q -x tools/gdbinit"
+
 debug-nox: $(UCOREIMG) $(SWAPIMG) $(SFSIMG)
 	$(V)$(QEMU) -S -s -parallel stdio $(QEMUOPTS) -nographic &
 	$(V)sleep 2
 	$(V)$(TERMINAL) -e "$(GDB) -q -x tools/gdbinit"
 
 clean:
-	-rm -r $(SFSBINS)
 	-rm -r $(OBJDIR) $(BINDIR)
 
 ################ build rules end ################

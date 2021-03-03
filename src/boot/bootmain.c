@@ -1,4 +1,5 @@
 #include <defs.h>
+#include <x86.h>
 #include <elf.h>
 
 #define SECTSIZE 512
