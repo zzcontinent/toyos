@@ -45,7 +45,7 @@ LIBDIR += libs
 KSRCDIR += $(shell find kern * -type d)
 KINCLUDE = $(KSRCDIR)
 KCFLAGS += $(addprefix -I,$(KINCLUDE))
-kernel = $(call totarget,kernel)
+kernel = $(call tobin,kernel)
 KOBJS = $(call read_packet,kernel libs)
 
 
@@ -58,19 +58,19 @@ UCFLAGS += $(addprefix -I,$(UINCLUDE))
 
 # +++ boot +++
 bootfiles = $(call listf_cc,boot)
-bootblock = $(call totarget,bootblock)
+bootblock = $(call tobin,bootblock)
 
 # +++ ucore.img +++
-UCOREIMG := $(call totarget,ucore.img)
+UCOREIMG := $(call tobin,ucore.img)
 
 # +++ sfs.img +++
 SFSROOT := disk0
-SFSIMG := $(call totarget,sfs.img)
+SFSIMG := $(call tobin,sfs.img)
 SFSBINS :=
-SFSIMG := $(call totarget,sfs.img)
+SFSIMG := $(call tobin,sfs.img)
 
 # +++ swap.img +++
-SWAPIMG := $(call totarget,swap.img)
+SWAPIMG := $(call tobin,swap.img)
 
 # +++ qemu +++
 QEMUOPTS = -hda $(UCOREIMG) -drive file=$(SWAPIMG),media=disk,cache=writeback -drive file=$(SFSIMG),media=disk,cache=writeback
@@ -150,12 +150,12 @@ $(call create_target,kernel)
 # +++ bootblock +++
 $(foreach f,$(bootfiles),$(call cc_compile,$(f),$(CC),$(CFLAGS) -Os -nostdinc))
 
-$(bootblock): $(call toobj,boot/bootasm.S) $(call toobj,$(bootfiles)) | $(call totarget,sign)
+$(bootblock): $(call toobj,boot/bootasm.S) $(call toobj,$(bootfiles)) | $(call tobin,sign)
 	@echo + ld $@ : $^
 	$(V)$(LD) $(LDFLAGS) -N -T tools/boot.ld $^ -o $(call toobj,bootblock)
 	@$(OBJDUMP) -S $(call objfile,bootblock) > $(call asmfile,bootblock)
 	@$(OBJCOPY) -S -O binary $(call objfile,bootblock) $(call outfile,bootblock)
-	$(call totarget,sign) $(call outfile,bootblock) $(bootblock)
+	$(call tobin,sign) $(call outfile,bootblock) $(bootblock)
 
 $(call create_target,bootblock)
 
@@ -187,9 +187,9 @@ $(foreach p,$(USER_BINS),$(eval $(call fscopy,$(p),$(SLASH))))
 $(SFSROOT):
 	$(V)mkdir $@
 
-$(SFSIMG): $(SFSROOT) $(SFSBINS) | $(call totarget,mksfs)
+$(SFSIMG): $(SFSROOT) $(SFSBINS) | $(call tobin,mksfs)
 	$(V)dd if=/dev/zero os=$@ bs=1M count=128
-	@$(call totarget,mksfs) $@ $(SFSROOT)
+	@$(call tobin,mksfs) $@ $(SFSROOT)
 
 $(call create_target,sfs.img)
 

@@ -21,7 +21,7 @@ todep = $(patsubst %.o,%.d,$(call toobj,$(1),$(2)))
 
 # 4
 # add $(BINDIR)/ to $(1)
-totarget = $(addprefix $(BINDIR)$(SLASH),$(1))
+tobin = $(addprefix $(BINDIR)$(SLASH),$(1))
 
 # 5
 # change $(name) to $(OBJPREFIX)$(name)
@@ -76,14 +76,14 @@ endef
 # add packet and objs to target
 # (target, #packets, #objs, cc, [, flags])
 define do_create_target
-__temp_target__ = $$(call totarget,$(1))
+__temp_bin__ = $$(call tobin,$(1))
 __temp_objs__ = $$(foreach p,$$(call packetname,$(2)),$$($$(p))) $(3)
-TARGETS += $$(__temp_target__)
+TARGETS += $$(__temp_bin__)
 ifneq ($(4),)
-$$(__temp_target__): $$(__temp_objs__) | $$$$(dir $$$$@)
+$$(__temp_bin__): $$(__temp_objs__) | $$$$(dir $$$$@)
 	$(V)$(4) $(5) $$^ -o $$@
 else
-$$(__temp_target__): $$(__temp_objs__) | $$$$(dir $$$$@)
+$$(__temp_bin__): $$(__temp_objs__) | $$$$(dir $$$$@)
 endif
 endef
 
