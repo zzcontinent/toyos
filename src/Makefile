@@ -27,8 +27,10 @@ OBJCOPY := $(GCCPREFIX)objcopy
 OBJDUMP := $(GCCPREFIX)objdump
 
 # +++ compile out targets +++
-BINDIR := out/bin
-OBJDIR := out/obj
+OUT_DIR := out/
+OUT_TARGETDIR := $(OUT_DIR)bin
+OUT_OBJDIR := $(OUT_DIR)obj
+OUT_TOOLDIR := $(OUT_DIR)tools
 ALLOBJS :=
 ALLDEPS :=
 
@@ -44,7 +46,7 @@ LIBDIR += libs
 KSRCDIR += $(shell find kern * -type d)
 KINCLUDE = $(KSRCDIR)
 KCFLAGS += $(addprefix -I,$(KINCLUDE))
-kernel = $(call tobin,kernel)
+kernel = $(call to_out_target,kernel)
 KOBJS = $(call read_packet,kernel libs)
 
 
@@ -57,19 +59,19 @@ UCFLAGS += $(addprefix -I,$(UINCLUDE))
 
 # +++ boot +++
 bootfiles = $(call listf_cc,boot)
-bootblock = $(call tobin,bootblock)
+bootblock = $(call to_out_target,bootblock)
 
 # +++ ucore.img +++
-UCOREIMG := $(call tobin,ucore.img)
+UCOREIMG := $(call to_out_target,ucore.img)
 
 # +++ sfs.img +++
 SFSROOT := disk0
-SFSIMG := $(call tobin,sfs.img)
+SFSIMG := $(call to_out_target,sfs.img)
 SFSBINS :=
-SFSIMG := $(call tobin,sfs.img)
+SFSIMG := $(call to_out_target,sfs.img)
 
 # +++ swap.img +++
-SWAPIMG := $(call tobin,swap.img)
+SWAPIMG := $(call to_out_target,swap.img)
 
 # +++ qemu +++
 QEMUOPTS = -hda $(UCOREIMG) -drive file=$(SWAPIMG),media=disk,cache=writeback -drive file=$(SFSIMG),media=disk,cache=writeback
@@ -85,21 +87,12 @@ TERMINAL := terminator
 ################ function start ################
 include tools/function.mk
 
-# for cc
-listf_cc = $(call listf,$(1),$(CTYPE))
-add_files_cc = $(call add_files,$(1),$(CC),$(CFLAGS),$(3),$(2),$(4))
-create_target_cc = $(call create_target,$(1),$(2),$(3),$(CC),$(CFLAGS))
-
-# for hostcc
-add_files_host = $(call add_files,$(1),$(HOSTCC),$(HOSTCFLAGS),$(2),$(3))
-create_target_host = $(call create_target,$(1),$(2),$(3),$(HOSTCC),$(HOSTCFLAGS))
 
 # generate out files functions
 swaptype = $(patsubst %.$(2),%.$(3),$(1))
-objfile = $(call toobj,$(1))
-asmfile = $(call swaptype,$(call objfile,$(1)),o,asm)
-outfile = $(call swaptype,$(call objfile,$(1)),o,out)
-symfile = $(call swaptype,$(call objfile,$(1)),o,sym)
+asmfile = $(call swaptype,$(call to_out_obj,$(1)),o,asm)
+outfile = $(call swaptype,$(call to_out_obj,$(1)),o,out)
+symfile = $(call swaptype,$(call to_out_obj,$(1)),o,sym)
 filename = $(basename $(notdir $(1)))
 ubinfile = $(call outfile,$(addprefix $(USER_PREFIX),$(call filename,$(1))))
 
@@ -147,23 +140,23 @@ $(kernel): $(KOBJS)
 $(call create_target,kernel)
 
 # +++ bootblock +++
-$(foreach f,$(bootfiles),$(call cc_compile,$(f),$(CC),$(CFLAGS) -Os -nostdinc))
+$(foreach f,$(bootfiles),$(call cc_compile_batch,$(f),$(CC),$(CFLAGS) -Os -nostdinc))
 
-$(bootblock): $(call toobj,boot/bootasm.S) $(call todep,boot/bootasm.S) $(call toobj,$(bootfiles)) $(call todep,$(bootfiles))| $(call tobin,sign)
+$(bootblock): $(call to_out_obj,$(bootfiles)) | $(call to_out_target,sign)
 	@echo + ld $@ : $^
-	$(V)$(LD) $(LDFLAGS) -N -T tools/boot.ld $^ -o $(call toobj,bootblock)
-	@$(OBJDUMP) -S $(call objfile,bootblock) > $(call asmfile,bootblock)
-	@$(OBJCOPY) -S -O binary $(call objfile,bootblock) $(call outfile,bootblock)
-	$(call tobin,sign) $(call outfile,bootblock) $(bootblock)
+	$(V)$(LD) $(LDFLAGS) -N -T tools/boot.ld $^ -o $(call to_out_obj,bootblock)
+	@$(OBJDUMP) -S $(call to_out_obj,bootblock) > $(call asmfile,bootblock)
+	@$(OBJCOPY) -S -O binary $(call to_out_obj,bootblock) $(call outfile,bootblock)
+	$(call to_out_target,sign) $(call outfile,bootblock) $(bootblock)
 
 $(call create_target,bootblock)
 
 # +++ sign tools +++
-$(call add_files_host,tools/sign.c,sign,sign)
-$(call create_target_host,sign,sign)
+$(call compile_files_host,tools/sign.c)
+$(call create_target_host,sign,tools/sign)
 
 # +++ mkfs tools +++
-$(call add_files_host,tools/mksfs.c,mksfs,mksfs)
+$(call compile_files_host,tools/mksfs.c,mksfs,mksfs)
 $(call create_target_host,mksfs,mksfs)
 
 # +++ create ucore.img +++
@@ -186,9 +179,9 @@ $(foreach p,$(USER_BINS),$(eval $(call fscopy,$(p),$(SLASH))))
 $(SFSROOT):
 	$(V)mkdir $@
 
-$(SFSIMG): $(SFSROOT) $(SFSBINS) | $(call tobin,mksfs)
+$(SFSIMG): $(SFSROOT) $(SFSBINS) | $(call to_out_target,mksfs)
 	$(V)dd if=/dev/zero os=$@ bs=1M count=128
-	@$(call tobin,mksfs) $@ $(SFSROOT)
+	@$(call to_out_target,mksfs) $@ $(SFSROOT)
 
 $(call create_target,sfs.img)
 
@@ -223,7 +216,7 @@ lines:
 	@find -type f | grep -E 'c$$|h$$|S$$'| xargs wc | sort -k1 -n
 
 clean:
-	-rm -r $(OBJDIR) $(BINDIR)
+	@-rm -r $(OUT_DIR)
 
 ################ build rules end ################
 
