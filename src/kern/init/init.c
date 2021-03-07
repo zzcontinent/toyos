@@ -10,4 +10,23 @@ int kern_init(void)
 	cons_init();
 	const char* message = "toyos is loading ...";
 	cprintf("%s\n", message);
+
+	print_kerninfo();
+	print_stackframe();
+
+	pmm_init();
+	pic_init();
+
+	vmm_init();
+	sched_init();
+	proc_init();
+
+	ide_init();
+	swap_init();
+	fs_init();
+
+	clock_init();
+	intr_enable();
+
+	cpu_idle();
 }
