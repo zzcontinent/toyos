@@ -1,10 +1,11 @@
+#include <defs.h>
 #include "picirq.h"
 #include <console.h>
-#include <defs.h>
 #include <memlayout.h>
 #include <stdio.h>
 #include <string.h>
 #include <x86.h>
+#include <trap.h>
 
 static uint16_t* crt_buf;
 static uint16_t crt_pos;
@@ -74,7 +75,17 @@ static void serial_intr(void)
 	}
 }
 
-
+static void lpt_putc_sub(int c)
+{
+	int i;
+	for (i = 0; !(inb(LPTPORT + 1) & 0x80) && i < 12800; i++)
+	{
+		delay();
+	}
+	outb(LPTPORT + 0, c);
+	outb(LPTPORT + 2, 0x08 | 0x04 | 0x01);
+	outb(LPTPORT + 2, 0x08);
+}
 
 
 

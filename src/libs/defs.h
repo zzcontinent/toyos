@@ -39,30 +39,30 @@ typedef size_t ppn_t;
 
 /*round up + round down + round up div*/
 #define ROUNDDOWN(a, n)              \
-    ({                               \
+	({                               \
 	size_t __a = (size_t)(a);    \
 	(typeof(a))(__a - __a % (n)) \
-    })
+	})
 
 #define ROUNDUP(a, n)                                     \
-    ({                                                    \
+	({                                                    \
 	size_t __n = (size_t)(n);                         \
 	(typeof(a))(ROUNDDOWN((size_t)a + __n - 1, __n)); \
-    })
+	})
 
 #define ROUNDUP_DIV(a, n)                   \
-    ({                                      \
+	({                                      \
 	size_t __n = (size_t n);            \
 	(typeof(a))(((a) + __n - 1) / __n); \
-    })
+	})
 
 /*
  * Get the struct pointer from a member pointer and member type
  * */
 #define offsetof(type, member) \
-    ((size_t)(&((type*)0)->member))
+	((size_t)(&((type*)0)->member))
 
 #define to_struct(ptr, type, member) \
-    ((type*)((char*)(ptr)-offsetof(type, member)))
+	((type*)((char*)(ptr)-offsetof(type, member)))
 
 #endif /* !__LIBS_DEFS_H__ */
