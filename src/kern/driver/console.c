@@ -1,11 +1,11 @@
-#include <defs.h>
 #include "picirq.h"
 #include <console.h>
+#include <defs.h>
 #include <memlayout.h>
 #include <stdio.h>
 #include <string.h>
-#include <x86.h>
 #include <trap.h>
+#include <x86.h>
 
 static uint16_t* crt_buf;
 static uint16_t crt_pos;
@@ -52,7 +52,7 @@ static void serial_intr(void)
 
 	// set speed: require DLAB latch
 	outb(COM1 + COM_LCR, COM_LCR_DLAB);
-	outb(COM1 + COM_DLL, (uint8_t) (115200 / 9600));
+	outb(COM1 + COM_DLL, (uint8_t)(115200 / 9600));
 	outb(COM1 + COM_DLM, 0);
 
 	// 8 bits data, 1 stop bit, parity off; turn off DLAB latch
@@ -66,11 +66,10 @@ static void serial_intr(void)
 	//clear any preexisting overrun indications and interrupts
 	// serial port doesn't exist if COM_LSR returns 0xFF
 	serial_exists = (inb(COM1 + COM_LSR) != 0xFF);
-	(void) inb(COM1 + COM_IIR);
-	(void) inb(COM1 + COM_RX);
+	(void)inb(COM1 + COM_IIR);
+	(void)inb(COM1 + COM_RX);
 
-	if (serial_exists)
-	{
+	if (serial_exists) {
 		pic_enable(IRQ_COM1);
 	}
 }
@@ -78,8 +77,7 @@ static void serial_intr(void)
 static void lpt_putc_sub(int c)
 {
 	int i;
-	for (i = 0; !(inb(LPTPORT + 1) & 0x80) && i < 12800; i++)
-	{
+	for (i = 0; !(inb(LPTPORT + 1) & 0x80) && i < 12800; i++) {
 		delay();
 	}
 	outb(LPTPORT + 0, c);
@@ -87,18 +85,45 @@ static void lpt_putc_sub(int c)
 	outb(LPTPORT + 2, 0x08);
 }
 
+/* lpt_putc - copy console output to parallel port */
+static void lpt_putc(int c)
+{
+	if (c != '\b') {
+		lpt_putc_sub(c);
+	} else {
+		lpt_putc_sub('\b');
+		lpt_putc_sub(' ');
+		lpt_putc_sub('\b');
+	}
+}
 
+/* cga_putc - print character to console */
+static void cga_putc(int c)
+{
+	// set black on white
+	if (!(c & ~0xFF)) {
+		c |= 0x0700;
+	}
+	switch (c & 0xFF) {
+		case '\b':
+			if (crt_post > 0) {
+				crt_pos--;
+				crt_buf[crt_pos] = (c & ~0xFF) | ' ';
+			}
+			break;
+		case '\n':
+			crt_pos += CRT_COLS;
+		case '\r':
+			crt_pos -= (crt_pos % CRT_COLS);
+			break;
+		default:
+			crt_buf[crt_pos++] = c; // write the character
+			break;
+	}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+	// what is the purpose of this?
+	if (crt_pos >= CRT_SIZE) {
+		int i;
+		mem
+	}
+}
