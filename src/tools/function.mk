@@ -28,7 +28,7 @@ to_out_target = $(addprefix $(OUT_TARGETDIR)$(SLASH),$(1))
 # -------------------------------------------------------------------------
 # cc compile template, generate rule for dep, obj:
 # (file, cc[, flags])
-define cc_template
+define template_cc
 ALLOBJS += $$(call to_out_obj,$(1))
 ALLDEPS += $$(call to_out_dep,$(1))
 $$(call to_out_dep,$(1)): $(1) | $$$$(dir $$$$@)
@@ -42,22 +42,22 @@ endef
 # -------------------------------------------------------------------------
 # compile file
 # (#files, cc[,flags])
-define cc_template_batch
-$$(foreach f,$(1),$$(eval $$(call cc_template,$$(f),$(2),$(3))))
+define template_cc_batch
+$$(foreach f,$(1),$$(eval $$(call template_cc,$$(f),$(2),$(3))))
 endef
 
 # -------------------------------------------------------------------------
 # compile file
 # (#files, cc[, flags])
-cc_compile_batch = $(eval $(call cc_template_batch,$(1),$(2),$(3)))
+rule_compile_files = $(eval $(call template_cc_batch,$(1),$(2),$(3)))
 # (#files)
-compile_files = $(call cc_compile_batch,$(1),$(CC),$(CFLAGS))
+rule_compile_files_cc = $(call rule_compile_files,$(1),$(CC),$(CFLAGS))
 # (#files)
-compile_files_host = $(call cc_compile_batch,$(1),$(HOSTCC),$(HOSTCFLAGS))
+rule_compile_files_hostcc = $(call rule_compile_files,$(1),$(HOSTCC),$(HOSTCFLAGS))
 # -------------------------------------------------------------------------
 # add packet and objs to target
 # (target, #objs, cc, [, flags])
-define do_create_target
+define template_do_create_target
 ifneq ($(3),)
 $$(call to_out_target,$(1)): $$(call to_out_obj,$(2)) | $$$$(dir $$$$@)
 	$(V)$(3) $(4) $$^ -o $$@
@@ -67,18 +67,18 @@ endif
 endef
 
 # (target, #objs, cc, [, flags])
-create_target = $(eval $(call do_create_target,$(1),$(2),$(3),$(4)))
+rule_create_target = $(eval $(call template_do_create_target,$(1),$(2),$(3),$(4)))
 # (target, #objs)
-create_target_cc = $(call create_target,$(1),$(2),$(CC),$(CFLAGS))
+rule_create_target_cc = $(call rule_create_target,$(1),$(2),$(CC),$(CFLAGS))
 # (target, #objs)
-create_target_host = $(call create_target,$(1),$(2),$(HOSTCC),$(HOSTCFLAGS))
+rule_create_target_host = $(call rule_create_target,$(1),$(2),$(HOSTCC),$(HOSTCFLAGS))
 # -------------------------------------------------------------------------
 # finish all
-define do_finish_all
+define tempalte_do_finish_all
 $$(sort $$(dir $$(ALLOBJS)) $(OUT_TARGETDIR)$(SLASH) $(OUT_OBJDIR)$(SLASH)):
 	@mkdir -p $$@
 endef
 
-finish_all = $(eval $(call do_finish_all))
+rule_finish_all = $(eval $(call tempalte_do_finish_all))
 
 # -------------------------------------------------------------------------
