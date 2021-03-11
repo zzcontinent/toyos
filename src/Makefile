@@ -15,8 +15,9 @@ HOSTCFLAGS	:= -g -Wall -O2 -D_FILE_OFFSET_BITS=64
 
 GDB := ${GCCPREFIX}gdb
 CC := $(GCCPREFIX)gcc
-CFLAGS := -fno-builtin -fno-PIC -Wall -ggdb -m32 -gstabs -nostdinc $(DEFS)
+CFLAGS := -fno-builtin -fno-PIC -Wall -ggdb -m32 -gstabs -nostdinc
 CFLAGS += $(shell $(CC) -fno-stack-protector -E -x c /dev/null >/dev/null 2>&1 && echo -fno-stack-protector)
+KCFLAGS := $(CFLAGS)
 CTYPE := c S
 
 LD := $(GCCPREFIX)ld
@@ -46,6 +47,7 @@ LIBDIR := libs
 KSRCDIR := $(shell find kern/* -type d)
 KINCLUDE = $(KSRCDIR)
 KCFLAGS += $(addprefix -I,$(KINCLUDE))
+KCFLAGS += $(addprefix -I,libs)
 kernel = $(call to_out_target,kernel)
 # KOBJS = $(call read_packet,kernel libs)
 
@@ -129,7 +131,7 @@ $(call rule_compile_files,$(call listf_cc,$(USRCDIR)),$(CC),$(UCFLAGS))
 # +++ kernel +++
 # libs/*.c
 $(call rule_compile_files_cc,$(call listf_cc,$(LIBDIR)))
-$(call rule_compile_files_cc,$(foreach d,$(KSRCDIR),$(call listf_cc,$(d))))
+$(call rule_compile_files,$(foreach d,$(KSRCDIR),$(call listf_cc,$(d))),$(CC),$(KCFLAGS))
 
 $(kernel): tools/kernel.ld
 
