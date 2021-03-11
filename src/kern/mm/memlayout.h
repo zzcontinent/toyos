@@ -92,8 +92,8 @@
 #include <atomic.h>
 #include <list.h>
 
-typedef uintprt_t pde_t;
-typedef uintprt_t pte_t;
+typedef uintptr_t pde_t;
+typedef uintptr_t pte_t;
 typedef pte_t swap_entry_t; // the pte can also be a swap entry
 
 // some constants for bios interrupt 15h AX = 0xE820
@@ -120,7 +120,7 @@ struct Page {
 	int zone_num;		// used in buddy system, the No. of zone which the page belongs to
 	list_entry_t page_link;		// free list link
 	list_entry_t pra_page_link;	// used for pra (page replace algorithm) 
-	uintprt_t pra_vaddr;		// used for pra (page replace algorithm) 
+	uintptr_t pra_vaddr;		// used for pra (page replace algorithm) 
 };
 
 #endif  /* !__ASSEMBLER__ */
