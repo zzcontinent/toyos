@@ -29,9 +29,9 @@ static void read_sect(void* dst, uint32_t secnum)
  * read_seg - read @count bytes at @offset from kernel into virtual address @va,
  * might copy more than asked
  * */
-static void read_seg(uintprt_t va, uint32_t count, uint32_t offset)
+static void read_seg(uintptr_t va, uint32_t count, uint32_t offset)
 {
-    uintprt_t end_va = va + count;
+    uintptr_t end_va = va + count;
     va -= offset % SECTSIZE;
     uint32_t secnum = (offset / SECTSIZE) + 1;
     for (; va < end_va; va += SECTSIZE, secnum++) {
@@ -41,12 +41,12 @@ static void read_seg(uintprt_t va, uint32_t count, uint32_t offset)
 
 void bootmain(void)
 {
-    read_seg((uintprt_t)ELFHDR, SECTSIZE * 8, 0);
+    read_seg((uintptr_t)ELFHDR, SECTSIZE * 8, 0);
     if (ELFHDR->e_magic != ELF_MAGIC) {
 	goto bad;
     }
     struct proghdr *ph, *eph;
-    ph = (struct proghdr*)((uintprt_t)ELFHDR + ELFHDR->e_phoff);
+    ph = (struct proghdr*)((uintptr_t)ELFHDR + ELFHDR->e_phoff);
     eph = ph + ELFHDR->e_phnum;
     for (; ph < eph; ph++) {
 	read_seg(ph->p_va & 0xFFFFFF, ph->p_memsz, ph->p_offset);

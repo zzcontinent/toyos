@@ -2,7 +2,10 @@
 #define __LIBS_X86_H__
 
 #include <defs.h>
+
 static inline void* __memcpy(void* dst, const void* src, size_t n);
+static inline void* __memset(void* s, char c, size_t n);
+static inline void* __memmove(void* dst, const void* src, size_t n);
 
 static inline uint8_t inb(uint16_t port)
 {
@@ -153,45 +156,45 @@ static inline void write_eflags(uint32_t eflags)
 	asm volatile("pushl %0; popfl" ::"r"(eflags));
 }
 
-static inline void lcr0(uintprt_t cr0)
+static inline void lcr0(uintptr_t cr0)
 {
 	asm volatile("mov %0, %%cr0" ::"r"(cr0)
 			: "memory");
 }
 
-static inline void lcr3(uintprt_t cr3)
+static inline void lcr3(uintptr_t cr3)
 {
 	asm volatile("mov %0, %%cr3" ::"r"(cr3)
 			: "memory");
 }
 
-static inline uintprt_t rcr0(void)
+static inline uintptr_t rcr0(void)
 {
-	uintprt_t cr0;
+	uintptr_t cr0;
 	asm volatile("mov %%cr0, %0"
 			: "=r"(cr0)::"memory");
 	return cr0;
 }
 
-static inline uintprt_t rcr1(void)
+static inline uintptr_t rcr1(void)
 {
-	uintprt_t cr1;
+	uintptr_t cr1;
 	asm volatile("mov %%cr1, %0"
 			: "=r"(cr1)::"memory");
 	return cr1;
 }
 
-static inline uintprt_t rcr2(void)
+static inline uintptr_t rcr2(void)
 {
-	uintprt_t cr2;
+	uintptr_t cr2;
 	asm volatile("mov %%cr2, %0"
 			: "=r"(cr2)::"memory");
 	return cr2;
 }
 
-static inline uintprt_t rcr3(void)
+static inline uintptr_t rcr3(void)
 {
-	uintprt_t cr3;
+	uintptr_t cr3;
 	asm volatile("mov %%cr3, %0"
 			: "=r"(cr3)::"memory");
 	return cr3;

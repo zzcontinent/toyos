@@ -26,10 +26,10 @@ typedef unsigned long long uint64_t;
  * uintptr_t to represent the numerical values of addresses.
  * */
 typedef int32_t intptr_t;
-typedef uint32_t uintprt_t;
+typedef uint32_t uintptr_t;
 
 /*size_t is used for memory object size*/
-typedef uintprt_t size_t;
+typedef uintptr_t size_t;
 
 /* off_t is used for file offset and lengths */
 typedef intptr_t off_t;

@@ -8,6 +8,7 @@
 #include <string.h>
 #include <trap.h>
 #include <x86.h>
+#include <sync.h>
 
 static uint16_t* crt_buf;
 static uint16_t crt_pos;

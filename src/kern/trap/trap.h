@@ -69,12 +69,12 @@ struct trapframe {
 	uint32_t tf_trapno;
 	/* below here defined by x86 hardware */
 	uint32_t tf_err;
-	uintprt_t tf_eip;
+	uintptr_t tf_eip;
 	uint16_t tf_cs;
 	uint16_t tf_padding4;
 	uint32_t tf_eflags;
 	/* below here only when crossing rings, such as from user to kernel */
-	uintprt_t tf_esp;
+	uintptr_t tf_esp;
 	uint16_t tf_ss;
 	uint16_t tf_padding5;
 } __attribute__((packed));
