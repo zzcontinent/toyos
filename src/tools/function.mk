@@ -27,33 +27,35 @@ to_out_target = $(addprefix $(OUT_TARGETDIR)$(SLASH),$(1))
 
 # -------------------------------------------------------------------------
 # cc compile template, generate rule for dep, obj:
-# (file, cc[, flags])
+# (target, file, cc[, flags])
 define template_cc
-ALLOBJS += $$(call to_out_obj,$(1))
-ALLDEPS += $$(call to_out_dep,$(1))
-$$(call to_out_dep,$(1)): $(1) | $$$$(dir $$$$@)
-	@echo + cc deps $$<
-	@$(V)$(2) -I$$(dir $(1)) $(3) -MM $$< -MT "$$(patsubst %.d,%.o,$$@) $$@" > $$@
-$$(call to_out_obj,$(1)): $(1) | $$$$(dir $$$$@)
-	@echo + cc $$<
-	@$(V)$(2) -I$$(dir $(1)) $(3) -c $$< -o $$@
+ALLOBJS_$(1) += $$(call to_out_obj,$(2))
+ALLDEPS_$(1) += $$(call to_out_dep,$(2))
+ALLOBJS += $$(call to_out_obj,$(2))
+ALLDEPS += $$(call to_out_dep,$(2))
+$$(call to_out_dep,$(2)): $(2) | $$$$(dir $$$$@)
+	@echo + cc $(2) => deps $$<
+	@$(V)$(3) -I$$(dir $(2)) $(4) -MM $$< -MT "$$(patsubst %.d,%.o,$$@) $$@" > $$@
+$$(call to_out_obj,$(2)): $(2) | $$$$(dir $$$$@)
+	@echo + cc $(2) => obj $$<
+	@$(V)$(3) -I$$(dir $(2)) $(4) -c $$< -o $$@
 endef
 
 # -------------------------------------------------------------------------
 # compile file
-# (#files, cc[,flags])
+# (target, #files, cc[,flags])
 define template_cc_batch
-$$(foreach f,$(1),$$(eval $$(call template_cc,$$(f),$(2),$(3))))
+$$(foreach f,$(2),$$(eval $$(call template_cc,$(1),$$(f),$(3),$(4))))
 endef
 
 # -------------------------------------------------------------------------
 # compile file
-# (#files, cc[, flags])
-rule_compile_files = $(eval $(call template_cc_batch,$(1),$(2),$(3)))
-# (#files)
-rule_compile_files_cc = $(call rule_compile_files,$(1),$(CC),$(CFLAGS))
-# (#files)
-rule_compile_files_hostcc = $(call rule_compile_files,$(1),$(HOSTCC),$(HOSTCFLAGS))
+# (target, #files, cc[, flags])
+rule_compile_files = $(eval $(call template_cc_batch,$(1),$(2),$(3),$(4)))
+# (target, #files)
+rule_compile_files_cc = $(call rule_compile_files,$(1),$(2),$(CC),$(CFLAGS))
+# (target, #files)
+rule_compile_files_hostcc = $(call rule_compile_files,$(1),$(2),$(HOSTCC),$(HOSTCFLAGS))
 # -------------------------------------------------------------------------
 # add packet and objs to target
 # (target, #objs, cc, [, flags])

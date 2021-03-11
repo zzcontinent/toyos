@@ -318,7 +318,7 @@ static int kbd_proc_data(void)
 	} else if (shift & E0ESC) {
 	}
 
-	shift |= shiftcode[Data];
+	shift |= shiftcode[data];
 	shift ^= togglecode[data];
 	c = charcode[shift & (CTL | shift)][data];
 	if (shift & CAPSLOCK) {

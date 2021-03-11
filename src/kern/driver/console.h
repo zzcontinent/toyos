@@ -39,6 +39,5 @@ void cons_init();
 void cons_putc(int c);
 int cons_getc(void);
 void serial_intr(void);
-void kbd_intr(void);
 
 #endif
