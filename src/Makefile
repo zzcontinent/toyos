@@ -34,6 +34,7 @@ OUT_OBJDIR := $(OUT_DIR)obj
 OUT_TOOLDIR := $(OUT_DIR)tools
 ALLOBJS :=
 ALLDEPS :=
+# there are many targets with specific objs to be linked. how to classify target -> objs
 
 # +++ user program out +++
 USER_PREFIX := __user_
@@ -49,8 +50,6 @@ KINCLUDE = $(KSRCDIR)
 KCFLAGS += $(addprefix -I,$(KINCLUDE))
 KCFLAGS += $(addprefix -I,libs)
 kernel = $(call to_out_target,kernel)
-# KOBJS = $(call read_packet,kernel libs)
-
 
 # +++ user include +++
 UINCLUDE += user/include/ \
@@ -125,26 +124,26 @@ endef
 
 ################ build rules start ################
 # +++ user +++
-$(call rule_compile_files,$(call listf_cc,$(USRCDIR)),$(CC),$(UCFLAGS))
+$(call rule_compile_files,user,$(call listf_cc,$(USRCDIR)),$(CC),$(UCFLAGS))
 # $(foreach p,$(call read_packet,uprog),$(eval $(call user_prog_ld,$(p))))
 
 # +++ kernel +++
 # libs/*.c
-$(call rule_compile_files_cc,$(call listf_cc,$(LIBDIR)))
-$(call rule_compile_files,$(foreach d,$(KSRCDIR),$(call listf_cc,$(d))),$(CC),$(KCFLAGS))
+$(call rule_compile_files_cc,kernel,$(call listf_cc,$(LIBDIR)))
+$(call rule_compile_files,kernel,$(foreach d,$(KSRCDIR),$(call listf_cc,$(d))),$(CC),$(KCFLAGS))
 
 $(kernel): tools/kernel.ld
 
-$(kernel): $(KOBJS)
+$(kernel): $(ALLOBJS_kernel)
 	@echo +ld $@
-	$(V)$(LD) $(LDFLAGS) -T tools/kernel.ld -o $@ $(KOBJS)
+	$(V)$(LD) $(LDFLAGS) -T tools/kernel.ld -o $@ $(ALLOBJS_kernel)
 	@$(OBJDUMP) -S $@ > $(call asmfile,kernel)
 	@$(OBJDUMP) -t $@ | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > $(call symfile,kernel)
 
 $(call rule_create_target,kernel)
 
 # +++ bootblock +++
-$(call rule_compile_files,$(bootfiles),$(CC),$(CFLAGS) -Os -nostdinc)
+$(call rule_compile_files,bootblock,$(bootfiles),$(CC),$(CFLAGS) -Os -nostdinc)
 
 $(bootblock): $(call to_out_obj,$(bootfiles)) | $(call to_out_target,sign)
 	@echo + ld $@ : $^
@@ -156,11 +155,11 @@ $(bootblock): $(call to_out_obj,$(bootfiles)) | $(call to_out_target,sign)
 $(call rule_create_target,bootblock)
 
 # +++ sign tools +++
-$(call rule_compile_files_hostcc,tools/sign.c)
+$(call rule_compile_files_hostcc,tools,tools/sign.c)
 $(call rule_create_target_host,sign,tools/sign)
 
 # +++ mkfs tools +++
-$(call rule_compile_files_hostcc,tools/mksfs.c,mksfs,mksfs)
+$(call rule_compile_files_hostcc,tools,tools/mksfs.c,mksfs,mksfs)
 $(call rule_create_target_host,mksfs,mksfs)
 
 # +++ create ucore.img +++
