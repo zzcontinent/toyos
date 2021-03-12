@@ -49,7 +49,7 @@ KSRCDIR := $(shell find kern/* -type d)
 KINCLUDE = $(KSRCDIR)
 KCFLAGS += $(addprefix -I,$(KINCLUDE))
 KCFLAGS += $(addprefix -I,libs)
-kernel = $(call to_out_target,kernel)
+target_kernel = $(call to_out_target,kernel)
 
 # +++ user include +++
 UINCLUDE += user/include/ \
@@ -60,22 +60,22 @@ UCFLAGS += $(addprefix -I,$(UINCLUDE))
 
 # +++ boot +++
 bootfiles = $(call listf_cc,boot)
-bootblock = $(call to_out_target,bootblock)
+target_bootblock = $(call to_out_target,bootblock)
 
 # +++ ucore.img +++
-UCOREIMG := $(call to_out_target,ucore.img)
+target_ucoreimg = $(call to_out_target,ucore.img)
 
 # +++ sfs.img +++
 SFSROOT := disk0
-SFSIMG := $(call to_out_target,sfs.img)
-SFSBINS :=
-SFSIMG := $(call to_out_target,sfs.img)
+SFSIMG = $(call to_out_target,sfs.img)
+SFSBINS =
+SFSIMG = $(call to_out_target,sfs.img)
 
 # +++ swap.img +++
-SWAPIMG := $(call to_out_target,swap.img)
+SWAPIMG = $(call to_out_target,swap.img)
 
 # +++ qemu +++
-QEMUOPTS = -hda $(UCOREIMG) -drive file=$(SWAPIMG),media=disk,cache=writeback -drive file=$(SFSIMG),media=disk,cache=writeback
+QEMUOPTS = -hda $(target_ucoreimg) -drive file=$(SWAPIMG),media=disk,cache=writeback -drive file=$(SFSIMG),media=disk,cache=writeback
 
 # +++ terminal +++
 #TERMINAL := gnome-terminal
@@ -132,49 +132,49 @@ $(call rule_compile_files,user,$(call listf_cc,$(USRCDIR)),$(CC),$(UCFLAGS))
 $(call rule_compile_files_cc,kernel,$(call listf_cc,$(LIBDIR)))
 $(call rule_compile_files,kernel,$(foreach d,$(KSRCDIR),$(call listf_cc,$(d))),$(CC),$(KCFLAGS))
 
-$(kernel): tools/kernel.ld
+$(target_kernel): tools/kernel.ld
 
-$(kernel): $(ALLOBJS_kernel)
-	@echo +ld $@
+$(target_kernel): $(ALLOBJS_kernel)
+	@echo + ld $@ : $^
 	$(V)$(LD) $(LDFLAGS) -T tools/kernel.ld -o $@ $(ALLOBJS_kernel)
 	@$(OBJDUMP) -S $@ > $(call asmfile,kernel)
 	@$(OBJDUMP) -t $@ | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > $(call symfile,kernel)
 
-$(call rule_create_target,kernel)
+$(call rule_link_target,kernel)
 
 # +++ bootblock +++
 $(call rule_compile_files,bootblock,$(bootfiles),$(CC),$(CFLAGS) -Os -nostdinc)
 
-$(bootblock): $(call to_out_obj,$(bootfiles)) | $(call to_out_target,sign)
+$(target_bootblock): $(call to_out_obj,$(bootfiles)) | $(call to_out_target,sign)
 	@echo + ld $@ : $^
-	$(V)$(LD) $(LDFLAGS) -N -T tools/boot.ld $^ -o $(call to_out_obj,bootblock)
-	@$(OBJDUMP) -S $(call to_out_obj,bootblock) > $(call asmfile,bootblock)
-	@$(OBJCOPY) -S -O binary $(call to_out_obj,bootblock) $(call outfile,bootblock)
-	$(call to_out_target,sign) $(call outfile,bootblock) $(bootblock)
+	$(V)$(LD) $(LDFLAGS) -N -T tools/boot.ld $^ -o $(call to_out_obj,boot/bootblock)
+	@$(OBJDUMP) -S $(call to_out_obj,boot/bootblock) > $(call asmfile,boot/bootblock)
+	@$(OBJCOPY) -S -O binary $(call to_out_obj,boot/bootblock) $(call outfile,boot/bootblock)
+	$(call to_out_target,sign) $(call outfile,boot/bootblock) $(target_bootblock)
 
-$(call rule_create_target,bootblock)
+$(call rule_link_target,bootblock)
 
 # +++ sign tools +++
 $(call rule_compile_files_hostcc,tools,tools/sign.c)
-$(call rule_create_target_host,sign,tools/sign)
+$(call rule_link_target_host,sign,tools/sign)
 
 # +++ mkfs tools +++
 $(call rule_compile_files_hostcc,tools,tools/mksfs.c,mksfs,mksfs)
-$(call rule_create_target_host,mksfs,mksfs)
+$(call rule_link_target_host,mksfs,mksfs)
 
 # +++ create ucore.img +++
-$(UCOREIMG): $(kernel) $(bootblock)
+$(target_ucoreimg): $(target_kernel) $(target_bootblock)
 	$(V)dd if=/dev/zero of=$@ count=10000 bs=512
-	$(V)dd if=$(bootblock) of=$@ conv=notrunc
-	$(V)dd if=$(kernel) of=$@ seek=1 conv=notrunc
+	$(V)dd if=$(target_bootblock) of=$@ conv=notrunc
+	$(V)dd if=$(target_kernel) of=$@ seek=1 conv=notrunc
 
-$(call rule_create_target,ucore.img)
+$(call rule_link_target,ucore.img)
 
 # +++ create swap.img +++
 $(SWAPIMG):
 	$(V)dd if=/dev/zero of=$@ bs=1M count=128
 
-$(call rule_create_target,swap.img)
+$(call rule_link_target,swap.img)
 
 # +++ create sfs.img +++
 $(foreach p,$(USER_BINS),$(eval $(call fscopy,$(p),$(SLASH))))
@@ -186,7 +186,7 @@ $(SFSIMG): $(SFSROOT) $(SFSBINS) | $(call to_out_target,mksfs)
 	$(V)dd if=/dev/zero os=$@ bs=1M count=128
 	@$(call to_out_target,mksfs) $@ $(SFSROOT)
 
-$(call rule_create_target,sfs.img)
+$(call rule_link_target,sfs.img)
 
 # +++ finish +++
 $(call rule_finish_all)
@@ -194,13 +194,13 @@ $(call rule_finish_all)
 # +++ qemu +++
 .PHONY: qemu qemu-nox debug debug-nox monitor lines
 
-qemu: $(UCOREIMG) $(SWAPIMG) $(SFSIMG)
+qemu: $(target_ucoreimg) $(SWAPIMG) $(SFSIMG)
 	$(V)$(QEMU) -serial stdio $(QEMUOPTS) -serial null
 
-qemu-nox: $(UCOREIMG) $(SWAPIMG) $(SFSIMG)
+qemu-nox: $(target_ucoreimg) $(SWAPIMG) $(SFSIMG)
 	$(V)$(QEMU) -serial mon:stdio $(QEMUOPTS) -nographic
 
-debug: $(UCOREIMG) $(SWAPIMG) $(SFSIMG)
+debug: $(target_ucoreimg) $(SWAPIMG) $(SFSIMG)
 	$(V)$(QEMU) -S -s -parallel stdio $(QEMUOPTS) -serial null &
 	$(V)sleep 2
 	$(V)$(TERMINAL) -e "$(GDB) -q -x tools/gdbinit"
@@ -210,7 +210,7 @@ debug-bootblock: $(bootblock)
 	sleep 1
 	$(TERMINAL) -e "gdb -q -x tools/gdbinit"
 
-debug-nox: $(UCOREIMG) $(SWAPIMG) $(SFSIMG)
+debug-nox: $(target_ucoreimg) $(SWAPIMG) $(SFSIMG)
 	$(V)$(QEMU) -S -s -parallel stdio $(QEMUOPTS) -nographic &
 	$(V)sleep 2
 	$(V)$(TERMINAL) -e "$(GDB) -q -x tools/gdbinit"

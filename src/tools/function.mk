@@ -34,10 +34,10 @@ ALLDEPS_$(1) += $$(call to_out_dep,$(2))
 ALLOBJS += $$(call to_out_obj,$(2))
 ALLDEPS += $$(call to_out_dep,$(2))
 $$(call to_out_dep,$(2)): $(2) | $$$$(dir $$$$@)
-	@echo + cc $(2) => deps $$<
+	@echo + cc $@ : $$^
 	@$(V)$(3) -I$$(dir $(2)) $(4) -MM $$< -MT "$$(patsubst %.d,%.o,$$@) $$@" > $$@
 $$(call to_out_obj,$(2)): $(2) | $$$$(dir $$$$@)
-	@echo + cc $(2) => obj $$<
+	@echo + cc $@ : $$^
 	@$(V)$(3) -I$$(dir $(2)) $(4) -c $$< -o $$@
 endef
 
@@ -59,7 +59,7 @@ rule_compile_files_hostcc = $(call rule_compile_files,$(1),$(2),$(HOSTCC),$(HOST
 # -------------------------------------------------------------------------
 # add packet and objs to target
 # (target, #objs, cc, [, flags])
-define template_do_create_target
+define template_do_link_target
 ifneq ($(3),)
 $$(call to_out_target,$(1)): $$(call to_out_obj,$(2)) | $$$$(dir $$$$@)
 	$(V)$(3) $(4) $$^ -o $$@
@@ -69,11 +69,11 @@ endif
 endef
 
 # (target, #objs, cc, [, flags])
-rule_create_target = $(eval $(call template_do_create_target,$(1),$(2),$(3),$(4)))
+rule_link_target = $(eval $(call template_do_link_target,$(1),$(2),$(3),$(4)))
 # (target, #objs)
-rule_create_target_cc = $(call rule_create_target,$(1),$(2),$(CC),$(CFLAGS))
+rule_link_target_cc = $(call rule_link_target,$(1),$(2),$(CC),$(CFLAGS))
 # (target, #objs)
-rule_create_target_host = $(call rule_create_target,$(1),$(2),$(HOSTCC),$(HOSTCFLAGS))
+rule_link_target_host = $(call rule_link_target,$(1),$(2),$(HOSTCC),$(HOSTCFLAGS))
 # -------------------------------------------------------------------------
 # finish all
 define tempalte_do_finish_all
