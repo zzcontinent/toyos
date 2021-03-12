@@ -164,7 +164,7 @@ $(call rule_link_target_host,mksfs,mksfs)
 
 # +++ create ucore.img +++
 $(target_ucoreimg): $(target_kernel) $(target_bootblock)
-	$(V)dd if=/dev/zero of=$@ count=10000 bs=512
+	$(V)dd if=/dev/zero of=$@ count=1 bs=5M
 	$(V)dd if=$(target_bootblock) of=$@ conv=notrunc
 	$(V)dd if=$(target_kernel) of=$@ seek=1 conv=notrunc
 
@@ -200,13 +200,23 @@ qemu: $(target_ucoreimg) $(SWAPIMG) $(SFSIMG)
 qemu-nox: $(target_ucoreimg) $(SWAPIMG) $(SFSIMG)
 	$(V)$(QEMU) -serial mon:stdio $(QEMUOPTS) -nographic
 
+qemu-ucore-nox:  $(target_ucoreimg)
+	$(V)$(QEMU) -serial stdio -hda $< -serial null
+
 debug: $(target_ucoreimg) $(SWAPIMG) $(SFSIMG)
 	$(V)$(QEMU) -S -s -parallel stdio $(QEMUOPTS) -serial null &
 	$(V)sleep 2
 	$(V)$(TERMINAL) -e "$(GDB) -q -x tools/gdbinit"
 
 debug-bootblock: $(bootblock)
-	$(V)$(QEMU) -S -s -serial mon:stdio -hda out/bin/bootblock -nographic &
+	make qemukill
+	$(V)$(QEMU) -S -s -serial mon:stdio -hda out/target/bootblock -nographic &
+	sleep 1
+	$(TERMINAL) -e "gdb -q -x tools/gdbinit"
+
+debug-ucore: $(target_ucoreimg)
+	make qemukill
+	$(V)$(QEMU) -S -s -serial mon:stdio -hda $< -nographic &
 	sleep 1
 	$(TERMINAL) -e "gdb -q -x tools/gdbinit"
 
@@ -214,6 +224,9 @@ debug-nox: $(target_ucoreimg) $(SWAPIMG) $(SFSIMG)
 	$(V)$(QEMU) -S -s -parallel stdio $(QEMUOPTS) -nographic &
 	$(V)sleep 2
 	$(V)$(TERMINAL) -e "$(GDB) -q -x tools/gdbinit"
+
+qemukill:
+	-@ps ax | grep qemu-system-i386 | grep -v grep | awk '{print $$1}' | xargs kill -9 2>/dev/null
 
 lines:
 	@find -type f | grep -E 'c$$|h$$|S$$'| xargs wc | sort -k1 -n
