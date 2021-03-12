@@ -137,8 +137,8 @@ $(target_kernel): tools/kernel.ld
 $(target_kernel): $(ALLOBJS_kernel)
 	@echo + ld $@ : $^
 	$(V)$(LD) $(LDFLAGS) -T tools/kernel.ld -o $@ $(ALLOBJS_kernel)
-	@$(OBJDUMP) -S $@ > $(call asmfile,kernel)
-	@$(OBJDUMP) -t $@ | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > $(call symfile,kernel)
+	@$(OBJDUMP) -S $@ > $(call asmfile,kern/kernel)
+	@$(OBJDUMP) -t $@ | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > $(call symfile,kern/kernel)
 
 $(call rule_link_target,kernel)
 
