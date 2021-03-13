@@ -7,6 +7,7 @@ SECTIONS {
 	.text : {
 		*(.text .stub .text.* .gnu.linkonce.t.*)
 	}
+
 	PROVIDE(etext = .); /* define the 'etext' symbol to this value */
 
 	.rodata : {

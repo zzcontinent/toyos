@@ -3,6 +3,7 @@
 # +++ cc +++
 GCCPREFIX := ''
 QEMU := qemu-system-i386
+V := @
 
 .SUFFIXES: .c .S .h
 .DELETE_ON_ERROR:
@@ -106,8 +107,8 @@ $$(__user_bin__): tools/user.ld
 $$(__user_bin__): $$(UOBJS)
 $$(__user_bin__): $(1) | $$$$(dir $$$$@)
 	$(V)$(LD) $(LDFLAGS) -T tools/user.ld -o $$@ $$(UOBJS) $(1)
-	@$(OBJDUMP) -S $$@ > $$(call swaptype,$$<,o,asm)
-	@$(OBJDUMP) -t $$@ | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$$$/d' > $$(call swaptype,$$<,o,sym)
+	$(V)$(OBJDUMP) -S $$@ > $$(call swaptype,$$<,o,asm)
+	$(V)$(OBJDUMP) -t $$@ | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$$$/d' > $$(call swaptype,$$<,o,sym)
 endef
 
 # +++ sfs copy +++
@@ -137,8 +138,8 @@ $(target_kernel): tools/kernel.ld
 $(target_kernel): $(ALLOBJS_kernel)
 	@echo + ld $@ : $^
 	$(V)$(LD) $(LDFLAGS) -T tools/kernel.ld -o $@ $(ALLOBJS_kernel)
-	@$(OBJDUMP) -S $@ > $(call asmfile,kern/kernel)
-	@$(OBJDUMP) -t $@ | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > $(call symfile,kern/kernel)
+	$(V)$(OBJDUMP) -S $@ > $(call asmfile,kern/kernel)
+	$(V)$(OBJDUMP) -t $@ | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > $(call symfile,kern/kernel)
 
 $(call rule_link_target,kernel)
 
@@ -148,9 +149,9 @@ $(call rule_compile_files,bootblock,$(bootfiles),$(CC),$(CFLAGS) -Os -nostdinc)
 $(target_bootblock): $(call to_out_obj,$(bootfiles)) | $(call to_out_target,sign)
 	@echo + ld $@ : $^
 	$(V)$(LD) $(LDFLAGS) -N -T tools/boot.ld $^ -o $(call to_out_obj,boot/bootblock)
-	@$(OBJDUMP) -S $(call to_out_obj,boot/bootblock) > $(call asmfile,boot/bootblock)
-	@$(OBJCOPY) -S -O binary $(call to_out_obj,boot/bootblock) $(call outfile,boot/bootblock)
-	$(call to_out_target,sign) $(call outfile,boot/bootblock) $(target_bootblock)
+	$(V)$(OBJDUMP) -S $(call to_out_obj,boot/bootblock) > $(call asmfile,boot/bootblock)
+	$(V)$(OBJCOPY) -S -O binary $(call to_out_obj,boot/bootblock) $(call outfile,boot/bootblock)
+	$(V)$(call to_out_target,sign) $(call outfile,boot/bootblock) $(target_bootblock)
 
 $(call rule_link_target,bootblock)
 
@@ -184,7 +185,7 @@ $(SFSROOT):
 
 $(SFSIMG): $(SFSROOT) $(SFSBINS) | $(call to_out_target,mksfs)
 	$(V)dd if=/dev/zero os=$@ bs=1M count=128
-	@$(call to_out_target,mksfs) $@ $(SFSROOT)
+	$(V)$(call to_out_target,mksfs) $@ $(SFSROOT)
 
 $(call rule_link_target,sfs.img)
 
