@@ -18,7 +18,7 @@ static void read_sect(void* dst, uint32_t secnum)
     outb(0x1F3, secnum & 0xFF);
     outb(0x1F4, (secnum >> 8) & 0xFF);
     outb(0x1F5, (secnum >> 16) & 0xFF);
-    outb(0x1F6, ((secnum >> 24) & 0xFF) | 0xE0);
+    outb(0x1F6, ((secnum >> 24) & 0xF) | 0xE0);
     outb(0x1F7, 0x20);  // cmd 0x20 - read sectors
 
     waitdisk();

@@ -29,7 +29,7 @@ static inline uint16_t inw(uint16_t port)
 static inline void insl(uint32_t port, void* addr, int cnt)
 {
 	asm volatile("cld;"
-			"repne: insl;"
+			"repne; insl;"
 			: "=D"(addr), "=c"(cnt)
 			: "d"(port), "0"(addr), "1"(cnt)
 			: "memory", "cc");
