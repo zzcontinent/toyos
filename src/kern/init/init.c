@@ -24,7 +24,7 @@ int kern_init(void)
 	const char* message = "toyos is loading ...";
 	cprintf("%s\n", message);
 
-	//print_kerninfo();
+	print_kerninfo();
 	//print_stackframe();
 
 	//pmm_init();
