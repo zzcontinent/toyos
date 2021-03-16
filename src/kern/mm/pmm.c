@@ -1,14 +1,14 @@
 #include <assert.h>
-#include <pmm.h>
-#include <vmm.h>
-#include <kmalloc.h>
+#include <default_pmm.h>
 #include <defs.h>
-#include <x86.h>
-#include <stdio.h>
-#include <string.h>
+#include <kmalloc.h>
 #include <memlayout.h>
 #include <mmu.h>
-#include <default_pmm.h>
+#include <pmm.h>
+#include <stdio.h>
+#include <string.h>
+#include <vmm.h>
+#include <x86.h>
 
 /*
  * Task State Segment
@@ -23,9 +23,9 @@
  * When an interrupt happens in protected mode, the x86 CPU will look in the
  * TSS for SS0 and ESP0 and load their value into SS and ESP respectively.
  * */
-static struct taskstate ts = {0};
+static struct taskstate ts = { 0 };
 
-// virtual address of physicall page array
+// virtual address of physical page array
 struct Page* pages;
 // amount of physical memory(in pages)
 size_t npage = 0;
@@ -45,7 +45,7 @@ const struct pmm_manager* pmm_manager;
  * Thus, the page directory is treated as a page table as well as a
  * page directory.
  * */
-pde_t* const vpd = (pde_t*)PGADDR(PDX(VPT),PDX(VPT),0);
+pde_t* const vpd = (pde_t*)PGADDR(PDX(VPT), PDX(VPT), 0);
 pte_t* const vpt = (pte_t*)VPT; // 1111 1010 1100 0000 0000 0000 0000 0000
 
 /*
@@ -68,7 +68,7 @@ static struct segdesc gdt[] = {
 	[SEG_TSS] = SEG_NULL,
 };
 
-static struct pseudodesc_gdt_pd = {
+static struct pseudodesc gdt_pd = {
 	sizeof(gdt) - 1, (uintptr_t)gdt
 };
 
@@ -82,14 +82,143 @@ static void check_boot_pgdir(void);
  * */
 static inline void lgdt(struct pseudodesc* pd)
 {
-	asm volatile("lgdt (%0)" :: "r" (pd));
-	asm volatile("movw %%ax, %%gs" :: "a" (USER_DS));
-	asm volatile("movw %%ax, %%fs" :: "a" (USER_DS));
-	asm volatile("movw %%ax, %%es" :: "a" (KERNEL_DS));
-	asm volatile("movw %%ax, %%ds" :: "a" (KERNEL_DS));
-	asm volatile("movw %%ax, %%ss" :: "a" (KERNEL_DS));
+	asm volatile("lgdt (%0)" ::"r"(pd));
+	asm volatile("movw %%ax, %%gs" ::"a"(USER_DS));
+	asm volatile("movw %%ax, %%fs" ::"a"(USER_DS));
+	asm volatile("movw %%ax, %%es" ::"a"(KERNEL_DS));
+	asm volatile("movw %%ax, %%ds" ::"a"(KERNEL_DS));
+	asm volatile("movw %%ax, %%ss" ::"a"(KERNEL_DS));
 	// reload cs
-	asm volatile("ljmp %0, $1f\n 1:\n" :: "i" (KERNEL_CS));
+	asm volatile("ljmp %0, $1f\n 1:\n" ::"i"(KERNEL_CS));
 }
 
+void load_esp0(uintptr_t esp0)
+{
+	ts.ts_esp0 = esp0;
+}
+
+static void gdt_init(void)
+{
+	// set boot kernel stack and default SS0
+	load_esp0((uintptr_t)bootstacktop);
+	ts.ts_ss0 = KERNEL_DS;
+
+	// initialize the TSS field of the gdt
+	gdt[SEG_TSS] = SEGTSS(STS_T32A, (uintptr_t)&ts, sizeof(ts), DPL_KERNEL);
+
+	// reload all segment registers
+	lgdt(&gdt_pd);
+
+	// load the TSS
+	ltr(GD_TSS);
+}
+
+static void init_pmm_manager(void)
+{
+	pmm_manager = &default_pmm_manager;
+	cprintf("memory management: %s\n", pmm_manager->name);
+	pmm_manager->init();
+}
+
+// get pte and return the kernel virtual address of this pte for la
+// if the PT contains this pte didn't exist, alloc a page for PT
+// pgdir: the kernel virtual base address of PDT
+// la:    the linear address need to map
+// create:if alloc a page for PT
+// return: the kernel virtual address of this pte
+pte_t* get_pte(pde_t* pgdir, uintptr_t la, bool create)
+{
+	pde_t* pdep = &pgdir[PDX(la)];
+	if (!(*pdep & PTE_P)) {
+		struct Page* page;
+		if (!create || (page == alloc_page()) == NULL) {
+			return NULL;
+		}
+		set_page_ref(page, 1);
+		uintptr_t pa = page2pa(page);
+		memset(KADDR(pa), 0, PGSIZE);
+		*pdep = pa | PTE_U | PTE_W | PTE_P;
+	}
+	return &((pte_t*)KADDR(PDE_ADDR(*pdep)))[PTX(la)];
+}
+
+/*
+ * setup & enable the paging machanism
+ * la: linear address of this memory need to map (after x86 segment map)
+ * size: memory size
+ * pa: physical address of this memory
+ * perm: permission of this memory
+ * */
+static void boot_map_segment(pde_t* pgdir, uintptr_t la, size_t size, uintptr_t pa, uint32_t perm)
+{
+	assert(PGOFF(la) == PGOFF(pa));
+	size_t n = ROUNDUP(size + PGOFF(la), PGSIZE) / PGSIZE;
+	la = ROUNDDOWN(la, PGSIZE);
+	pa = ROUNDDOWN(pa, PGSIZE);
+	for (; n > 0; n--, la += PGSIZE, pa += PGSIZE) {
+		pte_t* ptep = get_pte(pgdir, la, 1);
+		assert(ptep != NULL);
+		*ptep = pa | PTE_P | perm;
+	}
+}
+
+// initialize the physical memory management
+static void page_init(void)
+{
+	struct e820map *memmap = (struct e820map*)(0x8000 + KERNBASE);
+	uint64_t maxpa = 0;
+	cprintf("e820map:\n");
+	int i;
+	for (i=0; i< memmap->nr_map; i++)
+	{
+		uint64_t begin = memmap->map[i].addr, end=begin + memcmp->map[i].size;
+		cprintf("|-  memory: %08llx, [%08llx, %0xllx], type = %d.\n",
+				memmap->map[i].size, begin, end-1, memmap->map[i].type)
+		if (memmap->map[i].type == E820_ARM)
+		{
+			if (maxpa < end && begin < KMEMSIZE)
+			{
+				maxpa = end;
+			}
+		}
+	}
+	if (maxpa > KMEMSIZE)
+	{
+		maxpa = KMEMSIZE;
+	}
+	extern char end[];
+	npage = maxpa / PGSIZE;
+	pages = (struct Page*) ROUNDUP((void*)end, PGSIZE);
+	for (i=0; i< npage; i++)
+	{
+		SetPageReserved(pages +i);
+	}
+}
+
+// allocate one page using pmm->alloc_pages(1)
+// return: the kernel virtual address of this allocated page
+// note: this function is used to get the memory for PDT and PT
+static void* boot_alloc_page(void)
+{
+	struct Page* p = alloc_page();
+	if (p == NULL)
+	{
+		panic("boot_alloc_page failed.\n")
+	}
+	return page2kva(p);
+}
+
+void pmm_init(void)
+{
+	// we've enabled paging
+	boot_cr3 = PADDR(boot_pgdir);
+
+	// alloc/free the physical memory(4KB)
+	// a framework of physical memory manager (struct pmm_manager) is defined in pmm.h
+	init_pmm_manager();
+
+	// detect physical memory space, reserve already used memory,
+	// use pmm->init_memmap to create free page list
+	page_init();
+}
 
