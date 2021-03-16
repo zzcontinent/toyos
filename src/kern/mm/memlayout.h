@@ -1,6 +1,8 @@
 #ifndef __KERN_MM_MEMLAYOUT_H__
 #define __KERN_MM_MEMLAYOUT_H__
 
+#include <mmu.h>
+
 /* global segment number */
 #define SEG_KTEXT 1
 #define SEG_KDATA 2
@@ -13,7 +15,7 @@
 #define GD_KDATA  ((SEG_KDATA) << 3)	// kernel data
 #define GD_UTEXT  ((SEG_UTEXT) << 3)	// user text
 #define GD_UDATA  ((SEG_UDATA) << 3)	// user data
-#define GD_TSS  ((SEGTSS) << 3)         // task segment seletoc
+#define GD_TSS  ((SEG_TSS) << 3)         // task segment seletoc
 
 #define DPL_KERNEL (0)
 #define DPL_USER (3)

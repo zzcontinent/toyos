@@ -41,7 +41,7 @@ typedef size_t ppn_t;
 #define ROUNDDOWN(a, n)              \
 	({                               \
 	size_t __a = (size_t)(a);    \
-	(typeof(a))(__a - __a % (n)) \
+	(typeof(a))(__a - __a % (n)); \
 	})
 
 #define ROUNDUP(a, n)                                     \
