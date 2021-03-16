@@ -162,6 +162,21 @@ static void boot_map_segment(pde_t* pgdir, uintptr_t la, size_t size, uintptr_t 
 	}
 }
 
+/*
+ * allocate one page using pmm->alloc_pages(1)
+ * return: the kernel virtual address of this allocated page
+ * note: this function is used to get the memory for PDT and PT
+ * */
+static void* boot_alloc_page(void)
+{
+	struct Page* p = alloc_page();
+	if (p == NULL)
+	{
+		panic("boot_alloc_page failed.\n");
+	}
+	return page2kva(p);
+}
+
 // initialize the physical memory management
 static void page_init(void)
 {
@@ -171,9 +186,9 @@ static void page_init(void)
 	int i;
 	for (i=0; i< memmap->nr_map; i++)
 	{
-		uint64_t begin = memmap->map[i].addr, end=begin + memcmp->map[i].size;
+		uint64_t begin = memmap->map[i].addr, end=begin + memmap->map[i].size;
 		cprintf("|-  memory: %08llx, [%08llx, %0xllx], type = %d.\n",
-				memmap->map[i].size, begin, end-1, memmap->map[i].type)
+				memmap->map[i].size, begin, end-1, memmap->map[i].type);
 		if (memmap->map[i].type == E820_ARM)
 		{
 			if (maxpa < end && begin < KMEMSIZE)
@@ -195,18 +210,37 @@ static void page_init(void)
 	}
 }
 
-// allocate one page using pmm->alloc_pages(1)
-// return: the kernel virtual address of this allocated page
-// note: this function is used to get the memory for PDT and PT
-static void* boot_alloc_page(void)
+static void check_alloc_page(void)
 {
-	struct Page* p = alloc_page();
-	if (p == NULL)
-	{
-		panic("boot_alloc_page failed.\n")
-	}
-	return page2kva(p);
+	pmm_manager->check();
+	cprintf("check_alloc_page succeed!\n");
 }
+
+static void check_pgdir(void)
+{
+	assert(npage <= KMEMSIZE / PGSIZE);
+	assert(boot_pgdir != NULL && (uint32_t)PGOFF(boot_pgdir) == 0);
+	assert(get_page(boot_pgdir, 0x0, NULL) == NULL);
+
+	struct Page *p1, *p2;
+	p1 = alloc_page();
+	assert(page_insert(boot_pgdir, p1, 0x0, 0) == 0);
+
+	pte_t *ptep;
+	assert((ptep = get_pte(boot_pgdir, 0x0, 0)) != NULL);
+	assert(pte2page(*ptep) == p1);
+	assert(page_ref(p1) == 1);
+	ptep = &((pte_t*)KADDR(PDE_ADDR(boot_pgdir[0])))[1];
+	assert(get_pte(boot_pgdir, PGSIZE, 0) == ptep);
+
+	p2 = alloc_page();
+	assert(page_insert(boot_pgdir, p2, PGSIZE, PTE_U| PTE_W) == 0);
+	assert((ptep = get_pte(boot_pgdir, PGSIZE, 0)) != NULL);
+	assert(*ptep & PTE_U);
+	assert(*ptep & PTE_W);
+	assert(boot_pgdir[0] & PTE_U);
+}
+
 
 void pmm_init(void)
 {
@@ -220,5 +254,10 @@ void pmm_init(void)
 	// detect physical memory space, reserve already used memory,
 	// use pmm->init_memmap to create free page list
 	page_init();
+
+	// use pmm->check to verify the correctness of the alloc/freee function in a pmm
+	check_alloc_page();
+	check_pgdir();
+
 }
 
