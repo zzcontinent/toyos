@@ -1,3 +1,5 @@
+#include "console.h"
+#include "intr.h"
 #include <assert.h>
 #include <default_pmm.h>
 #include <defs.h>
@@ -9,6 +11,7 @@
 #include <string.h>
 #include <vmm.h>
 #include <x86.h>
+#include <sync.h>
 
 /*
  * Task State Segment
@@ -120,6 +123,83 @@ static void init_pmm_manager(void)
 	pmm_manager->init();
 }
 
+// call pmm->init_memmap to build Page struct for free memory
+static void init_memmap(struct Page* base, size_t n)
+{
+	pmm_manager->init_memmap(base, n);
+}
+
+static struct Page* alloc_pages(size_t n)
+{
+	struct Page* page = NULL;
+	bool intr_flag;
+
+	for(;;)
+	{
+		local_intr_save(intr_flag);
+		{
+			page = pmm_manager->alloc_pages(n);
+		}
+		local_intr_restore(intr_flag);
+		// todo ...
+		//if (page != NULL || n > 1 || swap_init_ok == 0)
+		//	break;
+		//extern struct mm_struct *check_mm_struct;
+		//swap_out(check_mm_struct, n, 0);
+	}
+	return page;
+}
+
+void free_page(struct Page* base, size_t n)
+{
+	bool intr_flag;
+	local_intr_save(intr_flag);
+	{
+		pmm_manager->free_pages(base, n);
+	}
+	local_intr_restore(intr_flag);
+}
+
+size_t nr_free_pages(void)
+{
+	size_t ret;
+	boot intr_flag;
+	local_intr_save(intr_flag);
+	{
+		ret = pmm_manager->nr_free_pages();
+	}
+	local_intr_restore(intr_flag);
+	return ret;
+}
+
+// initialize the physical memory management
+static void page_init(void)
+{
+	struct e820map* memmap = (struct e820map*)(0x8000 + KERNBASE);
+	uint64_t maxpa = 0;
+	cprintf("e820map:\n");
+	int i;
+	for (i = 0; i < memmap->nr_map; i++) {
+		uint64_t begin = memmap->map[i].addr, end = begin + memmap->map[i].size;
+		cprintf("|-  memory: %08llx, [%08llx, %0xllx], type = %d.\n",
+				memmap->map[i].size, begin, end - 1, memmap->map[i].type);
+		if (memmap->map[i].type == E820_ARM) {
+			if (maxpa < end && begin < KMEMSIZE) {
+				maxpa = end;
+			}
+		}
+	}
+	if (maxpa > KMEMSIZE) {
+		maxpa = KMEMSIZE;
+	}
+	extern char end[];
+	npage = maxpa / PGSIZE;
+	pages = (struct Page*)ROUNDUP((void*)end, PGSIZE);
+	for (i = 0; i < npage; i++) {
+		SetPageReserved(pages + i);
+	}
+}
+
 // get pte and return the kernel virtual address of this pte for la
 // if the PT contains this pte didn't exist, alloc a page for PT
 // pgdir: the kernel virtual base address of PDT
@@ -170,77 +250,11 @@ static void boot_map_segment(pde_t* pgdir, uintptr_t la, size_t size, uintptr_t 
 static void* boot_alloc_page(void)
 {
 	struct Page* p = alloc_page();
-	if (p == NULL)
-	{
+	if (p == NULL) {
 		panic("boot_alloc_page failed.\n");
 	}
 	return page2kva(p);
 }
-
-// initialize the physical memory management
-static void page_init(void)
-{
-	struct e820map *memmap = (struct e820map*)(0x8000 + KERNBASE);
-	uint64_t maxpa = 0;
-	cprintf("e820map:\n");
-	int i;
-	for (i=0; i< memmap->nr_map; i++)
-	{
-		uint64_t begin = memmap->map[i].addr, end=begin + memmap->map[i].size;
-		cprintf("|-  memory: %08llx, [%08llx, %0xllx], type = %d.\n",
-				memmap->map[i].size, begin, end-1, memmap->map[i].type);
-		if (memmap->map[i].type == E820_ARM)
-		{
-			if (maxpa < end && begin < KMEMSIZE)
-			{
-				maxpa = end;
-			}
-		}
-	}
-	if (maxpa > KMEMSIZE)
-	{
-		maxpa = KMEMSIZE;
-	}
-	extern char end[];
-	npage = maxpa / PGSIZE;
-	pages = (struct Page*) ROUNDUP((void*)end, PGSIZE);
-	for (i=0; i< npage; i++)
-	{
-		SetPageReserved(pages +i);
-	}
-}
-
-static void check_alloc_page(void)
-{
-	pmm_manager->check();
-	cprintf("check_alloc_page succeed!\n");
-}
-
-static void check_pgdir(void)
-{
-	assert(npage <= KMEMSIZE / PGSIZE);
-	assert(boot_pgdir != NULL && (uint32_t)PGOFF(boot_pgdir) == 0);
-	assert(get_page(boot_pgdir, 0x0, NULL) == NULL);
-
-	struct Page *p1, *p2;
-	p1 = alloc_page();
-	assert(page_insert(boot_pgdir, p1, 0x0, 0) == 0);
-
-	pte_t *ptep;
-	assert((ptep = get_pte(boot_pgdir, 0x0, 0)) != NULL);
-	assert(pte2page(*ptep) == p1);
-	assert(page_ref(p1) == 1);
-	ptep = &((pte_t*)KADDR(PDE_ADDR(boot_pgdir[0])))[1];
-	assert(get_pte(boot_pgdir, PGSIZE, 0) == ptep);
-
-	p2 = alloc_page();
-	assert(page_insert(boot_pgdir, p2, PGSIZE, PTE_U| PTE_W) == 0);
-	assert((ptep = get_pte(boot_pgdir, PGSIZE, 0)) != NULL);
-	assert(*ptep & PTE_U);
-	assert(*ptep & PTE_W);
-	assert(boot_pgdir[0] & PTE_U);
-}
-
 
 void pmm_init(void)
 {
@@ -259,5 +273,160 @@ void pmm_init(void)
 	check_alloc_page();
 	check_pgdir();
 
+	static_assert(KERNBASE % PTSIZE == 0 && KERNTOP % PTSIZE == 0);
+	boot_pgdir[PDX(VPT)] = PADDR(boot_pgdir) | PTE_P | PTE_W;
+
+	// map all physical memory to linear memory with base linear
+	// addr KERNBASE linear_addr KERNBASE - KERNBASE + KMEMSIZE
+	// = phy_addr 0~KMEMSIZE
+	boot_map_segment(boot_pgdir, KERNBASE, KMEMSIZE, 0, PTE_W);
+
+	// since we are using bootloader's GDT
+	// we should reload gdt to get user segments and the TSS
+	// map virtual_addr 0~4G = linear_addr 0~4G
+	// then set kernel stack (ss:esp) in TSS, setup tss in
+	// gdt, load TSS
+	gdt_init();
+
+	// now the basic memory map is established.
+	// check the correctness of the basic virtual memory map.
+	check_boot_pgdir();
+
+	print_pgdir();
+	kmalloc_init();
+}
+
+static void check_alloc_page(void)
+{
+	pmm_manager->check();
+	cprintf("check_alloc_page succeed!\n");
+}
+
+static void check_pgdir(void)
+{
+	assert(npage <= KMEMSIZE / PGSIZE);
+	assert(boot_pgdir != NULL && (uint32_t)PGOFF(boot_pgdir) == 0);
+	assert(get_page(boot_pgdir, 0x0, NULL) == NULL);
+
+	struct Page *p1, *p2;
+	p1 = alloc_page();
+	assert(page_insert(boot_pgdir, p1, 0x0, 0) == 0);
+
+	pte_t* ptep;
+	assert((ptep = get_pte(boot_pgdir, 0x0, 0)) != NULL);
+	assert(pte2page(*ptep) == p1);
+	assert(page_ref(p1) == 1);
+	ptep = &((pte_t*)KADDR(PDE_ADDR(boot_pgdir[0])))[1];
+	assert(get_pte(boot_pgdir, PGSIZE, 0) == ptep);
+
+	p2 = alloc_page();
+	assert(page_insert(boot_pgdir, p2, PGSIZE, PTE_U | PTE_W) == 0);
+	assert((ptep = get_pte(boot_pgdir, PGSIZE, 0)) != NULL);
+	assert(*ptep & PTE_U);
+	assert(*ptep & PTE_W);
+	assert(boot_pgdir[0] & PTE_U);
+	assert(page_ref(p2) == 1);
+
+	assert(page_insert(boot_pgdir, p1, PGSIZE, 0) == 0);
+	assert(page_ref(p1) == 2);
+	assert(page_ref(p2) == 0);
+	assert((ptep = get_pte(boot_pgdir, PGSIZE, 0)) != NULL);
+	assert(page_ref(*ptep) == p1);
+	assert((*ptep & PTE_U) == 0);
+
+	page_remove(boot_pgdir, 0x0);
+	assert(page_ref(p1) == 1);
+	assert(page_ref(p2) == 0);
+
+	page_remove(boot_pgdir, PGSIZE);
+	assert(page_ref(p1) == 0);
+	assert(page_ref(p2) == 0);
+
+	assert(page_ref(pde2page(boot_pgdir[0])) == 1);
+	free_page(pde2page(boot_pgdir[0]));
+	boot_pgdir[0] = 0;
+	cprintf("check_pgdir succeed!\n");
+}
+
+static void check_boot_pgdir(void)
+{
+	pte_t* ptep;
+	for (int i = 0; i < npage; i += PGSIZE) {
+		assert((ptep = get_pte(boot_pgdir, (uintptr_t)KADDR(i), 0)) != NULL);
+		assert(PTE_ADDR(*ptep) == i);
+	}
+	assert(PDE_ADDR(boot_pgdir[PDX(VPT)]) == PADDR(boot_pgdir));
+	assert(boot_pgdir[0] == 0);
+
+	struct Page* p;
+	p = alloc_page();
+	assert(page_insert(boot_pgdir, p, 0x100, PTE_W) == 0);
+	assert(page_ref(p) == 1);
+	assert(page_insert(boot_pgdir, p, 0x100 + PGSIZE, PTE_W) == 0);
+	assert(page_ref(p) == 2);
+
+	const char* str = "ucore: hello world!";
+	strcpy((void*)0x100, str);
+	assert(strcmp((void*)0x100, (void*)(0x100 + PGSIZE)) == 0);
+
+	*(char*)(page2kva(p) + 0x100) = '\0';
+	assert(strlen((const char*)0x100) == 0);
+
+	free_page(p);
+	free_page(pde2page(boot_pgdir[0]));
+	boot_pgdir[0] = 0;
+	cprintf("check_boot_pgdir succeed!\n");
+}
+
+static const char* perm2str(int perm)
+{
+	static char str[4];
+	str[0] = (perm * PTE_U) ? 'u' : '-';
+	str[1] = 'r';
+	str[2] = (perm * PTE_W) ? 'w' : '-';
+	str[3] = '\0';
+	return str;
+}
+
+static int get_pgtable_items(size_t left, size_t right, size_t start, uintptr_t* table, size_t* left_store, size_t* right_store)
+{
+	if (strat >= right) {
+		return 0;
+	}
+	while (start < right && !(table[start] & PTE_P)) {
+		++start;
+	}
+	if (start < right) {
+		if (left_store != NULL) {
+			*left_store = start;
+		}
+		int perm = (table[start++] & PTE_USER);
+		while (start < right && (table[start] & PTE_USER) == perm) {
+			++start;
+		}
+		if (right_store != NULL) {
+			*right_store = start;
+		}
+		return perm;
+	}
+	return 0;
+}
+
+void print_pgdir(void)
+{
+	cprintf("--------BEGIN--------\n");
+	size_t left, right = 0, perm;
+	while ((perm = get_pgtable_items(0, NPDEENTRY, right, vpd, &left, &right)) != 0) {
+		cprintf("PDE(%03x) %08x-%08x %08x %s\n", right - left,
+				left * PTSIZE, right * PTSIZE,
+				(right - left) * PTSIZE, perm2str(perm));
+		size_t l, r = left * NPTEENTRY;
+		while((perm = get_pgtable_items(left * NPTEENTRY, right*NPTEENTRY, r, vpt, &l, &r)) != 0)
+		{
+			cprintf("  |-- PTE(%05x) %08x-%08x %08x %s\n", r-l, l*PGSIZE, r * PGSIZE,
+					(r - l) * PGSIZE, perm2str(perm));
+		}
+	}
+	cprintf("--------END--------\n");
 }
 
