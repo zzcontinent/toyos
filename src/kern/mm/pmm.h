@@ -106,6 +106,11 @@ static inline struct Page* pte2page(pte_t pte)
     return pa2page(PTE_ADDR(pte));
 }
 
+static inline struct Page* pde2page(pde_t pde)
+{
+    return pa2page(PDE_ADDR(pde));
+}
+
 static inline int page_ref(struct Page* page)
 {
     return page->ref;
@@ -118,8 +123,8 @@ static inline void set_page_ref(struct Page* page, int val)
 
 static inline int page_ref_inc(struct Page* page)
 {
-	page->ref += 1;
-	return page->ref;
+    page->ref += 1;
+    return page->ref;
 }
 
 #endif /* __KERN_MM_PMM_H__ */
