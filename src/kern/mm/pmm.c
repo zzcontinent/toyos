@@ -9,9 +9,9 @@
 #include <pmm.h>
 #include <stdio.h>
 #include <string.h>
+#include <sync.h>
 #include <vmm.h>
 #include <x86.h>
-#include <sync.h>
 
 /*
  * Task State Segment
@@ -129,13 +129,13 @@ static void init_memmap(struct Page* base, size_t n)
 	pmm_manager->init_memmap(base, n);
 }
 
-static struct Page* alloc_pages(size_t n)
+// call pmm->alloc_pages to allocate a continuous n*PAGESIZE memory
+struct Page* alloc_pages(size_t n)
 {
 	struct Page* page = NULL;
 	bool intr_flag;
 
-	for(;;)
-	{
+	for (;;) {
 		local_intr_save(intr_flag);
 		{
 			page = pmm_manager->alloc_pages(n);
@@ -150,7 +150,7 @@ static struct Page* alloc_pages(size_t n)
 	return page;
 }
 
-void free_page(struct Page* base, size_t n)
+void free_pages(struct Page* base, size_t n)
 {
 	bool intr_flag;
 	local_intr_save(intr_flag);
@@ -163,7 +163,7 @@ void free_page(struct Page* base, size_t n)
 size_t nr_free_pages(void)
 {
 	size_t ret;
-	boot intr_flag;
+	bool intr_flag;
 	local_intr_save(intr_flag);
 	{
 		ret = pmm_manager->nr_free_pages();
@@ -198,28 +198,6 @@ static void page_init(void)
 	for (i = 0; i < npage; i++) {
 		SetPageReserved(pages + i);
 	}
-}
-
-// get pte and return the kernel virtual address of this pte for la
-// if the PT contains this pte didn't exist, alloc a page for PT
-// pgdir: the kernel virtual base address of PDT
-// la:    the linear address need to map
-// create:if alloc a page for PT
-// return: the kernel virtual address of this pte
-pte_t* get_pte(pde_t* pgdir, uintptr_t la, bool create)
-{
-	pde_t* pdep = &pgdir[PDX(la)];
-	if (!(*pdep & PTE_P)) {
-		struct Page* page;
-		if (!create || (page == alloc_page()) == NULL) {
-			return NULL;
-		}
-		set_page_ref(page, 1);
-		uintptr_t pa = page2pa(page);
-		memset(KADDR(pa), 0, PGSIZE);
-		*pdep = pa | PTE_U | PTE_W | PTE_P;
-	}
-	return &((pte_t*)KADDR(PDE_ADDR(*pdep)))[PTX(la)];
 }
 
 /*
@@ -294,6 +272,123 @@ void pmm_init(void)
 
 	print_pgdir();
 	kmalloc_init();
+}
+
+// get pte and return the kernel virtual address of this pte for la
+// if the PT contains this pte didn't exist, alloc a page for PT
+// pgdir: the kernel virtual base address of PDT
+// la:    the linear address need to map
+// create:if alloc a page for PT
+// return: the kernel virtual address of this pte
+pte_t* get_pte(pde_t* pgdir, uintptr_t la, bool create)
+{
+	pde_t* pdep = &pgdir[PDX(la)];
+	if (!(*pdep & PTE_P)) {
+		struct Page* page;
+		if (!create || (page == alloc_page()) == NULL) {
+			return NULL;
+		}
+		set_page_ref(page, 1);
+		uintptr_t pa = page2pa(page);
+		memset(KADDR(pa), 0, PGSIZE);
+		*pdep = pa | PTE_U | PTE_W | PTE_P;
+	}
+	return &((pte_t*)KADDR(PDE_ADDR(*pdep)))[PTX(la)];
+}
+
+// get related Page struct for linear address la using PDT pgdir
+struct Page* get_page(pde_t* pgdir, uintptr_t la, pte_t** ptep_store)
+{
+	pte_t* ptep = get_pte(pgdir, la, 0);
+	if (ptep_store != NULL) {
+		*ptep_store = ptep;
+	}
+	if (ptep != NULL && *ptep & PTE_P) {
+		return pte2page(*ptep);
+	}
+	return NULL;
+}
+
+// free an Page struct which is related linear address la
+// and clean(invalidate) pte which is related linear address la
+// note: PT is changed, so the TLB need to be invalidate
+static inline void page_remove_pte(pde_t *pgdir, uintptr_t la, pte_t *ptep)
+{
+	if (*ptep & PTE_P)
+	{
+		struct Page *page = pte2page(*ptep);
+		if (page_ref_dec(page))
+		{
+			free_page(page);
+		}
+		*ptep = 0;
+		tlb_invalidate(pgdir, la);
+	}
+}
+
+// invalidate a TLB entry, but only if the page tables being
+// edited are the ones currently in use by the processor.
+void tlb_invalidate(pde_t *pgdir, uintptr_t la)
+{
+	if (rcr3() == PADDR(pgdir))
+	{
+		invlpg((void*)la);
+	}
+}
+
+void unmap_range(pde_t *pgdir, uintptr_t start, uintptr_t end)
+{
+	assert(start %PGSIZE == 0 && end %PGSIZE == 0);
+	assert(USER_ACCESS(start, end));
+	do {
+		pte_t *ptep = get_pte(pgdir, start, 0);
+	} while (start != 0 && start < end);
+}
+
+void exit_range(pde_t *pgdir, uintptr_t start, uintptr_t end)
+{
+	assert(start %PGSIZE == 0 && end %PGSIZE == 0);
+	assert(USER_ACCESS(start, end));
+
+	start = ROUNDDOWN(start, PTSIZE);
+	do {
+		int pde_idx = PDX(start);
+		if (pgdir[pde_idx] & PTE_P)
+		{
+			free_page(pde2page(pgdir[pde_idx]));
+			pgdir[pde_idx] = 0;
+		}
+		start += PTSIZE;
+	} while (start != 0 && start < end);
+}
+
+/*
+ * copy content of memory(start, end) of one process A to another process B
+ * @to: the addr of process B's Page Directory
+ * @from: the addr of process A's Page Directory
+ * @share: flags to indicate to dup OR share. we just use dup.
+ * CALL GRAPH: copy_mm -> dup_mmap -> copy_range
+ * */
+int copy_range(pde_t* to, pde_t *from, uintptr_t start, uintptr_t end, bool share)
+{
+	assert(start %PGSIZE == 0 && end %PGSIZE == 0);
+	assert(USER_ACCESS(start, end));
+
+	do{
+		// call get_pte to find process A's pte according to the addr start
+		pte_t *ptep = get_pte(from, start, 0);
+		pte_t *nptep;
+		if (ptep == NULL)
+		{
+			start = ROUNDDOWN(start + PTSIZE, PTSIZE);
+			continue;
+		}
+		// call get_pte to find process B's pte according to the addr start.
+		// if pte is NULL, just alloc a PT.
+
+
+	} while;
+
 }
 
 static void check_alloc_page(void)
@@ -421,12 +516,10 @@ void print_pgdir(void)
 				left * PTSIZE, right * PTSIZE,
 				(right - left) * PTSIZE, perm2str(perm));
 		size_t l, r = left * NPTEENTRY;
-		while((perm = get_pgtable_items(left * NPTEENTRY, right*NPTEENTRY, r, vpt, &l, &r)) != 0)
-		{
-			cprintf("  |-- PTE(%05x) %08x-%08x %08x %s\n", r-l, l*PGSIZE, r * PGSIZE,
+		while ((perm = get_pgtable_items(left * NPTEENTRY, right * NPTEENTRY, r, vpt, &l, &r)) != 0) {
+			cprintf("  |-- PTE(%05x) %08x-%08x %08x %s\n", r - l, l * PGSIZE, r * PGSIZE,
 					(r - l) * PGSIZE, perm2str(perm));
 		}
 	}
 	cprintf("--------END--------\n");
 }
-
