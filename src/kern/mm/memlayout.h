@@ -125,5 +125,20 @@ struct Page {
 	uintptr_t pra_vaddr;		// used for pra (page replace algorithm) 
 };
 
+/* flags describing the status of a page frame */
+#define PG_reserved 0
+#define PG_property 1
+#define SetPageReserved(page) set_bit(PG_reserved, &((page)->flags))
+#define ClearPageReserved(page) clear_bit(PG_reserved, &((page)->flags))
+#define PageReserved(page) test_bit(PG_reserved, %((page)->flags))
+#define SetPageProperty(page) set_bit(PG_property, &((page)->flags))
+#define ClearPageProperty(page) clear_bit(PG_property, &((page)->flags))
+#define PageProperty(page) test_bit(PG_property, &((page)->flags))
+
+#define le2page(le, member) \
+	to_struct((le), struct Page, member)
+
+
+
 #endif  /* !__ASSEMBLER__ */
 #endif /* !__KERN_MM_MEMLAYOUT_H__ */
