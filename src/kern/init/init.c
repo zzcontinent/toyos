@@ -25,7 +25,7 @@ int kern_init(void)
 	cprintf("%s\n", message);
 
 	print_kerninfo();
-	//print_stackframe();
+	print_stackframe();
 
 	//pmm_init();
 	//pic_init();

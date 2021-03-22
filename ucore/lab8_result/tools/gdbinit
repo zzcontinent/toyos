@@ -1,3 +1,18 @@
-file bin/kernel
+add-symbol-file bin/kernel
+add-symbol-file obj/bootblock.o
 target remote :1234
+break *0x7C00
+break kern_entry
+break bootmain
 break kern_init
+
+tui enable
+layout regs
+
+define hook-stop
+x /6i $pc-6
+#i frame
+x /16wx $esp
+end
+
+#continue

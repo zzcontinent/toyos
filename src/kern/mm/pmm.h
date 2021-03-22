@@ -1,12 +1,11 @@
 #ifndef __KERN_MM_PMM_H__
 #define __KERN_MM_PMM_H__
 
-#include "string.h"
-#include <assert.h>
-#include <atomic.h>
 #include <defs.h>
-#include <memlayout.h>
 #include <mmu.h>
+#include <memlayout.h>
+#include <atomic.h>
+#include <assert.h>
 
 struct pmm_manager {
 	const char* name;
@@ -45,7 +44,7 @@ void tlb_invalidate(pde_t* pgdir, uintptr_t la);
 struct Page* pgdir_alloc_page(pde_t* pgdir, uintptr_t la, uint32_t perm);
 void unmap_range(pde_t* pgdir, uintptr_t start, uintptr_t end);
 void exit_range(pde_t* pgdir, uintptr_t start, uintptr_t end);
-int copy_range(pde_t* to, pde_t* from, uintptr_t start, uintptr_t end, bool, bool share);
+int copy_range(pde_t* to, pde_t* from, uintptr_t start, uintptr_t end, bool share);
 
 void print_pgdir(void);
 

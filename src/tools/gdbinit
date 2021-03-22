@@ -2,6 +2,7 @@ add-symbol-file out/target/kernel
 add-symbol-file out/obj/boot/bootblock.o
 target remote :1234
 break *0x7c00
+break kern_entry
 break bootmain
 break kern_init
 

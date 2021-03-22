@@ -332,7 +332,7 @@ debug: $(UCOREIMG) $(SWAPIMG) $(SFSIMG)
 
 debug-nox: $(UCOREIMG) $(SWAPIMG) $(SFSIMG)
 	$(V)$(QEMU) -S -s -serial mon:stdio $(QEMUOPTS) -nographic &
-	$(V)sleep 2
+	$(V)sleep 1
 	$(V)$(TERMINAL) -e "$(GDB) -q -x tools/gdbinit"
 
 RUN_PREFIX	:= _binary_$(OBJDIR)_$(USER_PREFIX)
