@@ -385,10 +385,9 @@ int copy_range(pde_t* to, pde_t *from, uintptr_t start, uintptr_t end, bool shar
 		}
 		// call get_pte to find process B's pte according to the addr start.
 		// if pte is NULL, just alloc a PT.
-
-
-	} while;
-
+	// todo...
+	} while(1);
+	return 0;
 }
 
 static void check_alloc_page(void)
@@ -485,7 +484,7 @@ static const char* perm2str(int perm)
 
 static int get_pgtable_items(size_t left, size_t right, size_t start, uintptr_t* table, size_t* left_store, size_t* right_store)
 {
-	if (strat >= right) {
+	if (start >= right) {
 		return 0;
 	}
 	while (start < right && !(table[start] & PTE_P)) {

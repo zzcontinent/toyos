@@ -1,8 +1,6 @@
 #ifndef __KERN_MM_MEMLAYOUT_H__
 #define __KERN_MM_MEMLAYOUT_H__
 
-#include <mmu.h>
-
 /* global segment number */
 #define SEG_KTEXT 1
 #define SEG_KDATA 2
@@ -138,6 +136,10 @@ struct Page {
 #define le2page(le, member) \
 	to_struct((le), struct Page, member)
 
+typedef struct{
+	list_entry_t free_list;
+	unsigned int nr_free;
+} free_area_t;
 
 
 #endif  /* !__ASSEMBLER__ */

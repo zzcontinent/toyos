@@ -1,5 +1,5 @@
 #ifndef __KERN_MM_DEFAULT_PMM_H__
-#define  __KERN_MM_DEFAULT_PMM_H__
+#define __KERN_MM_DEFAULT_PMM_H__
 
 #include <pmm.h>
 

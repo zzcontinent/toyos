@@ -58,7 +58,7 @@ struct pushregs {
 
 struct trapframe {
 	struct pushregs tf_regs;
-	uint16_t ft_gs;
+	uint16_t tf_gs;
 	uint16_t tf_padding0;
 	uint16_t tf_fs;
 	uint16_t tf_padding1;
@@ -82,6 +82,6 @@ struct trapframe {
 void idt_init(void);
 void print_trapframe(struct trapframe *tf);
 void print_regs(struct pushregs *regs);
-void trap_in_kernel(struct trapframe *tf);
+bool trap_in_kernel(struct trapframe *tf);
 
 #endif /* !__KERN_TRAP_TRAP_H__ */
