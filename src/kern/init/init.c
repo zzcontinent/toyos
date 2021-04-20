@@ -28,9 +28,9 @@ int kern_init(void)
 	print_stackframe();
 
 	pmm_init();
-	//pic_init();
+	pic_init();
 
-	//vmm_init();
+	vmm_init();
 	//sched_init();
 	//proc_init();
 
