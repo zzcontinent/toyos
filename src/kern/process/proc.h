@@ -11,6 +11,8 @@
 #define MAX_PROCESS 4096
 #define MAX_PID (MAX_PROCESS * 2)
 
+extern struct proc_struct *idleproc, *initproc, *current;
+
 struct inode;
 
 enum proc_state {
@@ -18,6 +20,17 @@ enum proc_state {
 	PROC_SLEEPING,
 	PROC_RUNNABLE,
 	PROC_ZOMBIE,
+};
+
+struct context {
+	uint32_t eip;
+	uint32_t esp;
+	uint32_t ebx;
+	uint32_t ecx;
+	uint32_t edx;
+	uint32_t esi;
+	uint32_t edi;
+	uint32_t ebp;
 };
 
 struct proc_struct {
@@ -41,7 +54,7 @@ struct proc_struct {
 	uint32_t wait_state;
 	struct run_queue *rq;
 	int time_slice;
-	skew_heap_entry_t lab6_run_pool;
+	//skew_heap_entry_t lab6_run_pool;
 	uint32_t lab6_stride;
 	uint32_t lab6_priority;
 	struct files_struct *filesp;

@@ -25,12 +25,12 @@ int kern_init(void)
 	cprintf("%s\n", message);
 
 	print_kerninfo();
-	print_stackframe();
+	//print_stackframe();
 
-	pmm_init();
-	pic_init();
+	//pmm_init();
+	//pic_init();
 
-	vmm_init();
+	//vmm_init();
 	//sched_init();
 	//proc_init();
 
@@ -41,5 +41,6 @@ int kern_init(void)
 	//clock_init();
 	//intr_enable();
 
-	cpu_idle();
+	//cpu_idle();
+	while(1);
 }

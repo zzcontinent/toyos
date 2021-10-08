@@ -156,12 +156,12 @@ $(target_bootblock): $(call to_out_obj,$(bootfiles)) | $(call to_out_target,sign
 $(call rule_link_target,bootblock)
 
 # +++ sign tools +++
-$(call rule_compile_files_hostcc,tools,tools/sign.c)
+$(call rule_compile_files_hostcc,sign,tools/sign.c)
 $(call rule_link_target_host,sign,tools/sign)
 
 # +++ mkfs tools +++
-$(call rule_compile_files_hostcc,tools,tools/mksfs.c,mksfs,mksfs)
-$(call rule_link_target_host,mksfs,mksfs)
+$(call rule_compile_files_hostcc,mksfs,tools/mksfs.c)
+$(call rule_link_target_host,mksfs,tools/mksfs)
 
 # +++ create ucore.img +++
 $(target_ucoreimg): $(target_kernel) $(target_bootblock)
@@ -184,7 +184,7 @@ $(SFSROOT):
 	$(V)mkdir $@
 
 $(SFSIMG): $(SFSROOT) $(SFSBINS) | $(call to_out_target,mksfs)
-	$(V)dd if=/dev/zero os=$@ bs=1M count=128
+	$(V)dd if=/dev/zero of=$@ bs=1M count=128
 	$(V)$(call to_out_target,mksfs) $@ $(SFSROOT)
 
 $(call rule_link_target,sfs.img)
