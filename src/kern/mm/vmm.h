@@ -33,7 +33,7 @@ struct mm_struct {
 	int map_count;
 	void *sm_priv;
 	int mm_count;
-	semaphore_t mm_sem;
+//	semaphore_t mm_sem;
 	int locked_by;
 };
 

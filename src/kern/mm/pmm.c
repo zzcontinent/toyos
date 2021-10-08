@@ -7,6 +7,7 @@
 #include <memlayout.h>
 #include <mmu.h>
 #include <pmm.h>
+#include <error.h>
 #include <stdio.h>
 #include <string.h>
 #include <sync.h>
@@ -326,6 +327,44 @@ static inline void page_remove_pte(pde_t *pgdir, uintptr_t la, pte_t *ptep)
 	}
 }
 
+//page_remove - free an Page which is related linear address la and has an validated pte
+void
+page_remove(pde_t *pgdir, uintptr_t la) {
+	pte_t *ptep = get_pte(pgdir, la, 0);
+	if (ptep != NULL) {
+		page_remove_pte(pgdir, la, ptep);
+	}
+}
+
+//page_insert - build the map of phy addr of an Page with the linear addr la
+// paramemters:
+//  pgdir: the kernel virtual base address of PDT
+//  page:  the Page which need to map
+//  la:    the linear address need to map
+//  perm:  the permission of this Page which is setted in related pte
+// return value: always 0
+//note: PT is changed, so the TLB need to be invalidate
+int
+page_insert(pde_t *pgdir, struct Page *page, uintptr_t la, uint32_t perm) {
+	pte_t *ptep = get_pte(pgdir, la, 1);
+	if (ptep == NULL) {
+		return -E_NO_MEM;
+	}
+	page_ref_inc(page);
+	if (*ptep & PTE_P) {
+		struct Page *p = pte2page(*ptep);
+		if (p == page) {
+			page_ref_dec(page);
+		}
+		else {
+			page_remove_pte(pgdir, la, ptep);
+		}
+	}
+	*ptep = page2pa(page) | PTE_P | perm;
+	tlb_invalidate(pgdir, la);
+	return 0;
+}
+
 // invalidate a TLB entry, but only if the page tables being
 // edited are the ones currently in use by the processor.
 void tlb_invalidate(pde_t *pgdir, uintptr_t la)
@@ -385,7 +424,7 @@ int copy_range(pde_t* to, pde_t *from, uintptr_t start, uintptr_t end, bool shar
 		}
 		// call get_pte to find process B's pte according to the addr start.
 		// if pte is NULL, just alloc a PT.
-	// todo...
+		// todo...
 	} while(1);
 	return 0;
 }
