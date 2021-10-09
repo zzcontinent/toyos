@@ -14,6 +14,13 @@
 #include <trap.h>
 #include <vmm.h>
 
+static char *welcome = " _                        \n"
+"| |_ ___  _   _  ___  ___ \n"
+"| __/ _ \\| | | |/ _ \\/ __|\n"
+"| || (_) | |_| | (_) \\__ \\\n"
+" \\__\\___/ \\__, |\\___/|___/\n"
+"          |___/";
+
 int kern_init(void) __attribute__((noreturn));
 
 int kern_init(void)
@@ -21,8 +28,7 @@ int kern_init(void)
 	extern char edata[], end[];
 	memset(edata, 0, end - edata);
 	cons_init();
-	const char* message = "toyos is loading ...";
-	cprintf("%s\n", message);
+	cprintf("%s\n", welcome);
 
 	print_kerninfo();
 	//print_stackframe();
