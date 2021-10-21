@@ -42,7 +42,7 @@ int cputs(const char* str)
 	while ((c = *str++) != '\0') {
 		cputch(c, &cnt);
 	}
-	cputch('\b', &cnt);
+	cputch('\n', &cnt);
 	return cnt;
 }
 

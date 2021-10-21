@@ -42,7 +42,7 @@ static inline void insl(uint32_t port, void* addr, int cnt)
 
 static inline void outb(int16_t port, uint8_t data)
 {
-    asm volatile("outb %0, %1" ::"a"(data), "d"(port)
+    asm volatile("outb %0, %1" ::"a" (data), "d" (port)
 		 : "memory");
 }
 

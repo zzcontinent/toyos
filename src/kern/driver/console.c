@@ -375,6 +375,7 @@ int cons_getc(void)
 	bool intr_flag;
 	local_intr_save(intr_flag);
 	{
+		serial_intr();
 		kbd_intr();
 		if (cons.rpos != cons.wpos) {
 			c = cons.buf[cons.rpos++];

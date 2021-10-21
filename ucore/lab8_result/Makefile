@@ -320,7 +320,8 @@ qemu-nox: $(UCOREIMG) $(SWAPIMG) $(SFSIMG)
 monitor: $(UCOREIMG) $(SWAPING) $(SFSIMG)
 	$(V)$(QEMU) -monitor stdio $(QEMUOPTS) -serial null
 
-TERMINAL := gnome-terminal
+#TERMINAL := gnome-terminal
+TERMINAL := terminator
 
 dbg4ec: $(UCOREIMG) $(SWAPIMG) $(SFSIMG)
 	$(V)$(QEMU) -S -s -parallel stdio $(QEMUOPTS) -serial null

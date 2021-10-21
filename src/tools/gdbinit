@@ -5,6 +5,8 @@ break *0x7c00
 break kern_entry
 break bootmain
 break kern_init
+break print_kerninfo
+break print_stackframe
 
 tui enable
 layout regs
@@ -12,7 +14,7 @@ layout regs
 define hook-stop
 x /6i $pc-6
 #i frame
-x /16wx $esp
+#x /16wx $esp
 end
 
 #continue
