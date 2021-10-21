@@ -36,7 +36,7 @@ static void printnum(void (*putch)(int, void*, int), int fd,
 {
 	unsigned long long result = num;
 	unsigned mod = do_div(result, base);
-	if (num > base) {
+	if (num >= base) {
 		printnum(putch, fd, putdat, result, base, width - 1, padc);
 	} else {
 		while (--width > 0) {
@@ -122,6 +122,7 @@ reswitch:
 process_precision:
 				if (width < 0)
 					width = precision, precision = -1;
+				goto reswitch;
 			case 'l':
 				lflag++;
 				goto reswitch;
@@ -161,7 +162,7 @@ process_precision:
 				}
 				break;
 			case 'd':
-				num = getuint(&ap, lflag);
+				num = getint(&ap, lflag);
 				if ((long long)num < 0) {
 					putch('-', putdat, fd);
 					num = -(long long)num;
@@ -206,7 +207,7 @@ struct sprintbuf {
 	int cnt;
 };
 
-static void snprintputch(int ch, struct sprintbuf* b)
+static void sprintputch(int ch, struct sprintbuf* b)
 {
 	b->cnt++;
 	if (b->buf < b->ebuf) {
@@ -230,7 +231,7 @@ int vsnprintf(char* str, size_t size, const char* fmt, va_list ap)
 	if (str == NULL || b.buf > b.ebuf) {
 		return -E_INVAL;
 	}
-	vprintfmt((void*)snprintputch, NO_FD, &b, fmt, ap);
+	vprintfmt((void*)sprintputch, NO_FD, &b, fmt, ap);
 	*b.buf = '\0';
 	return b.cnt;
 }

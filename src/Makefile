@@ -76,7 +76,7 @@ SFSIMG = $(call to_out_target,sfs.img)
 SWAPIMG = $(call to_out_target,swap.img)
 
 # +++ qemu +++
-QEMUOPTS = -hda $(target_ucoreimg) -drive file=$(SWAPIMG),media=disk,cache=writeback -drive file=$(SFSIMG),media=disk,cache=writeback
+QEMUOPTS = -hda $(target_ucoreimg) -drive file=$(SWAPIMG),media=disk,cache=writeback -drive file=$(SFSIMG),media=disk,cache=writeback -no-reboot
 
 # +++ terminal +++
 #TERMINAL := gnome-terminal
@@ -206,24 +206,24 @@ qemu-ucore-nox:  $(target_ucoreimg)
 
 debug: $(target_ucoreimg) $(SWAPIMG) $(SFSIMG)
 	$(V)$(QEMU) -S -s -parallel stdio $(QEMUOPTS) -serial null &
-	$(V)sleep 2
+	$(V)sleep 3
 	$(V)$(TERMINAL) -e "$(GDB) -q -x tools/gdbinit"
 
 debug-bootblock: $(bootblock)
 	make qemukill
 	$(V)$(QEMU) -S -s -serial mon:stdio -hda out/target/bootblock -nographic &
 	sleep 1
-	$(TERMINAL) -e "gdb -q -x tools/gdbinit"
+	$(TERMINAL) --new-tab -e "gdb -q -x tools/gdbinit"
 
 debug-ucore: $(target_ucoreimg)
 	make qemukill
 	$(V)$(QEMU) -S -s -serial mon:stdio -hda $< -nographic &
 	sleep 1
-	$(TERMINAL) -e "gdb -q -x tools/gdbinit"
+	$(TERMINAL) --new-tab -e "gdb -q -x tools/gdbinit"
 
 debug-nox: $(target_ucoreimg) $(SWAPIMG) $(SFSIMG)
-	$(V)$(QEMU) -S -s -parallel stdio $(QEMUOPTS) -nographic &
-	$(V)sleep 2
+	$(V)$(QEMU) -S -s -serial mon:stdio $(QEMUOPTS) -nographic &
+	$(V)sleep 1
 	$(V)$(TERMINAL) -e "$(GDB) -q -x tools/gdbinit"
 
 qemukill:

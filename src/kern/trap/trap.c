@@ -177,111 +177,85 @@ print_pgfault(struct trapframe* tf)
 	static int
 pgfault_handler(struct trapframe* tf)
 {
-//	extern struct mm_struct* check_mm_struct;
-//	if (check_mm_struct != NULL) { //used for test check_swap
-//		print_pgfault(tf);
-//	}
-//	struct mm_struct* mm;
-//	if (check_mm_struct != NULL) {
-//		assert(current == idleproc);
-//		mm = check_mm_struct;
-//	} else {
-//		if (current == NULL) {
-//			print_trapframe(tf);
-//			print_pgfault(tf);
-//			panic("unhandled page fault.\n");
-//		}
-//		mm = current->mm;
-//	}
-//	return do_pgfault(mm, tf->tf_err, rcr2());
+	//	extern struct mm_struct* check_mm_struct;
+	//	if (check_mm_struct != NULL) { //used for test check_swap
+	//		print_pgfault(tf);
+	//	}
+	//	struct mm_struct* mm;
+	//	if (check_mm_struct != NULL) {
+	//		assert(current == idleproc);
+	//		mm = check_mm_struct;
+	//	} else {
+	//		if (current == NULL) {
+	//			print_trapframe(tf);
+	//			print_pgfault(tf);
+	//			panic("unhandled page fault.\n");
+	//		}
+	//		mm = current->mm;
+	//	}
+	//	return do_pgfault(mm, tf->tf_err, rcr2());
 }
 
 static volatile int in_swap_tick_event = 0;
 extern struct mm_struct* check_mm_struct;
 
-	static void
-trap_dispatch(struct trapframe* tf)
+static void trap_dispatch(struct trapframe* tf)
 {
-//	char c;
-//
-//	int ret = 0;
-//
-//	switch (tf->tf_trapno) {
-//		case T_PGFLT: //page fault
-//			if ((ret = pgfault_handler(tf)) != 0) {
-//				print_trapframe(tf);
-//				if (current == NULL) {
-//					panic("handle pgfault failed. ret=%d\n", ret);
-//				} else {
-//					if (trap_in_kernel(tf)) {
-//						panic("handle pgfault failed in kernel mode. ret=%d\n", ret);
-//					}
-//					cprintf("killed by kernel.\n");
-//					panic("handle user mode pgfault failed. ret=%d\n", ret);
-//					do_exit(-E_KILLED);
-//				}
-//			}
-//			break;
-//		case T_SYSCALL:
-//			syscall();
-//			break;
-//		case IRQ_OFFSET + IRQ_TIMER:
-//#if 0
-//LAB3 : If some page replacement algorithm(such as CLOCK PRA) need tick to change the priority of pages, 
-//     then you can add code here.
-//#endif
-//	     /* LAB1 YOUR CODE : STEP 3 */
-//	     /* handle the timer interrupt */
-//	     /* (1) After a timer interrupt, you should record this event using a global variable (increase it), such as ticks in kern/driver/clock.c
-//	      * (2) Every TICK_NUM cycle, you can print some info using a funciton, such as print_ticks().
-//	      * (3) Too Simple? Yes, I think so!
-//	      */
-//	     /* LAB5 YOUR CODE */
-//	     /* you should upate you lab1 code (just add ONE or TWO lines of code):
-//	      *    Every TICK_NUM cycle, you should set current process's current->need_resched = 1
-//	      */
-//	     /* LAB6 YOUR CODE */
-//	     /* IMPORTANT FUNCTIONS:
-//	      * run_timer_list
-//	      *----------------------
-//	      * you should update your lab5 code (just add ONE or TWO lines of code):
-//	      *    Every tick, you should update the system time, iterate the timers, and trigger the timers which are end to call scheduler.
-//	      *    You can use one funcitons to finish all these things.
-//	      */
-//	     ticks++;
-//       assert(current != NULL);
-//       run_timer_list();
-//       break;
-//		case IRQ_OFFSET + IRQ_COM1:
-//       //c = cons_getc();
-//       //cprintf("serial [%03d] %c\n", c, c);
-//       //break;
-//		case IRQ_OFFSET + IRQ_KBD:
-//       c = cons_getc();
-//       //cprintf("kbd [%03d] %c\n", c, c);
-//       {
-//	       extern void dev_stdin_write(char c);
-//	       dev_stdin_write(c);
-//       }
-//       break;
-//       //LAB1 CHALLENGE 1 : YOUR CODE you should modify below codes.
-//		case T_SWITCH_TOU:
-//		case T_SWITCH_TOK:
-//       panic("T_SWITCH_** ??\n");
-//       break;
-//		case IRQ_OFFSET + IRQ_IDE1:
-//		case IRQ_OFFSET + IRQ_IDE2:
-//       /* do nothing */
-//       break;
-//		default:
-//       print_trapframe(tf);
-//       if (current != NULL) {
-//	       cprintf("unhandled trap.\n");
-//	       do_exit(-E_KILLED);
-//       }
-//       // in kernel, it must be a mistake
-//       panic("unexpected trap in kernel.\n");
-//	}
+	char c;
+	int ret = 0;
+	switch (tf->tf_trapno) {
+		//case T_PGFLT: //page fault
+		//	if ((ret = pgfault_handler(tf)) != 0) {
+		//		print_trapframe(tf);
+		//		if (current == NULL) {
+		//			panic("handle pgfault failed. ret=%d\n", ret);
+		//		} else {
+		//			if (trap_in_kernel(tf)) {
+		//				panic("handle pgfault failed in kernel mode. ret=%d\n", ret);
+		//			}
+		//			cprintf("killed by kernel.\n");
+		//			panic("handle user mode pgfault failed. ret=%d\n", ret);
+		//			do_exit(-E_KILLED);
+		//		}
+		//	}
+		//	break;
+		//case T_SYSCALL:
+		//	syscall();
+		//	break;
+		//case IRQ_OFFSET + IRQ_TIMER:
+		//	ticks++;
+		//	assert(current != NULL);
+		//	run_timer_list();
+		//	break;
+		case IRQ_OFFSET + IRQ_COM1:
+			c = cons_getc();
+			cprintf("serial [%03d] %c\n", c, c);
+			break;
+		//case IRQ_OFFSET + IRQ_KBD:
+		//	c = cons_getc();
+		//	cprintf("kbd [%03d] %c\n", c, c);
+		//	{
+		//		extern void dev_stdin_write(char c);
+		//		dev_stdin_write(c);
+		//	}
+		//	break;
+		//case T_SWITCH_TOU:
+		//case T_SWITCH_TOK:
+		//	panic("T_SWITCH_** ??\n");
+		//	break;
+		//case IRQ_OFFSET + IRQ_IDE1:
+		//case IRQ_OFFSET + IRQ_IDE2:
+		//	/* do nothing */
+		//	break;
+		default:
+			print_trapframe(tf);
+			if (current != NULL) {
+				cprintf("unhandled trap.\n");
+				//do_exit(-E_KILLED);
+			}
+			// in kernel, it must be a mistake
+			panic("unexpected trap in kernel.\n");
+	}
 }
 
 /* *
