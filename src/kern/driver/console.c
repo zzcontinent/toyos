@@ -59,7 +59,7 @@ void serial_init(void)
 	outb(COM1 + COM_DLM, 0);
 
 	// 8 bits data, 1 stop bit, parity off; turn off DLAB latch
-	outb(COM1 + COM_MCR, 0);
+	outb(COM1 + COM_LCR, COM_LCR_WLEN8 & ~COM_LCR_DLAB);
 
 	// no modem control
 	outb(COM1 + COM_MCR, 0);

@@ -28,10 +28,10 @@ int kern_init(void)
 	extern char edata[], end[];
 	memset(edata, 0, end - edata);
 	cons_init();
-	cprintf("%s\n", welcome);
+	cprintf("%s\n\n", welcome);
 
 	print_kerninfo();
-	//print_stackframe();
+	print_stackframe();
 
 	//pmm_init();
 	//pic_init();

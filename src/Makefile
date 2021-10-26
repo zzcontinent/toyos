@@ -196,17 +196,14 @@ $(call rule_finish_all)
 .PHONY: qemu qemu-nox debug debug-nox monitor lines
 
 qemu: $(target_ucoreimg) $(SWAPIMG) $(SFSIMG)
-	$(V)$(QEMU) -serial stdio $(QEMUOPTS) -serial null
+	$(V)$(QEMU) -serial stdio $(QEMUOPTS) -parallel null
 
 qemu-nox: $(target_ucoreimg) $(SWAPIMG) $(SFSIMG)
 	$(V)$(QEMU) -serial mon:stdio $(QEMUOPTS) -nographic
 
-qemu-ucore-nox:  $(target_ucoreimg)
-	$(V)$(QEMU) -serial stdio -hda $< -serial null
-
 debug: $(target_ucoreimg) $(SWAPIMG) $(SFSIMG)
 	$(V)$(QEMU) -S -s -parallel stdio $(QEMUOPTS) -serial null &
-	$(V)sleep 3
+	$(V)sleep 2
 	$(V)$(TERMINAL) -e "$(GDB) -q -x tools/gdbinit"
 
 debug-bootblock: $(bootblock)
