@@ -165,7 +165,7 @@ $(call rule_link_target_host,mksfs,tools/mksfs)
 
 # +++ create ucore.img +++
 $(target_ucoreimg): $(target_kernel) $(target_bootblock)
-	$(V)dd if=/dev/zero of=$@ count=1 bs=5M
+	$(V)dd if=/dev/zero of=$@ count=10000
 	$(V)dd if=$(target_bootblock) of=$@ conv=notrunc
 	$(V)dd if=$(target_kernel) of=$@ seek=1 conv=notrunc
 
