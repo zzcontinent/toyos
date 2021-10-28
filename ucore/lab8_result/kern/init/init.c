@@ -30,6 +30,7 @@ kern_init(void) {
 
     print_kerninfo();
     print_stackframe();
+    while(1);
 
     grade_backtrace();
 

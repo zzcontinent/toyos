@@ -14,12 +14,13 @@
 #include <trap.h>
 #include <vmm.h>
 
-static char *welcome = " _                        \n"
+static char *welcome = "\n"
+" _\n"
 "| |_ ___  _   _  ___  ___ \n"
 "| __/ _ \\| | | |/ _ \\/ __|\n"
 "| || (_) | |_| | (_) \\__ \\\n"
 " \\__\\___/ \\__, |\\___/|___/\n"
-"          |___/";
+"          |___/\n";
 
 int kern_init(void) __attribute__((noreturn));
 
