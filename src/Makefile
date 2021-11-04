@@ -3,7 +3,7 @@
 # +++ cc +++
 GCCPREFIX := ''
 QEMU := qemu-system-i386
-V := @
+#V := @
 
 .SUFFIXES: .c .S .h
 .DELETE_ON_ERROR:
@@ -70,7 +70,6 @@ target_ucoreimg = $(call to_out_target,ucore.img)
 SFSROOT := disk0
 SFSIMG = $(call to_out_target,sfs.img)
 SFSBINS =
-SFSIMG = $(call to_out_target,sfs.img)
 
 # +++ swap.img +++
 SWAPIMG = $(call to_out_target,swap.img)

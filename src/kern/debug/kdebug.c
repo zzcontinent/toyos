@@ -293,7 +293,7 @@ void print_debuginfo(uintptr_t eip)
 	}
 }
 
-static __noinline uint32_t
+	static __noinline uint32_t
 read_eip(void)
 {
 	uint32_t eip;
@@ -337,10 +337,18 @@ read_eip(void)
  * */
 void print_stackframe(void)
 {
+	uint32_t esp = read_esp();
 	uint32_t ebp = read_ebp();
 	uint32_t eip = read_eip();
+	uint32_t ebp_1 = ebp;
+	cprintf("ebp:0x%x, esp:0x%x\n", ebp, esp);
 
 	int i, j;
+	for (i = 0; ebp_1 != 0 && i < 10; i++)
+	{
+		cprintf("ebp-addr:0x%x, val:0x%x\n", ebp, *(uint32_t *)ebp_1);
+		ebp_1 = ((uint32_t*)ebp_1)[0];
+	}
 	for (i = 0; ebp != 0 && i < STACKFRAME_DEPTH; i++) {
 		cprintf("ebp:0x%08x eip:0x%08x args:", ebp, eip);
 		uint32_t* args = (uint32_t*)ebp + 2;
