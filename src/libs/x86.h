@@ -62,6 +62,12 @@ static inline void outsl(uint32_t port, const void* addr, int cnt)
 			: "memory", "cc");
 }
 
+static inline uint32_t read_esp(void)
+{
+	uint32_t esp;
+	asm volatile("movl %%esp, %0" : "=r" (esp));
+	return esp;
+}
 static inline uint32_t read_ebp(void)
 {
 	uint32_t ebp;

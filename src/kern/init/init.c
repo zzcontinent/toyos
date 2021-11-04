@@ -23,13 +23,15 @@ static char *welcome = "\n"
 "          |___/\n";
 
 int kern_init(void) __attribute__((noreturn));
+extern char bootstacktop[], bootstack[]; 
 
 int kern_init(void)
 {
 	extern char edata[], end[];
 	memset(edata, 0, end - edata);
 	cons_init();
-	cprintf("%s\n\n", welcome);
+	cprintf("%s\n", welcome);
+	cprintf("bootstack:0x%x, bootstacktop:0x%x\n", bootstack, bootstacktop);
 
 	print_kerninfo();
 	print_stackframe();

@@ -348,6 +348,8 @@ print_stackframe(void) {
       *                   the calling funciton's ebp = ss:[ebp]
       */
     uint32_t ebp = read_ebp(), eip = read_eip();
+    ebp = read_ebp();
+    eip = read_eip();
 
     int i, j;
     for (i = 0; ebp != 0 && i < STACKFRAME_DEPTH; i ++) {

@@ -40,7 +40,7 @@ spin:
 .globl bootstack
 bootstack:
 	.space KSTACKSIZE
-	.globl bootstacktop
+.globl bootstacktop
 bootstacktop:
 # kernel builtin pgdir: an initial page directory (page directory table: PDT)
 .section .data.pgdir
