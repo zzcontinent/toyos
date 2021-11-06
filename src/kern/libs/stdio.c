@@ -4,6 +4,7 @@
 #include <defs.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <udebug.h>
 
 /* high level console I/O */
 
