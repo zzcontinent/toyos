@@ -13,6 +13,7 @@
 #include <swap.h>
 #include <trap.h>
 #include <vmm.h>
+#include <udebug.h>
 
 static char *welcome = "\n"
 " _\n"
@@ -25,6 +26,28 @@ static char *welcome = "\n"
 int kern_init(void) __attribute__((noreturn));
 extern char bootstacktop[], bootstack[]; 
 
+void st0()
+{
+	print_stackframe();
+}
+
+void st1()
+{
+	st0();
+}
+void st2()
+{
+	st1();
+}
+void st3()
+{
+	st2();
+}
+void st4()
+{
+	st3();
+}
+
 int kern_init(void)
 {
 	extern char edata[], end[];
@@ -33,8 +56,12 @@ int kern_init(void)
 	cprintf("%s\n", welcome);
 	cprintf("bootstack:0x%x, bootstacktop:0x%x\n", bootstack, bootstacktop);
 
+	udebug("\r\n");
 	print_kerninfo();
-	print_stackframe();
+	udebug("\r\n");
+	//print_stackframe();
+	st4();
+	udebug("\r\n");
 
 	//pmm_init();
 	//pic_init();
