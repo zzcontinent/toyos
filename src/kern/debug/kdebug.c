@@ -271,7 +271,7 @@ void print_kerninfo(void)
 	cprintf("  etext  0x%08x (phys)\n", etext);
 	cprintf("  edata  0x%08x (phys)\n", edata);
 	cprintf("  end    0x%08x (phys)\n", end);
-	cprintf("Kernel executable memory footprint: %dKB\n", (end - kern_init + 1023) / 1024);
+	cprintf("Kernel executable memory footprint: %dKB\n", ((uint32_t)end - (uint32_t)kern_init + 1023) / 1024);
 }
 
 /* *
@@ -340,19 +340,19 @@ read_eip(void)
 void print_stackframe(void)
 {
 	//volatile uint32_t esp = read_esp();
-	uint32_t ebp = read_ebp();
-	uint32_t eip = read_eip();
+	uint32_t t_ebp = read_ebp();
+	uint32_t t_eip = read_eip();
 	int i = 0, j = 0;
-	for (i = 0; ebp != 0 && i < STACKFRAME_DEPTH; i++) {
-		cprintf("ebp:0x%08p args:", ebp);
-		//cprintf("ebp:0x%08x eip:0x%08x args:", ebp, eip);
-		uint32_t* args = (uint32_t*)ebp + 2;
+	for (i = 0; t_ebp != 0 && i < STACKFRAME_DEPTH; i++) {
+		//cprintf("t_ebp:0x%08x args:", t_ebp);
+		cprintf("t_ebp:0x%x t_eip:0x%x args:", t_ebp, t_eip);
+		uint32_t* args = (uint32_t*)t_ebp + 2;
 		for (j = 0; j < 4; j++) {
 			cprintf("0x%08x ", args[j]);
 		}
-		print_debuginfo(eip - 1);
-		ebp = ((uint32_t*)ebp)[0];
-		eip = ((uint32_t*)ebp)[1];
+		print_debuginfo(t_eip - 1);
+		t_ebp = ((uint32_t*)t_ebp)[0];
+		t_eip = ((uint32_t*)t_ebp)[1];
 	}
 }
 

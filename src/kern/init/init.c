@@ -57,7 +57,7 @@ int kern_init(void)
 	cprintf("bootstack:0x%x, bootstacktop:0x%x\n", bootstack, bootstacktop);
 
 	udebug("\r\n");
-	print_kerninfo();
+	//print_kerninfo();
 	udebug("\r\n");
 	//print_stackframe();
 	st4();
