@@ -1,5 +1,5 @@
-add-symbol-file out/target/kernel
-add-symbol-file out/obj/boot/bootblock.o
+add-symbol-file bin/kernel
+add-symbol-file obj/bootblock.o
 target remote :1234
 break *0x7c00
 break kern_entry
@@ -9,11 +9,16 @@ break print_kerninfo
 break print_stackframe
 
 tui enable
-layout regs
+winheight src 10
+#layout regs
+layout asm
+layout src
+layout split
 
 define hook-stop
-x /6i $pc-6
-#i frame
+#x /6i $pc-6
+i registers eip esp ebp
+bt
 #x /16wx $esp
 end
 
