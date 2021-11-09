@@ -17,6 +17,7 @@ layout split
 
 define hook-stop
 #x /6i $pc-6
+echo ---------------------\n
 i registers eip esp ebp
 bt
 #x /16wx $esp
