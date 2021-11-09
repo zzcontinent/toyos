@@ -18,6 +18,23 @@ int kern_init(void) __attribute__((noreturn));
 
 static void lab1_switch_test(void);
 
+void t1()
+{
+	print_stackframe();
+}
+void t2()
+{
+	t1();
+}
+void t3()
+{
+	t2();
+}
+void t4()
+{
+	t2();
+}
+
 int
 kern_init(void) {
     extern char edata[], end[];
@@ -29,7 +46,8 @@ kern_init(void) {
     cprintf("%s\n\n", message);
 
     print_kerninfo();
-    print_stackframe();
+    //print_stackframe();
+    t4();
     while(1);
 
     grade_backtrace();
