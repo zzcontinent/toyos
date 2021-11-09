@@ -16,11 +16,11 @@ HOSTCFLAGS	:= -g -Wall -O2 -D_FILE_OFFSET_BITS=64
 
 GDB := ${GCCPREFIX}gdb
 CC := $(GCCPREFIX)gcc
-#CFLAGS := -fno-builtin -fno-PIC -Wall -ggdb -m32 --debug -gstabs+ -nostdinc
-CFLAGS := -fno-builtin -fno-PIC -Wall -ggdb -m32 --debug -gstabs+ -nostdinc
-CFLAGS += $(shell $(CC) -fno-stack-protector -E -x c /dev/null >/dev/null 2>&1 && echo -fno-stack-protector)
-KCFLAGS := $(CFLAGS)
+CFLAGS	:= -fno-builtin -fno-PIC -Wall -ggdb -m32 -gstabs -nostdinc $(DEFS)
+CFLAGS	+= $(shell $(CC) -fno-stack-protector -E -x c /dev/null >/dev/null 2>&1 && echo -fno-stack-protector)
 CTYPE := c S
+
+KCFLAGS := $(CFLAGS)
 
 LD := $(GCCPREFIX)ld
 LDFLAGS := -m $(shell $(LD) -V | grep elf_i386 2>/dev/null | head -n 1)
@@ -47,7 +47,24 @@ USER_BINS :=
 INCLUDE += libs/
 CFLAGS += $(addprefix -I,$(INCLUDE))
 LIBDIR := libs
-KSRCDIR := $(shell find kern/* -type d)
+#KSRCDIR := $(shell find kern/* -type d)
+KSRCDIR := 	kern/init \
+			   kern/libs \
+			   kern/debug \
+			   kern/driver \
+			   kern/trap \
+			   kern/mm \
+			   kern/sync \
+			   kern/fs    \
+			   kern/process \
+			   kern/schedule \
+			   kern/syscall  \
+			   kern/fs/swap \
+			   kern/fs/vfs \
+			   kern/fs/devs \
+			   kern/fs/sfs
+
+
 KINCLUDE = $(KSRCDIR)
 KCFLAGS += $(addprefix -I,$(KINCLUDE))
 KCFLAGS += $(addprefix -I,libs)
@@ -130,8 +147,8 @@ $(call rule_compile_files,user,$(call listf_cc,$(USRCDIR)),$(CC),$(UCFLAGS))
 
 # +++ kernel +++
 # libs/*.c
-$(call rule_compile_files_cc,kernel,$(call listf_cc,$(LIBDIR)))
 $(call rule_compile_files,kernel,$(foreach d,$(KSRCDIR),$(call listf_cc,$(d))),$(CC),$(KCFLAGS))
+$(call rule_compile_files_cc,kernel,$(call listf_cc,$(LIBDIR)))
 
 $(target_kernel): tools/kernel.ld
 

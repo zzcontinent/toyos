@@ -298,6 +298,13 @@ read_eip(void) {
     asm volatile("movl 4(%%ebp), %0" : "=r" (eip));
     return eip;
 }
+static inline uint32_t read_esp(void)
+{
+	uint32_t esp;
+	asm volatile("movl %%esp, %0" : "=r" (esp));
+	return esp;
+}
+
 
 /* *
  * print_stackframe - print a list of the saved eip values from the nested 'call'
@@ -333,35 +340,75 @@ read_eip(void) {
  * Note that, the length of ebp-chain is limited. In boot/bootasm.S, before jumping
  * to the kernel entry, the value of ebp has been set to zero, that's the boundary.
  * */
-void
-print_stackframe(void) {
-     /* LAB1 YOUR CODE : STEP 1 */
-     /* (1) call read_ebp() to get the value of ebp. the type is (uint32_t);
-      * (2) call read_eip() to get the value of eip. the type is (uint32_t);
-      * (3) from 0 .. STACKFRAME_DEPTH
-      *    (3.1) printf value of ebp, eip
-      *    (3.2) (uint32_t)calling arguments [0..4] = the contents in address (uint32_t)ebp +2 [0..4]
-      *    (3.3) cprintf("\n");
-      *    (3.4) call print_debuginfo(eip-1) to print the C calling function name and line number, etc.
-      *    (3.5) popup a calling stackframe
-      *           NOTICE: the calling funciton's return addr eip  = ss:[ebp+4]
-      *                   the calling funciton's ebp = ss:[ebp]
-      */
-    uint32_t t_ebp = read_ebp(), t_eip = read_eip();
-    t_ebp = read_ebp();
-    t_eip = read_eip();
+//void
+//print_stackframe(void) {
+//     /* LAB1 YOUR CODE : STEP 1 */
+//     /* (1) call read_ebp() to get the value of ebp. the type is (uint32_t);
+//      * (2) call read_eip() to get the value of eip. the type is (uint32_t);
+//      * (3) from 0 .. STACKFRAME_DEPTH
+//      *    (3.1) printf value of ebp, eip
+//      *    (3.2) (uint32_t)calling arguments [0..4] = the contents in address (uint32_t)ebp +2 [0..4]
+//      *    (3.3) cprintf("\n");
+//      *    (3.4) call print_debuginfo(eip-1) to print the C calling function name and line number, etc.
+//      *    (3.5) popup a calling stackframe
+//      *           NOTICE: the calling funciton's return addr eip  = ss:[ebp+4]
+//      *                   the calling funciton's ebp = ss:[ebp]
+//      */
+//    uint32_t t_ebp = read_ebp(), t_eip = read_eip();
+//    t_ebp = read_ebp();
+//    t_eip = read_eip();
+//
+//    int i, j;
+//    for (i = 0; t_ebp != 0 && i < STACKFRAME_DEPTH; i ++) {
+//        cprintf("t_ebp:0x%08x t_eip:0x%08x args:", t_ebp, t_eip);
+//        uint32_t *args = (uint32_t *)t_ebp + 2;
+//        for (j = 0; j < 4; j ++) {
+//            cprintf("0x%08x ", args[j]);
+//        }
+//        cprintf("\n");
+//        print_debuginfo(t_eip - 1);
+//        t_eip = ((uint32_t *)t_ebp)[1];
+//        t_ebp = ((uint32_t *)t_ebp)[0];
+//    }
+//}
 
-    int i, j;
-    for (i = 0; t_ebp != 0 && i < STACKFRAME_DEPTH; i ++) {
-        cprintf("t_ebp:0x%08x t_eip:0x%08x args:", t_ebp, t_eip);
-        uint32_t *args = (uint32_t *)t_ebp + 2;
-        for (j = 0; j < 4; j ++) {
-            cprintf("0x%08x ", args[j]);
-        }
-        cprintf("\n");
-        print_debuginfo(t_eip - 1);
-        t_eip = ((uint32_t *)t_ebp)[1];
-        t_ebp = ((uint32_t *)t_ebp)[0];
-    }
+void print_stack(uint32_t addr, uint32_t len)
+{
+	while(len--)
+	{
+		cprintf("addr:0x%08x ", addr);
+		cprintf("val:0x%08x \n", *((uint32_t*)addr));
+		addr += sizeof(addr);
+	}
 }
+
+void print_stackframe(void)
+{
+	uint32_t t_ebp = read_ebp();
+	uint32_t t_eip = read_eip();
+	uint32_t t_esp;
+	asm volatile("movl %%esp, %0" : "=r" (t_esp));
+
+	cprintf("\n-------------------------------------------\n");
+	print_stack(t_esp, 0xA0);
+	int i = 0, j = 0;
+	for (i = 0; t_ebp != 0 && i < STACKFRAME_DEPTH; i++) {
+		cprintf("eip:0x%08x ", t_eip);
+		cprintf("ebp:0x%08x\n", t_ebp);
+		cprintf("t_ebp:0x%x t_eip:0x%x args:", t_ebp, t_eip);
+		cprintf("\n-------------------------------------------\n");
+		print_stack(t_esp, 0xA0);
+		//uint32_t* args = (uint32_t*)t_ebp + 2;
+		//for (j = 0; j < 4; j++) {
+		//	cprintf("0x%08x ", args[j]);
+		//}
+		//print_debuginfo(t_eip - 1);
+		//t_eip = ((uint32_t *)t_ebp)[1];
+		//t_ebp = ((uint32_t *)t_ebp)[0];
+
+		t_eip = *((uint32_t*)(t_ebp + sizeof(t_ebp)));
+		t_ebp = *((uint32_t*)t_ebp);
+	}
+}
+
 
