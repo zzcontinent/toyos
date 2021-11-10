@@ -47,23 +47,7 @@ USER_BINS :=
 INCLUDE += libs/
 CFLAGS += $(addprefix -I,$(INCLUDE))
 LIBDIR := libs
-#KSRCDIR := $(shell find kern/* -type d)
-KSRCDIR := 	kern/init \
-			   kern/libs \
-			   kern/debug \
-			   kern/driver \
-			   kern/trap \
-			   kern/mm \
-			   kern/sync \
-			   kern/fs    \
-			   kern/process \
-			   kern/schedule \
-			   kern/syscall  \
-			   kern/fs/swap \
-			   kern/fs/vfs \
-			   kern/fs/devs \
-			   kern/fs/sfs
-
+KSRCDIR := $(shell find kern/* -type d)
 
 KINCLUDE = $(KSRCDIR)
 KCFLAGS += $(addprefix -I,$(KINCLUDE))
@@ -141,6 +125,8 @@ endef
 
 
 ################ build rules start ################
+all: 
+	make out/target/kernel -j
 # +++ user +++
 $(call rule_compile_files,user,$(call listf_cc,$(USRCDIR)),$(CC),$(UCFLAGS))
 # $(foreach p,$(call read_packet,uprog),$(eval $(call user_prog_ld,$(p))))
@@ -151,6 +137,8 @@ $(call rule_compile_files,kernel,$(foreach d,$(KSRCDIR),$(call listf_cc,$(d))),$
 $(call rule_compile_files_cc,kernel,$(call listf_cc,$(LIBDIR)))
 
 $(target_kernel): tools/kernel.ld
+
+$(target_kernel):  $(KINCLUDE)
 
 $(target_kernel): $(ALLOBJS_kernel)
 	@echo + ld $@ : $^
@@ -210,7 +198,7 @@ $(call rule_link_target,sfs.img)
 $(call rule_finish_all)
 
 # +++ qemu +++
-.PHONY: qemu qemu-nox debug debug-nox monitor lines
+.PHONY: all qemu qemu-nox debug debug-nox monitor lines
 
 qemu: $(target_ucoreimg) $(SWAPIMG) $(SFSIMG)
 	$(V)$(QEMU) -serial stdio $(QEMUOPTS) -parallel null

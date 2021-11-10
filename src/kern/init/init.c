@@ -54,24 +54,12 @@ int kern_init(void)
 	memset(edata, 0, end - edata);
 	cons_init();
 
-	//uint32_t t_esp;
-	//asm volatile("movl %%esp, %0" : "=r" (t_esp));
-	//print_stack(t_esp, 0xA0);
-	//uint32_t *p1, *p2;
-	//for (p1=edata; p1< end; p1++)
-	//{
-	//	cprintf("0x%x:0x%x\n", p1, *p1);
-	//}
-
 	cprintf("%s\n", welcome);
 	cprintf("bootstack:0x%x, bootstacktop:0x%x\n", bootstack, bootstacktop);
 	cprintf("edata:0x%x, end:0x%x\n", edata, end);
 
-	udebug("\r\n");
 	print_kerninfo();
-	udebug("\r\n");
 	st4();
-	udebug("\r\n");
 
 	//pmm_init();
 	//pic_init();
