@@ -26,28 +26,6 @@ static char *welcome = "\n"
 int kern_init(void) __attribute__((noreturn));
 extern char bootstacktop[], bootstack[]; 
 
-void st0()
-{
-	print_stackframe();
-}
-
-void st1()
-{
-	st0();
-}
-void st2()
-{
-	st1();
-}
-void st3()
-{
-	st2();
-}
-void st4()
-{
-	st3();
-}
-
 int kern_init(void)
 {
 	extern char edata[], end[];
@@ -59,9 +37,9 @@ int kern_init(void)
 	cprintf("edata:0x%x, end:0x%x\n", edata, end);
 
 	print_kerninfo();
-	st4();
+	print_stackframe();
 
-	//pmm_init();
+	pmm_init();
 	//pic_init();
 
 	//vmm_init();
