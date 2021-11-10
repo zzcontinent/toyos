@@ -66,7 +66,6 @@ int kern_init(void)
 	cprintf("%s\n", welcome);
 	cprintf("bootstack:0x%x, bootstacktop:0x%x\n", bootstack, bootstacktop);
 	cprintf("edata:0x%x, end:0x%x\n", edata, end);
-	//while(1);
 
 	udebug("\r\n");
 	print_kerninfo();
