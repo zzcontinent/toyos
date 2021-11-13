@@ -39,33 +39,19 @@ int
 kern_init(void) {
 	extern char edata[], end[];
 	memset(edata, 0, end - edata);
-	uint32_t t_esp;
-
 	cons_init();
-	asm volatile("movl %%esp, %0" : "=r" (t_esp));
-	print_stack(t_esp, 0xA0);
-	uint32_t *p1, *p2;
-	for (p1=edata; p1< end; p1++)
-	{
-		cprintf("0x%x:0x%x\n", p1, *p1);
-	}
-
 	const char *message = "(THU.CST) os is loading ...";
 	cprintf("%s\n", message);
 	cprintf("bootstack:0x%x, bootstacktop:0x%x\n", bootstack, bootstacktop);
 	cprintf("edata:0x%x, end:0x%x\n", edata, end);
-	while(1);
-
-
 
 	print_kerninfo();
-	//print_stackframe();
-	t4();
-	while(1);
+	print_stackframe();
 
 	grade_backtrace();
 
 	pmm_init();                 // init physical memory management
+	while(1);
 
 	pic_init();                 // init interrupt controller
 	idt_init();                 // init interrupt descriptor table

@@ -13,6 +13,7 @@
 #include <sync.h>
 #include <vmm.h>
 #include <x86.h>
+#include <udebug.h>
 
 /*
  * Task State Segment
@@ -182,8 +183,16 @@ static void page_init(void)
 	int i;
 	for (i = 0; i < memmap->nr_map; i++) {
 		uint64_t begin = memmap->map[i].addr, end = begin + memmap->map[i].size;
-		cprintf("|-  memory: %08llx, [%08llx, %0xllx], type = %d.\n",
-				memmap->map[i].size, begin, end - 1, memmap->map[i].type);
+		if(i == 0 && i != memmap->nr_map - 1)
+		        cprintf("├──memory: size:%08llx, [%08llx, %08llx], type = %d - %s.\n",
+                memmap->map[i].size, begin, end - 1, memmap->map[i].type, E820MAP_TYPE(memmap->map[i].type));
+		else if (i == memmap->nr_map - 1)
+		        cprintf("└──memory: size:%08llx, [%08llx, %08llx], type = %d - %s.\n",
+                memmap->map[i].size, begin, end - 1, memmap->map[i].type, E820MAP_TYPE(memmap->map[i].type));
+		else
+		        cprintf("├──memory: size:%08llx, [%08llx, %08llx], type = %d - %s.\n",
+                memmap->map[i].size, begin, end - 1, memmap->map[i].type, E820MAP_TYPE(memmap->map[i].type));
+
 		if (memmap->map[i].type == E820_ARM) {
 			if (maxpa < end && begin < KMEMSIZE) {
 				maxpa = end;
@@ -247,18 +256,22 @@ void pmm_init(void)
 	// detect physical memory space, reserve already used memory,
 	// use pmm->init_memmap to create free page list
 	page_init();
-
+	udebug("\r\n");
 	// use pmm->check to verify the correctness of the alloc/freee function in a pmm
 	check_alloc_page();
+	udebug("\r\n");
 	check_pgdir();
+	udebug("\r\n");
 
 	static_assert(KERNBASE % PTSIZE == 0 && KERNTOP % PTSIZE == 0);
+	udebug("\r\n");
 	boot_pgdir[PDX(VPT)] = PADDR(boot_pgdir) | PTE_P | PTE_W;
 
 	// map all physical memory to linear memory with base linear
 	// addr KERNBASE linear_addr KERNBASE - KERNBASE + KMEMSIZE
 	// = phy_addr 0~KMEMSIZE
 	boot_map_segment(boot_pgdir, KERNBASE, KMEMSIZE, 0, PTE_W);
+	udebug("\r\n");
 
 	// since we are using bootloader's GDT
 	// we should reload gdt to get user segments and the TSS
@@ -266,13 +279,17 @@ void pmm_init(void)
 	// then set kernel stack (ss:esp) in TSS, setup tss in
 	// gdt, load TSS
 	gdt_init();
+	udebug("\r\n");
 
 	// now the basic memory map is established.
 	// check the correctness of the basic virtual memory map.
 	check_boot_pgdir();
+	udebug("\r\n");
 
 	print_pgdir();
+	udebug("\r\n");
 	kmalloc_init();
+	udebug("\r\n");
 }
 
 // get pte and return the kernel virtual address of this pte for la
