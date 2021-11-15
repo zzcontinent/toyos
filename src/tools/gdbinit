@@ -5,8 +5,9 @@ break *0x7c00
 break kern_entry
 break bootmain
 break kern_init
-break print_kerninfo
-break print_stackframe
+break default_init
+break default_check
+break basic_check
 
 tui enable
 winheight src 10
