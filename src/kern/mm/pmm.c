@@ -14,6 +14,7 @@
 #include <vmm.h>
 #include <x86.h>
 #include <udebug.h>
+#include <swap.h>
 
 /*
  * Task State Segment
@@ -144,8 +145,8 @@ struct Page* alloc_pages(size_t n)
 		}
 		local_intr_restore(intr_flag);
 		// todo ...
-		//if (page != NULL || n > 1 || swap_init_ok == 0)
-		//	break;
+		if (page != NULL || n > 1 || swap_init_ok == 0)
+			break;
 		//extern struct mm_struct *check_mm_struct;
 		//swap_out(check_mm_struct, n, 0);
 	}
@@ -184,14 +185,14 @@ static void page_init(void)
 	for (i = 0; i < memmap->nr_map; i++) {
 		uint64_t begin = memmap->map[i].addr, end = begin + memmap->map[i].size;
 		if(i == 0 && i != memmap->nr_map - 1)
-		        cprintf("├──memory: size:%08llx, [%08llx, %08llx], type = %d - %s.\n",
-                memmap->map[i].size, begin, end - 1, memmap->map[i].type, E820MAP_TYPE(memmap->map[i].type));
+			cprintf("├──memory: size:%08llx, [%08llx, %08llx], type = %d - %s.\n",
+					memmap->map[i].size, begin, end - 1, memmap->map[i].type, E820MAP_TYPE(memmap->map[i].type));
 		else if (i == memmap->nr_map - 1)
-		        cprintf("└──memory: size:%08llx, [%08llx, %08llx], type = %d - %s.\n",
-                memmap->map[i].size, begin, end - 1, memmap->map[i].type, E820MAP_TYPE(memmap->map[i].type));
+			cprintf("└──memory: size:%08llx, [%08llx, %08llx], type = %d - %s.\n",
+					memmap->map[i].size, begin, end - 1, memmap->map[i].type, E820MAP_TYPE(memmap->map[i].type));
 		else
-		        cprintf("├──memory: size:%08llx, [%08llx, %08llx], type = %d - %s.\n",
-                memmap->map[i].size, begin, end - 1, memmap->map[i].type, E820MAP_TYPE(memmap->map[i].type));
+			cprintf("├──memory: size:%08llx, [%08llx, %08llx], type = %d - %s.\n",
+					memmap->map[i].size, begin, end - 1, memmap->map[i].type, E820MAP_TYPE(memmap->map[i].type));
 
 		if (memmap->map[i].type == E820_ARM) {
 			if (maxpa < end && begin < KMEMSIZE) {
@@ -208,6 +209,28 @@ static void page_init(void)
 	for (i = 0; i < npage; i++) {
 		SetPageReserved(pages + i);
 	}
+
+	uintptr_t freemem = PADDR((uintptr_t)pages + sizeof(struct Page) * npage);
+
+	for (i = 0; i < memmap->nr_map; i ++) {
+		uint64_t begin = memmap->map[i].addr, end = begin + memmap->map[i].size;
+		if (memmap->map[i].type == E820_ARM) {
+			if (begin < freemem) {
+				begin = freemem;
+			}
+			if (end > KMEMSIZE) {
+				end = KMEMSIZE;
+			}
+			if (begin < end) {
+				begin = ROUNDUP(begin, PGSIZE);
+				end = ROUNDDOWN(end, PGSIZE);
+				if (begin < end) {
+					init_memmap(pa2page(begin), (end - begin) / PGSIZE);
+				}
+			}
+		}
+	}
+
 }
 
 /*
