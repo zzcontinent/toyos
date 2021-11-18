@@ -324,9 +324,12 @@ void pmm_init(void)
 pte_t* get_pte(pde_t* pgdir, uintptr_t la, bool create)
 {
 	pde_t* pdep = &pgdir[PDX(la)];
+	udebug("pgdir=0x%x, la=0x%x, create=%d\r\n", pgdir, la, create);
 	if (!(*pdep & PTE_P)) {
 		struct Page* page;
-		if (!create || (page == alloc_page()) == NULL) {
+		udebug("\r\n");
+		if (!create || (page = alloc_page()) == NULL) {
+			udebug("\r\n");
 			return NULL;
 		}
 		set_page_ref(page, 1);
@@ -334,7 +337,10 @@ pte_t* get_pte(pde_t* pgdir, uintptr_t la, bool create)
 		memset(KADDR(pa), 0, PGSIZE);
 		*pdep = pa | PTE_U | PTE_W | PTE_P;
 	}
-	return &((pte_t*)KADDR(PDE_ADDR(*pdep)))[PTX(la)];
+	udebug("\r\n");
+	pte_t* ret = &((pte_t*)KADDR(PDE_ADDR(*pdep)))[PTX(la)];
+	udebug("ret=0x%x\r\n", ret);
+	return ret;
 }
 
 // get related Page struct for linear address la using PDT pgdir
@@ -386,11 +392,14 @@ page_remove(pde_t *pgdir, uintptr_t la) {
 //note: PT is changed, so the TLB need to be invalidate
 int
 page_insert(pde_t *pgdir, struct Page *page, uintptr_t la, uint32_t perm) {
+	udebug("pgdir=0x%x, la=0x%x\r\n", pgdir, la);
 	pte_t *ptep = get_pte(pgdir, la, 1);
 	if (ptep == NULL) {
 		return -E_NO_MEM;
 	}
+	udebug("\r\n");
 	page_ref_inc(page);
+	udebug("\r\n");
 	if (*ptep & PTE_P) {
 		struct Page *p = pte2page(*ptep);
 		if (p == page) {
@@ -400,8 +409,11 @@ page_insert(pde_t *pgdir, struct Page *page, uintptr_t la, uint32_t perm) {
 			page_remove_pte(pgdir, la, ptep);
 		}
 	}
+	udebug("\r\n");
 	*ptep = page2pa(page) | PTE_P | perm;
+	udebug("\r\n");
 	tlb_invalidate(pgdir, la);
+	udebug("\r\n");
 	return 0;
 }
 
@@ -477,13 +489,16 @@ static void check_alloc_page(void)
 
 static void check_pgdir(void)
 {
+	udebug("\r\n");
 	assert(npage <= KMEMSIZE / PGSIZE);
 	assert(boot_pgdir != NULL && (uint32_t)PGOFF(boot_pgdir) == 0);
 	assert(get_page(boot_pgdir, 0x0, NULL) == NULL);
 
+	udebug("\r\n");
 	struct Page *p1, *p2;
 	p1 = alloc_page();
 	assert(page_insert(boot_pgdir, p1, 0x0, 0) == 0);
+	udebug("\r\n");
 
 	pte_t* ptep;
 	assert((ptep = get_pte(boot_pgdir, 0x0, 0)) != NULL);
@@ -491,6 +506,7 @@ static void check_pgdir(void)
 	assert(page_ref(p1) == 1);
 	ptep = &((pte_t*)KADDR(PDE_ADDR(boot_pgdir[0])))[1];
 	assert(get_pte(boot_pgdir, PGSIZE, 0) == ptep);
+	udebug("\r\n");
 
 	p2 = alloc_page();
 	assert(page_insert(boot_pgdir, p2, PGSIZE, PTE_U | PTE_W) == 0);
@@ -499,21 +515,29 @@ static void check_pgdir(void)
 	assert(*ptep & PTE_W);
 	assert(boot_pgdir[0] & PTE_U);
 	assert(page_ref(p2) == 1);
+	udebug("\r\n");
 
 	assert(page_insert(boot_pgdir, p1, PGSIZE, 0) == 0);
+	udebug("\r\n");
 	assert(page_ref(p1) == 2);
 	assert(page_ref(p2) == 0);
+	udebug("\r\n");
 	assert((ptep = get_pte(boot_pgdir, PGSIZE, 0)) != NULL);
-	assert(page_ref(*ptep) == p1);
+	assert(pte2page(*ptep) == p1);
+	udebug("\r\n");
 	assert((*ptep & PTE_U) == 0);
+	udebug("\r\n");
 
+	//TODO... crush here
 	page_remove(boot_pgdir, 0x0);
 	assert(page_ref(p1) == 1);
 	assert(page_ref(p2) == 0);
+	udebug("\r\n");
 
 	page_remove(boot_pgdir, PGSIZE);
 	assert(page_ref(p1) == 0);
 	assert(page_ref(p2) == 0);
+	udebug("\r\n");
 
 	assert(page_ref(pde2page(boot_pgdir[0])) == 1);
 	free_page(pde2page(boot_pgdir[0]));

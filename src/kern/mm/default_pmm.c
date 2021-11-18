@@ -34,10 +34,10 @@ static void default_init_memmap(struct Page *base, size_t n) {
 static struct Page * default_alloc_pages(size_t n) 
 {
 	assert(n > 0);
+	udebug("n=%d, nr_free=%d\r\n", n, nr_free);
 	if (n > nr_free) {
 		return NULL;
 	}
-	udebug("\r\n");
 	struct Page *page = NULL;
 	list_entry_t *le = &free_list;
 	// TODO: optimize (next-fit)
@@ -50,6 +50,7 @@ static struct Page * default_alloc_pages(size_t n)
 	}
 	udebug("\r\n");
 	if (page != NULL) {
+		udebug("\r\n");
 		if (page->property > n) {
 			struct Page *p = page + n;
 			p->property = page->property - n;
@@ -60,6 +61,7 @@ static struct Page * default_alloc_pages(size_t n)
 		nr_free -= n;
 		ClearPageProperty(page);
 	}
+	udebug("\r\n");
 	return page;
 }
 
