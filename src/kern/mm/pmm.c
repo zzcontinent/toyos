@@ -380,7 +380,7 @@ static inline void page_remove_pte(pde_t *pgdir, uintptr_t la, pte_t *ptep)
 	if (*ptep & PTE_P)
 	{
 		struct Page *page = pte2page(*ptep);
-		if (page_ref_dec(page))
+		if (page_ref_dec(page) == 0)
 		{
 			free_page(page);
 		}
@@ -546,7 +546,9 @@ static void check_pgdir(void)
 	assert((*ptep & PTE_U) == 0);
 
 	//TODO... crush here
+	assert(page_ref(p1) == 2);
 	page_remove(boot_pgdir, 0x0);
+	udebug("page_ref(p1)=%d\r\n", page_ref(p1));
 	assert(page_ref(p1) == 1);
 	assert(page_ref(p2) == 0);
 

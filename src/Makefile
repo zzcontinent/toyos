@@ -204,6 +204,7 @@ qemu: $(target_ucoreimg) $(SWAPIMG) $(SFSIMG)
 	$(V)$(QEMU) -serial stdio $(QEMUOPTS) -parallel null
 
 qemu-nox: $(target_ucoreimg) $(SWAPIMG) $(SFSIMG)
+	make qemukill
 	$(V)$(QEMU) -serial mon:stdio $(QEMUOPTS) -nographic
 
 debug: $(target_ucoreimg) $(SWAPIMG) $(SFSIMG)
