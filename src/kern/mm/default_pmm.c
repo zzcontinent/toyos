@@ -48,9 +48,7 @@ static struct Page * default_alloc_pages(size_t n)
 			break;
 		}
 	}
-	udebug("\r\n");
 	if (page != NULL) {
-		udebug("\r\n");
 		if (page->property > n) {
 			struct Page *p = page + n;
 			p->property = page->property - n;
@@ -61,7 +59,6 @@ static struct Page * default_alloc_pages(size_t n)
 		nr_free -= n;
 		ClearPageProperty(page);
 	}
-	udebug("\r\n");
 	return page;
 }
 
@@ -115,62 +112,47 @@ static void basic_check(void)
 {
 	struct Page *p0, *p1, *p2;
 	p0 = p1 = p2 = NULL;
-	udebug("\r\n");
 	assert((p0 = alloc_page()) != NULL);
-	udebug("\r\n");
 	assert((p1 = alloc_page()) != NULL);
-	udebug("\r\n");
 	assert((p2 = alloc_page()) != NULL);
-	udebug("\r\n");
 
 	assert(p0 != p1 && p0 != p2 && p1 != p2);
-	udebug("\r\n");
 	assert(page_ref(p0) == 0 && page_ref(p1) == 0 && page_ref(p2) == 0);
-	udebug("\r\n");
 
 	assert(page2pa(p0) < npage * PGSIZE);
 	assert(page2pa(p1) < npage * PGSIZE);
 	assert(page2pa(p2) < npage * PGSIZE);
-	udebug("\r\n");
 
 	list_entry_t free_list_store = free_list;
 	list_init(&free_list);
 	assert(list_empty(&free_list));
-	udebug("\r\n");
 
 	unsigned int nr_free_store = nr_free;
 	nr_free = 0;
 
 	assert(alloc_page() == NULL);
-	udebug("\r\n");
 
 	free_page(p0);
 	free_page(p1);
 	free_page(p2);
 	assert(nr_free == 3);
-	udebug("\r\n");
 
 	assert((p0 = alloc_page()) != NULL);
 	assert((p1 = alloc_page()) != NULL);
 	assert((p2 = alloc_page()) != NULL);
-	udebug("\r\n");
 
 	assert(alloc_page() == NULL);
-	udebug("\r\n");
 
 	free_page(p0);
 	assert(!list_empty(&free_list));
-	udebug("\r\n");
 
 	struct Page *p;
 	assert((p = alloc_page()) == p0);
 	assert(alloc_page() == NULL);
-	udebug("\r\n");
 
 	assert(nr_free == 0);
 	free_list = free_list_store;
 	nr_free = nr_free_store;
-	udebug("\r\n");
 
 	free_page(p);
 	free_page(p1);
@@ -191,20 +173,16 @@ static void default_check(void)
 	udebug("total=%d, nr_free_pages=%d\r\n", total, nr_free_pages());
 	assert(total == nr_free_pages());
 
-	udebug("\r\n");
 	basic_check();
-	udebug("\r\n");
 
 	struct Page *p0 = alloc_pages(5), *p1, *p2;
 	assert(p0 != NULL);
 	assert(!PageProperty(p0));
-	udebug("\r\n");
 
 	list_entry_t free_list_store = free_list;
 	list_init(&free_list);
 	assert(list_empty(&free_list));
 	assert(alloc_page() == NULL);
-	udebug("\r\n");
 
 	unsigned int nr_free_store = nr_free;
 	nr_free = 0;
@@ -215,42 +193,34 @@ static void default_check(void)
 	assert((p1 = alloc_pages(3)) != NULL);
 	assert(alloc_page() == NULL);
 	assert(p0 + 2 == p1);
-	udebug("\r\n");
 
 	p2 = p0 + 1;
 	free_page(p0);
 	free_pages(p1, 3);
 	assert(PageProperty(p0) && p0->property == 1);
 	assert(PageProperty(p1) && p1->property == 3);
-	udebug("\r\n");
 
 	assert((p0 = alloc_page()) == p2 - 1);
 	free_page(p0);
 	assert((p0 = alloc_pages(2)) == p2 + 1);
-	udebug("\r\n");
 
 	free_pages(p0, 2);
 	free_page(p2);
-	udebug("\r\n");
 
 	assert((p0 = alloc_pages(5)) != NULL);
 	assert(alloc_page() == NULL);
-	udebug("\r\n");
 
 	assert(nr_free == 0);
 	nr_free = nr_free_store;
-	udebug("\r\n");
 
 	free_list = free_list_store;
 	free_pages(p0, 5);
-	udebug("\r\n");
 
 	le = &free_list;
 	while ((le = list_next(le)) != &free_list) {
 		struct Page *p = le2page(le, page_link);
 		count --, total -= p->property;
 	}
-	udebug("\r\n");
 	assert(count == 0);
 	assert(total == 0);
 }

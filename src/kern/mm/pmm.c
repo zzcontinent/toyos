@@ -88,6 +88,7 @@ static void check_boot_pgdir(void);
  * */
 static inline void lgdt(struct pseudodesc* pd)
 {
+	udebug("+++ in  +++\r\n");
 	asm volatile("lgdt (%0)" ::"r"(pd));
 	asm volatile("movw %%ax, %%gs" ::"a"(USER_DS));
 	asm volatile("movw %%ax, %%fs" ::"a"(USER_DS));
@@ -96,15 +97,19 @@ static inline void lgdt(struct pseudodesc* pd)
 	asm volatile("movw %%ax, %%ss" ::"a"(KERNEL_DS));
 	// reload cs
 	asm volatile("ljmp %0, $1f\n 1:\n" ::"i"(KERNEL_CS));
+	udebug("--- out ---\r\n");
 }
 
 void load_esp0(uintptr_t esp0)
 {
+	udebug("+++ in  +++\r\n");
 	ts.ts_esp0 = esp0;
+	udebug("--- out ---\r\n");
 }
 
 static void gdt_init(void)
 {
+	udebug("+++ in  +++\r\n");
 	// set boot kernel stack and default SS0
 	load_esp0((uintptr_t)bootstacktop);
 	ts.ts_ss0 = KERNEL_DS;
@@ -117,24 +122,30 @@ static void gdt_init(void)
 
 	// load the TSS
 	ltr(GD_TSS);
+	udebug("--- out ---\r\n");
 }
 
 static void init_pmm_manager(void)
 {
+	udebug("+++ in  +++\r\n");
 	pmm_manager = &default_pmm_manager;
 	cprintf("memory management: %s\n", pmm_manager->name);
 	pmm_manager->init();
+	udebug("--- out ---\r\n");
 }
 
 // call pmm->init_memmap to build Page struct for free memory
 static void init_memmap(struct Page* base, size_t n)
 {
+	udebug("+++ in  +++\r\n");
 	pmm_manager->init_memmap(base, n);
+	udebug("--- out ---\r\n");
 }
 
 // call pmm->alloc_pages to allocate a continuous n*PAGESIZE memory
 struct Page* alloc_pages(size_t n)
 {
+	udebug("+++ in  +++\r\n");
 	struct Page* page = NULL;
 	bool intr_flag;
 
@@ -150,21 +161,25 @@ struct Page* alloc_pages(size_t n)
 		//extern struct mm_struct *check_mm_struct;
 		//swap_out(check_mm_struct, n, 0);
 	}
-	return page;
+	{udebug("--- out ---\r\n");return page;}
+	udebug("--- out ---\r\n");
 }
 
 void free_pages(struct Page* base, size_t n)
 {
+	udebug("+++ in  +++\r\n");
 	bool intr_flag;
 	local_intr_save(intr_flag);
 	{
 		pmm_manager->free_pages(base, n);
 	}
 	local_intr_restore(intr_flag);
+	udebug("--- out ---\r\n");
 }
 
 size_t nr_free_pages(void)
 {
+	udebug("+++ in  +++\r\n");
 	size_t ret;
 	bool intr_flag;
 	local_intr_save(intr_flag);
@@ -172,12 +187,14 @@ size_t nr_free_pages(void)
 		ret = pmm_manager->nr_free_pages();
 	}
 	local_intr_restore(intr_flag);
-	return ret;
+	{udebug("--- out ---\r\n");return ret;}
+	udebug("--- out ---\r\n");
 }
 
 // initialize the physical memory management
 static void page_init(void)
 {
+	udebug("+++ in  +++\r\n");
 	struct e820map* memmap = (struct e820map*)(0x8000 + KERNBASE);
 	uint64_t maxpa = 0;
 	cprintf("e820map:\n");
@@ -231,6 +248,7 @@ static void page_init(void)
 		}
 	}
 
+	udebug("--- out ---\r\n");
 }
 
 /*
@@ -242,6 +260,7 @@ static void page_init(void)
  * */
 static void boot_map_segment(pde_t* pgdir, uintptr_t la, size_t size, uintptr_t pa, uint32_t perm)
 {
+	udebug("+++ in  +++\r\n");
 	assert(PGOFF(la) == PGOFF(pa));
 	size_t n = ROUNDUP(size + PGOFF(la), PGSIZE) / PGSIZE;
 	la = ROUNDDOWN(la, PGSIZE);
@@ -251,6 +270,7 @@ static void boot_map_segment(pde_t* pgdir, uintptr_t la, size_t size, uintptr_t 
 		assert(ptep != NULL);
 		*ptep = pa | PTE_P | perm;
 	}
+	udebug("--- out ---\r\n");
 }
 
 /*
@@ -260,15 +280,18 @@ static void boot_map_segment(pde_t* pgdir, uintptr_t la, size_t size, uintptr_t 
  * */
 static void* boot_alloc_page(void)
 {
+	udebug("+++ in  +++\r\n");
 	struct Page* p = alloc_page();
 	if (p == NULL) {
 		panic("boot_alloc_page failed.\n");
 	}
-	return page2kva(p);
+	{udebug("--- out ---\r\n");return page2kva(p);}
+	udebug("--- out ---\r\n");
 }
 
 void pmm_init(void)
 {
+	udebug("+++ in  +++\r\n");
 	// we've enabled paging
 	boot_cr3 = PADDR(boot_pgdir);
 
@@ -279,22 +302,17 @@ void pmm_init(void)
 	// detect physical memory space, reserve already used memory,
 	// use pmm->init_memmap to create free page list
 	page_init();
-	udebug("\r\n");
 	// use pmm->check to verify the correctness of the alloc/freee function in a pmm
 	check_alloc_page();
-	udebug("\r\n");
 	check_pgdir();
-	udebug("\r\n");
 
 	static_assert(KERNBASE % PTSIZE == 0 && KERNTOP % PTSIZE == 0);
-	udebug("\r\n");
 	boot_pgdir[PDX(VPT)] = PADDR(boot_pgdir) | PTE_P | PTE_W;
 
 	// map all physical memory to linear memory with base linear
 	// addr KERNBASE linear_addr KERNBASE - KERNBASE + KMEMSIZE
 	// = phy_addr 0~KMEMSIZE
 	boot_map_segment(boot_pgdir, KERNBASE, KMEMSIZE, 0, PTE_W);
-	udebug("\r\n");
 
 	// since we are using bootloader's GDT
 	// we should reload gdt to get user segments and the TSS
@@ -302,17 +320,14 @@ void pmm_init(void)
 	// then set kernel stack (ss:esp) in TSS, setup tss in
 	// gdt, load TSS
 	gdt_init();
-	udebug("\r\n");
 
 	// now the basic memory map is established.
 	// check the correctness of the basic virtual memory map.
 	check_boot_pgdir();
-	udebug("\r\n");
 
 	print_pgdir();
-	udebug("\r\n");
 	kmalloc_init();
-	udebug("\r\n");
+	udebug("--- out ---\r\n");
 }
 
 // get pte and return the kernel virtual address of this pte for la
@@ -323,37 +338,37 @@ void pmm_init(void)
 // return: the kernel virtual address of this pte
 pte_t* get_pte(pde_t* pgdir, uintptr_t la, bool create)
 {
+	udebug("+++ in  +++\r\n");
 	pde_t* pdep = &pgdir[PDX(la)];
-	udebug("pgdir=0x%x, la=0x%x, create=%d\r\n", pgdir, la, create);
 	if (!(*pdep & PTE_P)) {
 		struct Page* page;
-		udebug("\r\n");
 		if (!create || (page = alloc_page()) == NULL) {
-			udebug("\r\n");
-			return NULL;
+			{udebug("--- out ---\r\n");return NULL;}
 		}
 		set_page_ref(page, 1);
 		uintptr_t pa = page2pa(page);
 		memset(KADDR(pa), 0, PGSIZE);
 		*pdep = pa | PTE_U | PTE_W | PTE_P;
 	}
-	udebug("\r\n");
 	pte_t* ret = &((pte_t*)KADDR(PDE_ADDR(*pdep)))[PTX(la)];
 	udebug("ret=0x%x\r\n", ret);
-	return ret;
+	{udebug("--- out ---\r\n");return ret;}
+	udebug("--- out ---\r\n");
 }
 
 // get related Page struct for linear address la using PDT pgdir
 struct Page* get_page(pde_t* pgdir, uintptr_t la, pte_t** ptep_store)
 {
+	udebug("+++ in  +++\r\n");
 	pte_t* ptep = get_pte(pgdir, la, 0);
 	if (ptep_store != NULL) {
 		*ptep_store = ptep;
 	}
 	if (ptep != NULL && *ptep & PTE_P) {
-		return pte2page(*ptep);
+		{udebug("--- out ---\r\n");return pte2page(*ptep);}
 	}
-	return NULL;
+	{udebug("--- out ---\r\n");return NULL;}
+	udebug("--- out ---\r\n");
 }
 
 // free an Page struct which is related linear address la
@@ -361,6 +376,7 @@ struct Page* get_page(pde_t* pgdir, uintptr_t la, pte_t** ptep_store)
 // note: PT is changed, so the TLB need to be invalidate
 static inline void page_remove_pte(pde_t *pgdir, uintptr_t la, pte_t *ptep)
 {
+	udebug("+++ in  +++\r\n");
 	if (*ptep & PTE_P)
 	{
 		struct Page *page = pte2page(*ptep);
@@ -371,15 +387,18 @@ static inline void page_remove_pte(pde_t *pgdir, uintptr_t la, pte_t *ptep)
 		*ptep = 0;
 		tlb_invalidate(pgdir, la);
 	}
+	udebug("--- out ---\r\n");
 }
 
 //page_remove - free an Page which is related linear address la and has an validated pte
-void
-page_remove(pde_t *pgdir, uintptr_t la) {
+void page_remove(pde_t *pgdir, uintptr_t la) 
+{
+	udebug("+++ in  +++\r\n");
 	pte_t *ptep = get_pte(pgdir, la, 0);
 	if (ptep != NULL) {
 		page_remove_pte(pgdir, la, ptep);
 	}
+	udebug("--- out ---\r\n");
 }
 
 //page_insert - build the map of phy addr of an Page with the linear addr la
@@ -395,11 +414,9 @@ page_insert(pde_t *pgdir, struct Page *page, uintptr_t la, uint32_t perm) {
 	udebug("pgdir=0x%x, la=0x%x\r\n", pgdir, la);
 	pte_t *ptep = get_pte(pgdir, la, 1);
 	if (ptep == NULL) {
-		return -E_NO_MEM;
+		{udebug("--- out ---\r\n");return -E_NO_MEM;}
 	}
-	udebug("\r\n");
 	page_ref_inc(page);
-	udebug("\r\n");
 	if (*ptep & PTE_P) {
 		struct Page *p = pte2page(*ptep);
 		if (p == page) {
@@ -409,35 +426,38 @@ page_insert(pde_t *pgdir, struct Page *page, uintptr_t la, uint32_t perm) {
 			page_remove_pte(pgdir, la, ptep);
 		}
 	}
-	udebug("\r\n");
 	*ptep = page2pa(page) | PTE_P | perm;
-	udebug("\r\n");
 	tlb_invalidate(pgdir, la);
-	udebug("\r\n");
-	return 0;
+	{udebug("--- out ---\r\n");return 0;}
+	udebug("--- out ---\r\n");
 }
 
 // invalidate a TLB entry, but only if the page tables being
 // edited are the ones currently in use by the processor.
 void tlb_invalidate(pde_t *pgdir, uintptr_t la)
 {
+	udebug("+++ in  +++\r\n");
 	if (rcr3() == PADDR(pgdir))
 	{
 		invlpg((void*)la);
 	}
+	udebug("--- out ---\r\n");
 }
 
 void unmap_range(pde_t *pgdir, uintptr_t start, uintptr_t end)
 {
+	udebug("+++ in  +++\r\n");
 	assert(start %PGSIZE == 0 && end %PGSIZE == 0);
 	assert(USER_ACCESS(start, end));
 	do {
 		pte_t *ptep = get_pte(pgdir, start, 0);
 	} while (start != 0 && start < end);
+	udebug("--- out ---\r\n");
 }
 
 void exit_range(pde_t *pgdir, uintptr_t start, uintptr_t end)
 {
+	udebug("+++ in  +++\r\n");
 	assert(start %PGSIZE == 0 && end %PGSIZE == 0);
 	assert(USER_ACCESS(start, end));
 
@@ -451,6 +471,7 @@ void exit_range(pde_t *pgdir, uintptr_t start, uintptr_t end)
 		}
 		start += PTSIZE;
 	} while (start != 0 && start < end);
+	udebug("--- out ---\r\n");
 }
 
 /*
@@ -462,6 +483,7 @@ void exit_range(pde_t *pgdir, uintptr_t start, uintptr_t end)
  * */
 int copy_range(pde_t* to, pde_t *from, uintptr_t start, uintptr_t end, bool share)
 {
+	udebug("+++ in  +++\r\n");
 	assert(start %PGSIZE == 0 && end %PGSIZE == 0);
 	assert(USER_ACCESS(start, end));
 
@@ -478,27 +500,28 @@ int copy_range(pde_t* to, pde_t *from, uintptr_t start, uintptr_t end, bool shar
 		// if pte is NULL, just alloc a PT.
 		// todo...
 	} while(1);
-	return 0;
+	{udebug("--- out ---\r\n");return 0;}
+	udebug("--- out ---\r\n");
 }
 
 static void check_alloc_page(void)
 {
+	udebug("+++ in  +++\r\n");
 	pmm_manager->check();
 	cprintf("check_alloc_page succeed!\n");
+	udebug("--- out ---\r\n");
 }
 
 static void check_pgdir(void)
 {
-	udebug("\r\n");
+	udebug("+++ in  +++\r\n");
 	assert(npage <= KMEMSIZE / PGSIZE);
 	assert(boot_pgdir != NULL && (uint32_t)PGOFF(boot_pgdir) == 0);
 	assert(get_page(boot_pgdir, 0x0, NULL) == NULL);
 
-	udebug("\r\n");
 	struct Page *p1, *p2;
 	p1 = alloc_page();
 	assert(page_insert(boot_pgdir, p1, 0x0, 0) == 0);
-	udebug("\r\n");
 
 	pte_t* ptep;
 	assert((ptep = get_pte(boot_pgdir, 0x0, 0)) != NULL);
@@ -506,7 +529,6 @@ static void check_pgdir(void)
 	assert(page_ref(p1) == 1);
 	ptep = &((pte_t*)KADDR(PDE_ADDR(boot_pgdir[0])))[1];
 	assert(get_pte(boot_pgdir, PGSIZE, 0) == ptep);
-	udebug("\r\n");
 
 	p2 = alloc_page();
 	assert(page_insert(boot_pgdir, p2, PGSIZE, PTE_U | PTE_W) == 0);
@@ -515,38 +537,33 @@ static void check_pgdir(void)
 	assert(*ptep & PTE_W);
 	assert(boot_pgdir[0] & PTE_U);
 	assert(page_ref(p2) == 1);
-	udebug("\r\n");
 
 	assert(page_insert(boot_pgdir, p1, PGSIZE, 0) == 0);
-	udebug("\r\n");
 	assert(page_ref(p1) == 2);
 	assert(page_ref(p2) == 0);
-	udebug("\r\n");
 	assert((ptep = get_pte(boot_pgdir, PGSIZE, 0)) != NULL);
 	assert(pte2page(*ptep) == p1);
-	udebug("\r\n");
 	assert((*ptep & PTE_U) == 0);
-	udebug("\r\n");
 
 	//TODO... crush here
 	page_remove(boot_pgdir, 0x0);
 	assert(page_ref(p1) == 1);
 	assert(page_ref(p2) == 0);
-	udebug("\r\n");
 
 	page_remove(boot_pgdir, PGSIZE);
 	assert(page_ref(p1) == 0);
 	assert(page_ref(p2) == 0);
-	udebug("\r\n");
 
 	assert(page_ref(pde2page(boot_pgdir[0])) == 1);
 	free_page(pde2page(boot_pgdir[0]));
 	boot_pgdir[0] = 0;
 	cprintf("check_pgdir succeed!\n");
+	udebug("--- out ---\r\n");
 }
 
 static void check_boot_pgdir(void)
 {
+	udebug("+++ in  +++\r\n");
 	pte_t* ptep;
 	for (int i = 0; i < npage; i += PGSIZE) {
 		assert((ptep = get_pte(boot_pgdir, (uintptr_t)KADDR(i), 0)) != NULL);
@@ -573,22 +590,26 @@ static void check_boot_pgdir(void)
 	free_page(pde2page(boot_pgdir[0]));
 	boot_pgdir[0] = 0;
 	cprintf("check_boot_pgdir succeed!\n");
+	udebug("--- out ---\r\n");
 }
 
 static const char* perm2str(int perm)
 {
+	udebug("+++ in  +++\r\n");
 	static char str[4];
 	str[0] = (perm * PTE_U) ? 'u' : '-';
 	str[1] = 'r';
 	str[2] = (perm * PTE_W) ? 'w' : '-';
 	str[3] = '\0';
-	return str;
+	{udebug("--- out ---\r\n");return str;}
+	udebug("--- out ---\r\n");
 }
 
 static int get_pgtable_items(size_t left, size_t right, size_t start, uintptr_t* table, size_t* left_store, size_t* right_store)
 {
+	udebug("+++ in  +++\r\n");
 	if (start >= right) {
-		return 0;
+		{udebug("--- out ---\r\n");return 0;}
 	}
 	while (start < right && !(table[start] & PTE_P)) {
 		++start;
@@ -604,13 +625,15 @@ static int get_pgtable_items(size_t left, size_t right, size_t start, uintptr_t*
 		if (right_store != NULL) {
 			*right_store = start;
 		}
-		return perm;
+		{udebug("--- out ---\r\n");return perm;}
 	}
-	return 0;
+	{udebug("--- out ---\r\n");return 0;}
+	udebug("--- out ---\r\n");
 }
 
 void print_pgdir(void)
 {
+	udebug("+++ in  +++\r\n");
 	cprintf("--------BEGIN--------\n");
 	size_t left, right = 0, perm;
 	while ((perm = get_pgtable_items(0, NPDEENTRY, right, vpd, &left, &right)) != 0) {
@@ -624,4 +647,5 @@ void print_pgdir(void)
 		}
 	}
 	cprintf("--------END--------\n");
+	udebug("--- out ---\r\n");
 }
