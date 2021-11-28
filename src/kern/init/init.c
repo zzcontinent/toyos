@@ -41,8 +41,10 @@ int kern_init(void)
 
 	pmm_init();
 	pic_init();
+	idt_init();                 // init interrupt descriptor table
 
-	vmm_init();
+
+	//vmm_init();
 	//sched_init();
 	//proc_init();
 
@@ -54,5 +56,6 @@ int kern_init(void)
 	//intr_enable();
 
 	//cpu_idle();
+	udebug("\r\n");
 	while(1);
 }

@@ -19,80 +19,6 @@
 
 #define TICK_NUM 100
 
-static void print_ticks()
-{
-	cprintf("%d ticks\n", TICK_NUM);
-#ifdef DEBUG_GRADE
-	cprintf("End of Test.\n");
-	panic("EOT: kernel seems ok.");
-#endif
-}
-
-/* *
- * Interrupt descriptor table:
- *
- * Must be built at run time because shifted function addresses can't
- * be represented in relocation records.
- * */
-static struct gatedesc idt[256] = { { 0 } };
-
-static struct pseudodesc idt_pd = {
-	sizeof(idt) - 1, (uintptr_t)idt
-};
-
-/* idt_init - initialize IDT to each of the entry points in kern/trap/vectors.S */
-void idt_init(void)
-{
-	extern uintptr_t __vectors[];
-	int i;
-	for (i = 0; i < sizeof(idt) / sizeof(struct gatedesc); i++) {
-		SETGATE(idt[i], 0, GD_KTEXT, __vectors[i], DPL_KERNEL);
-	}
-	SETGATE(idt[T_SYSCALL], 1, GD_KTEXT, __vectors[T_SYSCALL], DPL_USER);
-	lidt(&idt_pd);
-}
-
-	static const char*
-trapname(int trapno)
-{
-	static const char* const excnames[] = {
-		"Divide error",
-		"Debug",
-		"Non-Maskable Interrupt",
-		"Breakpoint",
-		"Overflow",
-		"BOUND Range Exceeded",
-		"Invalid Opcode",
-		"Device Not Available",
-		"Double Fault",
-		"Coprocessor Segment Overrun",
-		"Invalid TSS",
-		"Segment Not Present",
-		"Stack Fault",
-		"General Protection",
-		"Page Fault",
-		"(unknown trap)",
-		"x87 FPU Floating-Point Error",
-		"Alignment Check",
-		"Machine-Check",
-		"SIMD Floating-Point Exception"
-	};
-
-	if (trapno < sizeof(excnames) / sizeof(const char* const)) {
-		return excnames[trapno];
-	}
-	if (trapno >= IRQ_OFFSET && trapno < IRQ_OFFSET + 16) {
-		return "Hardware Interrupt";
-	}
-	return "(unknown trap)";
-}
-
-/* trap_in_kernel - test if trap happened in kernel */
-bool trap_in_kernel(struct trapframe* tf)
-{
-	return (tf->tf_cs == (uint16_t)KERNEL_CS);
-}
-
 static const char* IA32flags[] = {
 	"CF",
 	NULL,
@@ -119,6 +45,81 @@ static const char* IA32flags[] = {
 	NULL,
 	NULL,
 };
+
+static const char* const excnames[] = {
+	"Divide error",
+	"Debug",
+	"Non-Maskable Interrupt",
+	"Breakpoint",
+	"Overflow",
+	"BOUND Range Exceeded",
+	"Invalid Opcode",
+	"Device Not Available",
+	"Double Fault",
+	"Coprocessor Segment Overrun",
+	"Invalid TSS",
+	"Segment Not Present",
+	"Stack Fault",
+	"General Protection",
+	"Page Fault",
+	"(unknown trap)",
+	"x87 FPU Floating-Point Error",
+	"Alignment Check",
+	"Machine-Check",
+	"SIMD Floating-Point Exception"
+};
+
+/* *
+ * Interrupt descriptor table:
+ *
+ * Must be built at run time because shifted function addresses can't
+ * be represented in relocation records.
+ * */
+static struct gatedesc idt[256] = { { 0 } };
+
+static struct pseudodesc idt_pd = {
+	sizeof(idt) - 1, (uintptr_t)idt
+};
+
+static volatile int in_swap_tick_event = 0;
+extern struct mm_struct* check_mm_struct;
+
+static void print_ticks()
+{
+	cprintf("%d ticks\n", TICK_NUM);
+}
+
+/* idt_init - initialize IDT to each of the entry points in kern/trap/vectors.S */
+void idt_init(void)
+{
+	extern uintptr_t __vectors[];
+	int i;
+	for (i = 0; i < sizeof(idt) / sizeof(struct gatedesc); i++)
+	{
+		SETGATE(idt[i], 0, GD_KTEXT, __vectors[i], DPL_KERNEL);
+	}
+	SETGATE(idt[T_SYSCALL], 1, GD_KTEXT, __vectors[T_SYSCALL], DPL_USER);
+	lidt(&idt_pd);
+}
+
+static const char* trapname(int trapno)
+{
+
+	if (trapno < sizeof(excnames) / sizeof(const char* const)) {
+		return excnames[trapno];
+	}
+	if (trapno >= IRQ_OFFSET && trapno < IRQ_OFFSET + 16) {
+		return "Hardware Interrupt";
+	}
+	return "(unknown trap)";
+}
+
+/* trap_in_kernel - test if trap happened in kernel */
+bool trap_in_kernel(struct trapframe* tf)
+{
+	return (tf->tf_cs == (uint16_t)KERNEL_CS);
+}
+
 
 void print_trapframe(struct trapframe* tf)
 {
@@ -160,8 +161,7 @@ void print_regs(struct pushregs* regs)
 	cprintf("  eax  0x%08x\n", regs->reg_eax);
 }
 
-	static inline void
-print_pgfault(struct trapframe* tf)
+static inline void print_pgfault(struct trapframe* tf)
 {
 	/* error_code:
 	 * bit 0 == 0 means no page found, 1 means protection fault
@@ -174,8 +174,7 @@ print_pgfault(struct trapframe* tf)
 			(tf->tf_err & 1) ? "protection fault" : "no page found");
 }
 
-	static int
-pgfault_handler(struct trapframe* tf)
+static int pgfault_handler(struct trapframe* tf)
 {
 	//	extern struct mm_struct* check_mm_struct;
 	//	if (check_mm_struct != NULL) { //used for test check_swap
@@ -196,8 +195,6 @@ pgfault_handler(struct trapframe* tf)
 	//	return do_pgfault(mm, tf->tf_err, rcr2());
 }
 
-static volatile int in_swap_tick_event = 0;
-extern struct mm_struct* check_mm_struct;
 
 static void trap_dispatch(struct trapframe* tf)
 {
@@ -231,22 +228,22 @@ static void trap_dispatch(struct trapframe* tf)
 			c = cons_getc();
 			cprintf("serial [%03d] %c\n", c, c);
 			break;
-		//case IRQ_OFFSET + IRQ_KBD:
-		//	c = cons_getc();
-		//	cprintf("kbd [%03d] %c\n", c, c);
-		//	{
-		//		extern void dev_stdin_write(char c);
-		//		dev_stdin_write(c);
-		//	}
-		//	break;
-		//case T_SWITCH_TOU:
-		//case T_SWITCH_TOK:
-		//	panic("T_SWITCH_** ??\n");
-		//	break;
-		//case IRQ_OFFSET + IRQ_IDE1:
-		//case IRQ_OFFSET + IRQ_IDE2:
-		//	/* do nothing */
-		//	break;
+			//case IRQ_OFFSET + IRQ_KBD:
+			//	c = cons_getc();
+			//	cprintf("kbd [%03d] %c\n", c, c);
+			//	{
+			//		extern void dev_stdin_write(char c);
+			//		dev_stdin_write(c);
+			//	}
+			//	break;
+			//case T_SWITCH_TOU:
+			//case T_SWITCH_TOK:
+			//	panic("T_SWITCH_** ??\n");
+			//	break;
+			//case IRQ_OFFSET + IRQ_IDE1:
+			//case IRQ_OFFSET + IRQ_IDE2:
+			//	/* do nothing */
+			//	break;
 		default:
 			print_trapframe(tf);
 			if (current != NULL) {
