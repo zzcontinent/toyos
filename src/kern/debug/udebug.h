@@ -30,8 +30,8 @@ typedef unsigned long __U64;
 #define LEVEL_ERROR  2
 #define LEVEL_OFF    3
 #define LEVEL_SIMPLE 4
-//#define ULOG_LEVEL LEVEL_DEBUG
-#define ULOG_LEVEL LEVEL_OFF
+#define ULOG_LEVEL LEVEL_DEBUG
+//#define ULOG_LEVEL LEVEL_OFF
 
 #define printf cprintf
 

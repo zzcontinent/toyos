@@ -2,7 +2,6 @@
 #include <list.h>
 #include <string.h>
 #include <default_pmm.h>
-#include <udebug.h>
 
 free_area_t free_area;
 
@@ -11,14 +10,11 @@ free_area_t free_area;
 
 static void default_init(void)
 {
-	udebug("+++ in  +++\r\n");
 	list_init(&free_list);
 	nr_free = 0;
-	udebug("--- out ---\r\n");
 }
 
 static void default_init_memmap(struct Page *base, size_t n) {
-	udebug("n=%d\r\n", n);
 	assert(n > 0);
 	struct Page *p = base;
 	for (; p != base + n; p ++) {
@@ -27,20 +23,16 @@ static void default_init_memmap(struct Page *base, size_t n) {
 		set_page_ref(p, 0);
 	}
 	base->property = n;
-	udebug("n=%d\r\n", n);
 	SetPageProperty(base);
 	nr_free += n;
 	list_add_before(&free_list, &(base->page_link));
-	udebug("--- out ---\r\n");
 }
 
 static struct Page * default_alloc_pages(size_t n) 
 {
-	udebug("+++ in  +++\r\n");
 	assert(n > 0);
-	udebug("n=%d, nr_free=%d\r\n", n, nr_free);
 	if (n > nr_free) {
-		{udebug("--- out ---\r\n");return NULL;}
+		return NULL;
 	}
 	struct Page *page = NULL;
 	list_entry_t *le = &free_list;
@@ -63,13 +55,11 @@ static struct Page * default_alloc_pages(size_t n)
 		nr_free -= n;
 		ClearPageProperty(page);
 	}
-	{udebug("--- out ---\r\n");return page;}
-	udebug("--- out ---\r\n");
+	return page;
 }
 
 static void default_free_pages(struct Page *base, size_t n) 
 {
-	udebug("+++ in  +++\r\n");
 	assert(n > 0);
 	struct Page *p = base;
 	for (; p != base + n; p ++) {
@@ -107,19 +97,15 @@ static void default_free_pages(struct Page *base, size_t n)
 		le = list_next(le);
 	}
 	list_add_before(le, &(base->page_link));
-	udebug("--- out ---\r\n");
 }
 
 static size_t default_nr_free_pages(void) 
 {
-	udebug("+++ in  +++\r\n");
-	{udebug("--- out ---\r\n");return nr_free;}
-	udebug("--- out ---\r\n");
+	return nr_free;
 }
 
 static void basic_check(void) 
 {
-	udebug("+++ in  +++\r\n");
 	struct Page *p0, *p1, *p2;
 	p0 = p1 = p2 = NULL;
 	assert((p0 = alloc_page()) != NULL);
@@ -167,14 +153,12 @@ static void basic_check(void)
 	free_page(p);
 	free_page(p1);
 	free_page(p2);
-	udebug("--- out ---\r\n");
 }
 
 // LAB2: below code is used to check the first fit allocation algorithm (your EXERCISE 1)
 // NOTICE: You SHOULD NOT CHANGE basic_check, default_check functions!
 static void default_check(void) 
 {
-	udebug("+++ in  +++\r\n");
 	int count = 0, total = 0;
 	list_entry_t *le = &free_list;
 	while ((le = list_next(le)) != &free_list) {
@@ -182,7 +166,6 @@ static void default_check(void)
 		assert(PageProperty(p));
 		count ++, total += p->property;
 	}
-	udebug("total=%d, nr_free_pages=%d\r\n", total, nr_free_pages());
 	assert(total == nr_free_pages());
 
 	basic_check();
@@ -235,7 +218,6 @@ static void default_check(void)
 	}
 	assert(count == 0);
 	assert(total == 0);
-	udebug("--- out ---\r\n");
 }
 
 const struct pmm_manager default_pmm_manager = {
