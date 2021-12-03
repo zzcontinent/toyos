@@ -31,27 +31,27 @@ static inline void list_init(list_entry_t* elm)
 	elm->prev = elm->next = elm;
 }
 
-static inline void __list_add(list_entry_t* elm, list_entry_t* prev, list_entry_t* next)
+static inline void __list_add(list_entry_t* insert_elm, list_entry_t* prev, list_entry_t* next)
 {
-	prev->next = elm;
-	next->prev = elm;
-	elm->prev = prev;
-	elm->next = next;
+	prev->next = insert_elm;
+	next->prev = insert_elm;
+	insert_elm->prev = prev;
+	insert_elm->next = next;
 }
 
-static inline void list_add_before(list_entry_t* listelm, list_entry_t* elm)
+static inline void list_add_before(list_entry_t* listelm, list_entry_t* insert_elm)
 {
-	__list_add(elm, listelm->prev, listelm);
+	__list_add(insert_elm, listelm->prev, listelm);
 }
 
-static inline void list_add_after(list_entry_t* listelm, list_entry_t* elm)
+static inline void list_add_after(list_entry_t* listelm, list_entry_t* insert_elm)
 {
-	__list_add(elm, listelm, listelm->next);
+	__list_add(insert_elm, listelm, listelm->next);
 }
 
-static inline void list_add(list_entry_t* listelm, list_entry_t* elm)
+static inline void list_add(list_entry_t* listelm, list_entry_t* insert_elm)
 {
-	list_add_after(listelm, elm);
+	list_add_after(listelm, insert_elm);
 }
 
 static inline void __list_del(list_entry_t* prev, list_entry_t* next)
