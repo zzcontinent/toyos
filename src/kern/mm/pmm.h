@@ -132,4 +132,9 @@ static inline int page_ref_dec(struct Page* page)
 	return page->ref;
 }
 
+static inline struct Page * kva2page(void *kva) {
+	return pa2page(PADDR(kva));
+}
+
+
 #endif /* __KERN_MM_PMM_H__ */
