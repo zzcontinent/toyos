@@ -24,7 +24,7 @@ static char *welcome = "\n"
 "          |___/\n";
 
 int kern_init(void) __attribute__((noreturn));
-extern char bootstacktop[], bootstack[]; 
+extern char bootstacktop[], bootstack[];
 
 int kern_init(void)
 {
