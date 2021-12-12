@@ -60,9 +60,8 @@ struct slob_block {
 	int units;
 	struct slob_block *next;
 };
-typedef struct slob_block slob_t;
 
-#define SLOB_UNIT sizeof(slob_t)
+#define SLOB_UNIT sizeof(struct slob_block)
 #define SLOB_UNITS(size) (((size) + SLOB_UNIT - 1)/SLOB_UNIT)
 #define SLOB_ALIGN L1_CACHE_BYTES
 
@@ -71,11 +70,10 @@ struct bigblock {
 	void *pages;
 	struct bigblock *next;
 };
-typedef struct bigblock bigblock_t;
 
-static slob_t arena = { .next = &arena, .units = 1 };
-static slob_t *slobfree = &arena;
-static bigblock_t *bigblocks;
+static struct slob_block arena = { .next = &arena, .units = 1 };
+static struct slob_block *slobfree = &arena;
+static struct bigblock *bigblocks;
 
 
 static void* __slob_get_free_pages(gfp_t gfp, int order)
@@ -99,7 +97,7 @@ static void *slob_alloc(size_t size, gfp_t gfp, int align)
 {
 	assert( (size + SLOB_UNIT) < PAGE_SIZE );
 
-	slob_t *prev, *cur, *aligned = 0;
+	struct slob_block *prev, *cur, *aligned = 0;
 	int delta = 0, units = SLOB_UNITS(size);
 	unsigned long flags;
 
@@ -107,7 +105,7 @@ static void *slob_alloc(size_t size, gfp_t gfp, int align)
 	prev = slobfree;
 	for (cur = prev->next; ; prev = cur, cur = cur->next) {
 		if (align) {
-			aligned = (slob_t *)ALIGN((unsigned long)cur, align);
+			aligned = (struct slob_block *)ALIGN((unsigned long)cur, align);
 			delta = aligned - cur;
 		}
 		if (cur->units >= units + delta) { /* room enough? */
@@ -139,7 +137,7 @@ static void *slob_alloc(size_t size, gfp_t gfp, int align)
 			if (size == PAGE_SIZE) /* trying to shrink arena? */
 				return 0;
 
-			cur = (slob_t *)__slob_get_free_page(gfp);
+			cur = (struct slob_block *)__slob_get_free_page(gfp);
 			if (!cur)
 				return 0;
 
@@ -152,7 +150,7 @@ static void *slob_alloc(size_t size, gfp_t gfp, int align)
 
 static void slob_free(void *block, int size)
 {
-	slob_t *cur, *b = (slob_t *)block;
+	struct slob_block *cur, *b = (struct slob_block *)block;
 	unsigned long flags;
 
 	if (!block)
@@ -184,31 +182,26 @@ static void slob_free(void *block, int size)
 	spin_unlock_irqrestore(&slob_lock, flags);
 }
 
-
-
-void check_slab(void) {
+void check_slab(void)
+{
 	cprintf("check_slab() success\n");
 }
 
-void
-slab_init(void) {
+void slab_init(void) {
 	cprintf("use SLOB allocator\n");
 	check_slab();
 }
 
-inline void
-kmalloc_init(void) {
+inline void kmalloc_init(void) {
 	slab_init();
 	cprintf("kmalloc_init() succeeded!\n");
 }
 
-size_t
-slab_allocated(void) {
+size_t slab_allocated(void) {
 	return 0;
 }
 
-size_t
-kallocated(void) {
+size_t kallocated(void) {
 	return slab_allocated();
 }
 
@@ -222,8 +215,8 @@ static int find_order(int size)
 
 static void *__kmalloc(size_t size, gfp_t gfp)
 {
-	slob_t *m;
-	bigblock_t *bb;
+	struct slob_block *m;
+	struct bigblock *bb;
 	unsigned long flags;
 
 	if (size < PAGE_SIZE - SLOB_UNIT) {
@@ -231,7 +224,7 @@ static void *__kmalloc(size_t size, gfp_t gfp)
 		return m ? (void *)(m + 1) : 0;
 	}
 
-	bb = slob_alloc(sizeof(bigblock_t), gfp, 0);
+	bb = slob_alloc(sizeof(struct bigblock), gfp, 0);
 	if (!bb)
 		return 0;
 
@@ -246,12 +239,11 @@ static void *__kmalloc(size_t size, gfp_t gfp)
 		return bb->pages;
 	}
 
-	slob_free(bb, sizeof(bigblock_t));
+	slob_free(bb, sizeof(struct bigblock));
 	return 0;
 }
 
-	void *
-kmalloc(size_t size)
+void * kmalloc(size_t size)
 {
 	return __kmalloc(size, 0);
 }
@@ -259,7 +251,7 @@ kmalloc(size_t size)
 
 void kfree(void *block)
 {
-	bigblock_t *bb, **last = &bigblocks;
+	struct bigblock *bb, **last = &bigblocks;
 	unsigned long flags;
 
 	if (!block)
@@ -273,21 +265,21 @@ void kfree(void *block)
 				*last = bb->next;
 				spin_unlock_irqrestore(&block_lock, flags);
 				__slob_free_pages((unsigned long)block, bb->order);
-				slob_free(bb, sizeof(bigblock_t));
+				slob_free(bb, sizeof(struct bigblock));
 				return;
 			}
 		}
 		spin_unlock_irqrestore(&block_lock, flags);
 	}
 
-	slob_free((slob_t *)block - 1, 0);
+	slob_free((struct slob_block *)block - 1, 0);
 	return;
 }
 
 
 unsigned int ksize(const void *block)
 {
-	bigblock_t *bb;
+	struct bigblock *bb;
 	unsigned long flags;
 
 	if (!block)
@@ -303,6 +295,6 @@ unsigned int ksize(const void *block)
 		spin_unlock_irqrestore(&block_lock, flags);
 	}
 
-	return ((slob_t *)block - 1)->units * SLOB_UNIT;
+	return ((struct slob_block *)block - 1)->units * SLOB_UNIT;
 }
 
