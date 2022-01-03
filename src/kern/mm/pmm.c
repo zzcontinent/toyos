@@ -360,7 +360,7 @@ static inline void page_remove_pte(pde_t *pgdir, uintptr_t la, pte_t *ptep)
 }
 
 //page_remove - free an Page which is related linear address la and has an validated pte
-void page_remove(pde_t *pgdir, uintptr_t la) 
+void page_remove(pde_t *pgdir, uintptr_t la)
 {
 	pte_t *ptep = get_pte(pgdir, la, 0);
 	if (ptep != NULL) {

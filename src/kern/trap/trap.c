@@ -104,7 +104,6 @@ void idt_init(void)
 
 static const char* trapname(int trapno)
 {
-
 	if (trapno < sizeof(excnames) / sizeof(const char* const)) {
 		return excnames[trapno];
 	}
@@ -169,9 +168,9 @@ static inline void print_pgfault(struct trapframe* tf)
 	 * bit 2 == 0 means kernel, 1 means user
 	 * */
 	cprintf("page fault at 0x%08x: %c/%c [%s].\n", rcr2(),
-			(tf->tf_err & 4) ? 'U' : 'K',
-			(tf->tf_err & 2) ? 'W' : 'R',
-			(tf->tf_err & 1) ? "protection fault" : "no page found");
+			(tf->tf_err & PTE_U) ? 'U' : 'K',
+			(tf->tf_err & PTE_W) ? 'W' : 'R',
+			(tf->tf_err & PTE_P) ? "protection fault" : "no page found");
 }
 
 static int pgfault_handler(struct trapframe* tf)
