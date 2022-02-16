@@ -1,3 +1,9 @@
+/* ******************************************************************************************
+ * FILE NAME   : init.c
+ * PROGRAMMER  : zhaozz
+ * DESCRIPTION : kernel entry
+ * DATE        : 2022-01-08 00:38:27
+ * *****************************************************************************************/
 #include <clock.h>
 #include <console.h>
 #include <defs.h>
@@ -44,7 +50,7 @@ int kern_init(void)
 	idt_init();                 // init interrupt descriptor table
 
 
-	//vmm_init();
+	vmm_init();
 	//sched_init();
 	//proc_init();
 

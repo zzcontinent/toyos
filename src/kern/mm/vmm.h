@@ -1,5 +1,12 @@
-#ifndef __KERN_MM_VMM_H__
-#define __KERN_MM_VMM_H__
+/* ******************************************************************************************
+ * FILE NAME   : vmm.h
+ * PROGRAMMER  : zhaozz
+ * DESCRIPTION : kernel vmm
+ * DATE        : 2022-01-08 00:37:46
+ * *****************************************************************************************/
+#ifndef  __VMM_H__
+#define  __VMM_H__
+
 
 #include <defs.h>
 #include <list.h>
@@ -38,6 +45,4 @@ struct mm_struct {
 };
 
 
-
-
-#endif
+#endif  /* __VMM_H__ */#ifndef __KERN_MM_VMM_H__
