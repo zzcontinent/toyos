@@ -7,7 +7,7 @@
 #include <clock.h>
 #include <console.h>
 #include <defs.h>
-#include <fs.h>
+//#include <fs.h>
 #include <ide.h>
 #include <intr.h>
 #include <kdebug.h>
@@ -50,7 +50,7 @@ int kern_init(void)
 	idt_init();                 // init interrupt descriptor table
 
 
-	vmm_init();
+	//vmm_init();
 	//sched_init();
 	//proc_init();
 
