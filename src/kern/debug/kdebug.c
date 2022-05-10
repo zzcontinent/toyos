@@ -13,21 +13,21 @@
 
 #define STACKFRAME_DEPTH 20
 
-extern const struct stab __STAB_BEGIN__[]; // beginning of stabs table
-extern const struct stab __STAB_END__[];   // end of stabs table
-extern const char __STABSTR_BEGIN__[];	   // beginning of string table
-extern const char __STABSTR_END__[];	   // end of string table
+extern const struct stab __STAB_BEGIN__[];   // beginning of stabs table
+extern const struct stab __STAB_END__[];     // end of stabs table
+extern const char __STABSTR_BEGIN__[];       // beginning of string table
+extern const char __STABSTR_END__[];         // end of string table
 
 
 
 /* debug information about a particular instruction pointer */
 struct eipdebuginfo {
 	const char* eip_file;    // source code filename for eip
-	int eip_line;	     // source code line number for eip
+	int eip_line;            // source code line number for eip
 	const char* eip_fn_name; // name of function containing eip
-	int eip_fn_namelen;	     // length of function's name
+	int eip_fn_namelen;      // length of function's name
 	uintptr_t eip_fn_addr;   // start address of function
-	int eip_fn_narg;	     // number of function arguments
+	int eip_fn_narg;         // number of function arguments
 };
 
 /* user STABS data structure  */
