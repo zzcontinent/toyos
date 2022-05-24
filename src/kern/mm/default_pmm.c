@@ -14,9 +14,9 @@ static void default_init(void)
 	nr_free = 0;
 }
 
-static void default_init_memmap(struct Page *base, size_t n) {
+static void default_init_memmap(struct page_frame *base, size_t n) {
 	assert(n > 0);
-	struct Page *p = base;
+	struct page_frame *p = base;
 	for (; p != base + n; p ++) {
 		assert(PAGE_RESERVED(p));
 		p->flags = p->property = 0;
@@ -28,17 +28,17 @@ static void default_init_memmap(struct Page *base, size_t n) {
 	list_add_before(&free_list, &(base->page_link));
 }
 
-static struct Page * default_alloc_pages(size_t n)
+static struct page_frame * default_alloc_pages(size_t n)
 {
 	assert(n > 0);
 	if (n > nr_free) {
 		return NULL;
 	}
-	struct Page *page = NULL;
+	struct page_frame *page = NULL;
 	list_entry_t *le = &free_list;
 	// TODO: optimize (next-fit)
 	while ((le = list_next(le)) != &free_list) {
-		struct Page *p = le2page(le, page_link);
+		struct page_frame *p = le2page(le, page_link);
 		if (p->property >= n) {
 			page = p;
 			break;
@@ -46,7 +46,7 @@ static struct Page * default_alloc_pages(size_t n)
 	}
 	if (page != NULL) {
 		if (page->property > n) {
-			struct Page *p = page + n;
+			struct page_frame *p = page + n;
 			p->property = page->property - n;
 			SET_PAGE_PROPERTY(p);
 			list_add_after(&(page->page_link), &(p->page_link));
@@ -58,10 +58,10 @@ static struct Page * default_alloc_pages(size_t n)
 	return page;
 }
 
-static void default_free_pages(struct Page *base, size_t n)
+static void default_free_pages(struct page_frame *base, size_t n)
 {
 	assert(n > 0);
-	struct Page *p = base;
+	struct page_frame *p = base;
 	for (; p != base + n; p ++) {
 		assert(!PAGE_RESERVED(p) && !PAGE_PROPERTY(p));
 		p->flags = 0;
@@ -106,7 +106,7 @@ static size_t default_nr_free_pages(void)
 
 static void basic_check(void)
 {
-	struct Page *p0, *p1, *p2;
+	struct page_frame *p0, *p1, *p2;
 	p0 = p1 = p2 = NULL;
 	assert((p0 = alloc_page()) != NULL);
 	assert((p1 = alloc_page()) != NULL);
@@ -142,7 +142,7 @@ static void basic_check(void)
 	free_page(p0);
 	assert(!list_empty(&free_list));
 
-	struct Page *p;
+	struct page_frame *p;
 	assert((p = alloc_page()) == p0);
 	assert(alloc_page() == NULL);
 
@@ -162,7 +162,7 @@ static void default_check(void)
 	int count = 0, total = 0;
 	list_entry_t *le = &free_list;
 	while ((le = list_next(le)) != &free_list) {
-		struct Page *p = le2page(le, page_link);
+		struct page_frame *p = le2page(le, page_link);
 		assert(PAGE_PROPERTY(p));
 		count ++, total += p->property;
 	}
@@ -170,7 +170,7 @@ static void default_check(void)
 
 	basic_check();
 
-	struct Page *p0 = alloc_pages(5), *p1, *p2;
+	struct page_frame *p0 = alloc_pages(5), *p1, *p2;
 	assert(p0 != NULL);
 	assert(!PAGE_PROPERTY(p0));
 
@@ -213,7 +213,7 @@ static void default_check(void)
 
 	le = &free_list;
 	while ((le = list_next(le)) != &free_list) {
-		struct Page *p = le2page(le, page_link);
+		struct page_frame *p = le2page(le, page_link);
 		count --, total -= p->property;
 	}
 	assert(count == 0);
