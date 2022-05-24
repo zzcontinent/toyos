@@ -128,7 +128,7 @@ struct e820map {
 /*
  * sturct page - page descriptor structures(physical page).
  * */
-struct Page {
+struct page_frame {
 	int ref;		// page frame's reference counter
 	uint32_t flags;		// array of flags that describe the status of the page frame
 	unsigned int property;	// used in buddy system, stores the order (the X in 2^X) of the continuous memory block
@@ -149,7 +149,7 @@ struct Page {
 #define PAGE_PROPERTY(page) test_bit(PG_property, &((page)->flags))
 
 #define le2page(le, member) \
-	to_struct((le), struct Page, member)
+	to_struct((le), struct page_frame, member)
 
 typedef struct{
 	list_entry_t free_list;
