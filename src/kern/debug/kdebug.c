@@ -295,8 +295,7 @@ void print_debuginfo(uintptr_t eip)
 	}
 }
 
-	static __noinline uint32_t
-read_eip(void)
+static __noinline uint32_t read_eip(void)
 {
 	uint32_t eip;
 	asm volatile("movl 4(%%ebp), %0" : "=r" (eip));
