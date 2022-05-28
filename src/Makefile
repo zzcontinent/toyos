@@ -11,13 +11,13 @@ QEMU := qemu-system-i386
 HOSTCC := gcc
 ## for mksfs program, -D_FILE_OFFSET_BITS=64 can guarantee sizeof(off_t)==8,  sizeof(ino_t) ==8
 ## for 64 bit gcc, to build 32-bit mksfs, you can use below line
-## HOSTCFLAGS	:= -g -Wall -m32 -O2 -D_FILE_OFFSET_BITS=64
-HOSTCFLAGS	:= -g -Wall -O2 -D_FILE_OFFSET_BITS=64
+## HOSTCFLAGS := -g -Wall -m32 -O2 -D_FILE_OFFSET_BITS=64
+HOSTCFLAGS := -g -Wall -O2 -D_FILE_OFFSET_BITS=64
 
 GDB := ${GCCPREFIX}gdb
 CC := $(GCCPREFIX)gcc
-CFLAGS	:= -fno-builtin -fno-PIC -Wall -ggdb -m32 -gstabs -nostdinc $(DEFS)
-CFLAGS	+= $(shell $(CC) -fno-stack-protector -E -x c /dev/null >/dev/null 2>&1 && echo -fno-stack-protector)
+CFLAGS := -fno-builtin -fno-PIC -Wall -ggdb -m32 -gstabs -nostdinc $(DEFS)
+CFLAGS += $(shell $(CC) -fno-stack-protector -E -x c /dev/null >/dev/null 2>&1 && echo -fno-stack-protector)
 CTYPE := c S
 
 KCFLAGS := $(CFLAGS)
@@ -125,7 +125,7 @@ endef
 
 
 ################ build rules start ################
-all: 
+all:
 	make out/target/kernel -j
 # +++ user +++
 $(call rule_compile_files,user,$(call listf_cc,$(USRCDIR)),$(CC),$(UCFLAGS))
