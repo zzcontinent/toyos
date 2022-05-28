@@ -6,13 +6,13 @@
 #define SEG_KDATA 2
 #define SEG_UTEXT 3
 #define SEG_UDATA 4
-#define SEG_TSS	  5
+#define SEG_TSS   5
 
 /* global descriptor number */
-#define GD_KTEXT  ((SEG_KTEXT) << 3)	// kernel text
-#define GD_KDATA  ((SEG_KDATA) << 3)	// kernel data
-#define GD_UTEXT  ((SEG_UTEXT) << 3)	// user text
-#define GD_UDATA  ((SEG_UDATA) << 3)	// user data
+#define GD_KTEXT  ((SEG_KTEXT) << 3)     // kernel text
+#define GD_KDATA  ((SEG_KDATA) << 3)     // kernel data
+#define GD_UTEXT  ((SEG_UTEXT) << 3)     // user text
+#define GD_UDATA  ((SEG_UDATA) << 3)     // user data
 #define GD_TSS  ((SEG_TSS) << 3)         // task segment seletoc
 
 #define DPL_KERNEL (0)
@@ -20,8 +20,8 @@
 
 #define KERNEL_CS  ((GD_KTEXT) | DPL_KERNEL)
 #define KERNEL_DS  ((GD_KDATA) | DPL_KERNEL)
-#define USER_CS	   ((GD_UTEXT) | DPL_USER)
-#define USER_DS	   ((GD_UDATA) | DPL_USER)
+#define USER_CS    ((GD_UTEXT) | DPL_USER)
+#define USER_DS    ((GD_UDATA) | DPL_USER)
 
 
 #define KERNBASE  0xC0000000
@@ -129,13 +129,13 @@ struct e820map {
  * sturct page - page descriptor structures(physical page).
  * */
 struct page_frame {
-	int ref;		// page frame's reference counter
-	uint32_t flags;		// array of flags that describe the status of the page frame
-	unsigned int property;	// used in buddy system, stores the order (the X in 2^X) of the continuous memory block
-	int zone_num;		// used in buddy system, the No. of zone which the page belongs to
-	list_entry_t page_link;		// free list link
-	list_entry_t pra_page_link;	// used for pra (page replace algorithm)
-	uintptr_t pra_vaddr;		// used for pra (page replace algorithm)
+	int ref;                          // page frame's reference counter
+	uint32_t flags;                   // array of flags that describe the status of the page frame
+	unsigned int property;            // used in buddy system, stores the order (the X in 2^X) of the continuous memory block
+	int zone_num;                     // used in buddy system, the No. of zone which the page belongs to
+	list_entry_t page_link;           // free list link
+	list_entry_t pra_page_link;       // used for pra (page replace algorithm)
+	uintptr_t pra_vaddr;              // used for pra (page replace algorithm)
 };
 
 /* flags describing the status of a page frame */
