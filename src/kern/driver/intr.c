@@ -1,5 +1,6 @@
 #include <kern/driver/intr.h>
-#include <libs/x86.h>
+#include <libs/libs_all.h>
+
 
 void intr_enable(void)
 {

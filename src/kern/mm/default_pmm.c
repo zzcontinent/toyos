@@ -1,6 +1,5 @@
+#include <libs/libs_all.h>
 #include <kern/mm/pmm.h>
-#include <libs/list.h>
-#include <libs/string.h>
 #include <kern/mm/default_pmm.h>
 
 free_area_t free_area;
