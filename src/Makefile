@@ -3,7 +3,7 @@
 # +++ cc +++
 GCCPREFIX := ''
 QEMU := qemu-system-i386
-#V := @
+V := @
 
 .SUFFIXES: .c .S .h
 .DELETE_ON_ERROR:
@@ -135,10 +135,8 @@ $(call rule_compile_files_cc,kernel,$(call listf_cc,$(LIBDIR)))
 
 $(target_kernel): tools/kernel.ld
 
-$(target_kernel):  $(KINCLUDE)
-
 $(target_kernel): $(ALLOBJS_kernel)
-	@echo + ld $@ : $^
+	@echo "==>[$@] : $^"
 	$(V)$(LD) $(LDFLAGS) -T tools/kernel.ld -o $@ $(ALLOBJS_kernel)
 	$(V)$(OBJDUMP) -S $@ > $(call asmfile,kern/kernel)
 	$(V)$(OBJDUMP) -t $@ | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > $(call symfile,kern/kernel)
