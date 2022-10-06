@@ -116,7 +116,7 @@ static const char* trapname(int trapno)
 /* trap_in_kernel - test if trap happened in kernel */
 bool trap_in_kernel(struct trapframe* tf)
 {
-	return (tf->tf_cs == (uint16_t)KERNEL_CS);
+	return (tf->tf_cs == (u16)KERNEL_CS);
 }
 
 

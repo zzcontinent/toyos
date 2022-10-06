@@ -10,9 +10,9 @@
 #include <libs/x86.h>
 #include <kern/sync/sync.h>
 
-static uint16_t* crt_buf;
-static uint16_t crt_pos;
-static uint16_t addr_6845;
+static u16* crt_buf;
+static u16 crt_pos;
+static u16 addr_6845;
 
 static void delay(void)
 {
@@ -24,11 +24,11 @@ static void delay(void)
 
 static void cga_init(void)
 {
-	volatile uint16_t* cp = (uint16_t*)(CGA_BUF + KERNBASE);
-	uint16_t was = *cp;
-	*cp = (uint16_t)0xA55A;
+	volatile u16* cp = (u16*)(CGA_BUF + KERNBASE);
+	u16 was = *cp;
+	*cp = (u16)0xA55A;
 	if (*cp != 0xA55A) {
-		cp = (uint16_t*)(MONO_BUF + KERNBASE);
+		cp = (u16*)(MONO_BUF + KERNBASE);
 		addr_6845 = MONO_BASE;
 	} else {
 		*cp = was;
@@ -36,13 +36,13 @@ static void cga_init(void)
 	}
 
 	// extract cursor location
-	uint32_t pos;
+	u32 pos;
 	outb(addr_6845, 14);
 	pos = inb(addr_6845 + 1) << 8;
 	outb(addr_6845, 15);
 	pos |= inb(addr_6845 + 1);
 
-	crt_buf = (uint16_t*)cp;
+	crt_buf = (u16*)cp;
 	crt_pos = pos;
 }
 
@@ -55,7 +55,7 @@ void serial_init(void)
 
 	// set speed: require DLAB latch
 	outb(COM1 + COM_LCR, COM_LCR_DLAB);
-	outb(COM1 + COM_DLL, (uint8_t)(115200 / 9600));
+	outb(COM1 + COM_DLL, (u8)(115200 / 9600));
 	outb(COM1 + COM_DLM, 0);
 
 	// 8 bits data, 1 stop bit, parity off; turn off DLAB latch
@@ -127,7 +127,7 @@ static void cga_putc(int c)
 	// what is the purpose of this?
 	if (crt_pos >= CRT_SIZE) {
 		int i;
-		memmove(crt_buf, crt_buf + CRT_COLS, (CRT_SIZE - CRT_COLS) * sizeof(uint16_t));
+		memmove(crt_buf, crt_buf + CRT_COLS, (CRT_SIZE - CRT_COLS) * sizeof(u16));
 		for (i = CRT_SIZE - CRT_COLS; i < CRT_SIZE; i++) {
 			crt_buf[i] = 0x0700 | ' ';
 		}
@@ -169,9 +169,9 @@ static void serial_putc(int c)
 #define CONSBUFFSIZE 512
 
 static struct {
-	uint8_t buf[CONSBUFFSIZE];
-	uint32_t rpos;
-	uint32_t wpos;
+	u8 buf[CONSBUFFSIZE];
+	u32 rpos;
+	u32 wpos;
 } cons;
 
 /*
@@ -223,7 +223,7 @@ void serial_intr(void)
 #define SCROLLLOCK (1 << 5)
 #define E0ESC (1 << 6)
 
-static uint8_t shiftcode[256] = {
+static u8 shiftcode[256] = {
 	[0x1D] CTL,
 	[0x2A] SHIFT,
 	[0x36] SHIFT,
@@ -232,13 +232,13 @@ static uint8_t shiftcode[256] = {
 	[0x2A] ALT,
 };
 
-static uint8_t togglecode[256] = {
+static u8 togglecode[256] = {
 	[0x3A] CAPSLOCK,
 	[0x45] NUMLOACK,
 	[0x46] SCROLLLOCK,
 };
 
-static uint8_t normalmap[256] = {
+static u8 normalmap[256] = {
 	NO, 0x1B, '1', '2', '3', '4', '5', '6', // 0x00
 	'7', '8', '9', '0', '-', '=', '\b', '\t',
 	'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', // 0x10
@@ -258,7 +258,7 @@ static uint8_t normalmap[256] = {
 	[0xD2] KEY_INS, [0xD3] KEY_DEL
 };
 
-static uint8_t shiftmap[256] = {
+static u8 shiftmap[256] = {
 	NO, 033, '!', '@', '#', '$', '%', '^', // 0x00
 	'&', '*', '(', ')', '_', '+', '\b', '\t',
 	'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', // 0x10
@@ -280,7 +280,7 @@ static uint8_t shiftmap[256] = {
 
 #define C(x) (x - '@')
 
-static uint8_t ctlmap[256] = {
+static u8 ctlmap[256] = {
 	NO, NO, NO, NO, NO, NO, NO, NO,
 	NO, NO, NO, NO, NO, NO, NO, NO,
 	C('Q'), C('W'), C('E'), C('R'), C('T'), C('Y'), C('U'), C('I'),
@@ -296,7 +296,7 @@ static uint8_t ctlmap[256] = {
 	[0xD2] KEY_INS, [0xD3] KEY_DEL
 };
 
-static uint8_t* charcode[4] = {
+static u8* charcode[4] = {
 	normalmap,
 	shiftmap,
 	ctlmap,
@@ -306,8 +306,8 @@ static uint8_t* charcode[4] = {
 static int kbd_proc_data(void)
 {
 	int c;
-	uint8_t data;
-	static uint32_t shift;
+	u8 data;
+	static u32 shift;
 	if ((inb(KBSTATP) & KBS_DIB) == 0) {
 		return -1;
 	}

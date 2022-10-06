@@ -4,7 +4,7 @@
 #include <libs/defs.h>
 
 struct pseudodesc {
-	uint16_t pd_lim;   // limit
+	u16 pd_lim;   // limit
 	uintptr_t pd_base; // base address
 } __attribute__((packed));
 
@@ -34,12 +34,12 @@ struct pseudodesc {
 static inline void* __memset(void* s, char c, size_t n) __always_inline;
 static inline void* __memmove(void* dst, const void* src, size_t n) __always_inline;
 static inline void* __memcpy(void* dst, const void* src, size_t n) __always_inline;
-static inline uint32_t read_ebp(void) __always_inline;
+static inline u32 read_ebp(void) __always_inline;
 
 
-static inline uint8_t inb(uint16_t port)
+static inline u8 inb(u16 port)
 {
-	uint8_t data;
+	u8 data;
 	asm volatile("inb %1, %0"
 			: "=a"(data)
 			: "d"(port)
@@ -47,16 +47,16 @@ static inline uint8_t inb(uint16_t port)
 	return data;
 }
 
-static inline uint16_t inw(uint16_t port)
+static inline u16 inw(u16 port)
 {
-	uint16_t data;
+	u16 data;
 	asm volatile("inw %1, %0"
 			: "=a"(data)
 			: "d"(port));
 	return data;
 }
 
-static inline void insl(uint32_t port, void* addr, int cnt)
+static inline void insl(u32 port, void* addr, int cnt)
 {
 	asm volatile("cld;"
 			"repne; insl;"
@@ -65,19 +65,19 @@ static inline void insl(uint32_t port, void* addr, int cnt)
 			: "memory", "cc");
 }
 
-static inline void outb(int16_t port, uint8_t data)
+static inline void outb(i16 port, u8 data)
 {
 	asm volatile("outb %0, %1" ::"a" (data), "d" (port)
 			: "memory");
 }
 
-static inline void outw(int16_t port, uint16_t data)
+static inline void outw(i16 port, u16 data)
 {
 	asm volatile("outw %0, %1" ::"a"(data), "d"(port)
 			: "memory");
 }
 
-static inline void outsl(uint32_t port, const void* addr, int cnt)
+static inline void outsl(u32 port, const void* addr, int cnt)
 {
 	asm volatile(
 			"cld;"
@@ -87,22 +87,22 @@ static inline void outsl(uint32_t port, const void* addr, int cnt)
 			: "memory", "cc");
 }
 
-static inline uint32_t read_esp(void)
+static inline u32 read_esp(void)
 {
-	uint32_t esp;
+	u32 esp;
 	asm volatile("movl %%esp, %0" : "=r" (esp));
 	return esp;
 }
-static inline uint32_t read_ebp(void)
+static inline u32 read_ebp(void)
 {
-	uint32_t ebp;
+	u32 ebp;
 	asm volatile("movl %%ebp, %0" : "=r" (ebp));
 	return ebp;
 }
 
 static inline read_dr(unsigned regnum)
 {
-	uint32_t value = 0;
+	u32 value = 0;
 	switch (regnum) {
 		case 0:
 			asm volatile("movl %%db0, %0"
@@ -132,7 +132,7 @@ static inline read_dr(unsigned regnum)
 	return value;
 }
 
-static void write_dr(unsigned regnum, uint32_t value)
+static void write_dr(unsigned regnum, u32 value)
 {
 	switch (regnum) {
 		case 0:
@@ -178,21 +178,21 @@ static inline void cli(void)
 			: "memory");
 }
 
-static inline void ltr(uint16_t sel)
+static inline void ltr(u16 sel)
 {
 	asm volatile("ltr %0" ::"r"(sel)
 			: "memory");
 }
 
-static inline uint32_t read_eflags(void)
+static inline u32 read_eflags(void)
 {
-	uint32_t eflags;
+	u32 eflags;
 	asm volatile("pushfl; popl %0"
 			: "=r"(eflags));
 	return eflags;
 }
 
-static inline void write_eflags(uint32_t eflags)
+static inline void write_eflags(u32 eflags)
 {
 	asm volatile("pushl %0; popfl" ::"r"(eflags));
 }

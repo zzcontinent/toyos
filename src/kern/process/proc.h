@@ -23,14 +23,14 @@ enum proc_state {
 };
 
 struct context {
-	uint32_t eip;
-	uint32_t esp;
-	uint32_t ebx;
-	uint32_t ecx;
-	uint32_t edx;
-	uint32_t esi;
-	uint32_t edi;
-	uint32_t ebp;
+	u32 eip;
+	u32 esp;
+	u32 ebx;
+	u32 ecx;
+	u32 edx;
+	u32 esi;
+	u32 edi;
+	u32 ebp;
 };
 
 struct proc_struct {
@@ -46,17 +46,17 @@ struct proc_struct {
 	struct context context;
 	struct trapframe *tf;
 	uintptr_t cr3;
-	uint32_t flags;
+	u32 flags;
 	list_entry_t list_link;
 	list_entry_t hash_link;
 	list_entry_t run_link;
 	int exit_code;
-	uint32_t wait_state;
+	u32 wait_state;
 	struct run_queue *rq;
 	int time_slice;
 	//skew_heap_entry_t lab6_run_pool;
-	uint32_t lab6_stride;
-	uint32_t lab6_priority;
+	u32 lab6_stride;
+	u32 lab6_priority;
 	struct files_struct *filesp;
 };
 

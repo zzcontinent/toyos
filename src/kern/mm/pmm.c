@@ -179,11 +179,11 @@ size_t nr_free_pages(void)
 static void page_init(void)
 {
 	struct e820map* memmap = (struct e820map*)(0x8000 + KERNBASE);
-	uint64_t maxpa = 0;
+	u64 maxpa = 0;
 	cprintf("e820map:\n");
 	int i;
 	for (i = 0; i < memmap->nr_map; i++) {
-		uint64_t begin = memmap->map[i].addr, end = begin + memmap->map[i].size;
+		u64 begin = memmap->map[i].addr, end = begin + memmap->map[i].size;
 		if(i == 0 && i != memmap->nr_map - 1)
 			cprintf("├──memory: size:%08llx, [%08llx, %08llx], type = %d - %s.\n",
 					memmap->map[i].size, begin, end - 1, memmap->map[i].type, E820MAP_TYPE(memmap->map[i].type));
@@ -213,7 +213,7 @@ static void page_init(void)
 	uintptr_t freemem = PADDR((uintptr_t)pages + sizeof(struct page_frame) * npage);
 
 	for (i = 0; i < memmap->nr_map; i ++) {
-		uint64_t begin = memmap->map[i].addr, end = begin + memmap->map[i].size;
+		u64 begin = memmap->map[i].addr, end = begin + memmap->map[i].size;
 		if (memmap->map[i].type == E820_ARM) {
 			if (begin < freemem) {
 				begin = freemem;
@@ -240,7 +240,7 @@ static void page_init(void)
  * pa: physical address of this memory
  * perm: permission of this memory
  * */
-static void boot_map_segment(pde_t* pgdir, uintptr_t la, size_t size, uintptr_t pa, uint32_t perm)
+static void boot_map_segment(pde_t* pgdir, uintptr_t la, size_t size, uintptr_t pa, u32 perm)
 {
 	assert(PGOFF(la) == PGOFF(pa));
 	size_t n = ROUNDUP(size + PGOFF(la), PGSIZE) / PGSIZE;
@@ -377,7 +377,7 @@ void page_remove(pde_t *pgdir, uintptr_t la)
 // return value: always 0
 //note: PT is changed, so the TLB need to be invalidate
 int
-page_insert(pde_t *pgdir, struct page_frame *page, uintptr_t la, uint32_t perm) {
+page_insert(pde_t *pgdir, struct page_frame *page, uintptr_t la, u32 perm) {
 	udebug("pgdir=0x%x, la=0x%x\r\n", pgdir, la);
 	pte_t *ptep = get_pte(pgdir, la, 1);
 	if (ptep == NULL) {
@@ -471,7 +471,7 @@ static void check_alloc_page(void)
 static void check_pgdir(void)
 {
 	assert(npage <= KMEMSIZE / PGSIZE);
-	assert(boot_pgdir != NULL && (uint32_t)PGOFF(boot_pgdir) == 0);
+	assert(boot_pgdir != NULL && (u32)PGOFF(boot_pgdir) == 0);
 	assert(get_page(boot_pgdir, 0x0, NULL) == NULL);
 
 	struct page_frame *p1, *p2;

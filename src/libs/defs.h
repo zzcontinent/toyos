@@ -11,22 +11,22 @@
 
 #define CHAR_BIT 8
 typedef int bool;
-typedef char int8_t;
-typedef unsigned char uint8_t;
-typedef short int16_t;
-typedef unsigned short uint16_t;
-typedef int int32_t;
-typedef unsigned int uint32_t;
-typedef long long int64_t;
-typedef unsigned long long uint64_t;
+typedef char i8;
+typedef unsigned char u8;
+typedef short i16;
+typedef unsigned short u16;
+typedef int i32;
+typedef unsigned int u32;
+typedef long long i64;
+typedef unsigned long long u64;
 
 /*
  * Pointers and addresses are 32-bit long.
  * Use pointer types to represent addresses,
  * uintptr_t to represent the numerical values of addresses.
  * */
-typedef int32_t intptr_t;
-typedef uint32_t uintptr_t;
+typedef i32 intptr_t;
+typedef u32 uintptr_t;
 
 /*size_t is used for memory object size*/
 typedef uintptr_t size_t;
