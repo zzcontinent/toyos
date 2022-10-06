@@ -2,7 +2,7 @@
 #define __LIBS_LIST_H__
 
 #ifndef __ASSEMBLER__
-#include <defs.h>
+#include <libs/defs.h>
 
 /*
  * simple doubly linked list implementation.

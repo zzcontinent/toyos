@@ -1,7 +1,7 @@
 #ifndef __KERN_MM_SLAB_H__
 #define __KERN_MM_SLAB_H__
 
-#include <defs.h>
+#include <libs/defs.h>
 
 #define KMALLOC_MAX_ORDER 10
 

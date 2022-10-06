@@ -1,10 +1,10 @@
-#include "stdarg.h"
-#include <assert.h>
-#include <console.h>
-#include <defs.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <udebug.h>
+#include "libs/stdarg.h"
+#include <kern/debug/assert.h>
+#include <kern/driver/console.h>
+#include <libs/defs.h>
+#include <libs/stdio.h>
+#include <libs/unistd.h>
+#include <kern/debug/udebug.h>
 
 /* high level console I/O */
 

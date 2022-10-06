@@ -1,9 +1,9 @@
 #ifndef __KERN_DEBUG_KDEBUG_H__
 #define __KERN_DEBUG_KDEBUG_H__
 
-#include "stdio.h"
-#include "trap.h"
-#include <defs.h>
+#include <libs/stdio.h>
+#include <kern/trap/trap.h>
+#include <libs/defs.h>
 
 static union { char c[4]; unsigned long l; } endian_test = { { 'l', '?', '?', 'b' } };
 #define ENDIANNESS ((char)endian_test.l)

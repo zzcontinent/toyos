@@ -1,14 +1,14 @@
-#include <assert.h>
-#include <console.h>
-#include <defs.h>
-#include <kbdreg.h>
-#include <memlayout.h>
-#include <picirq.h>
-#include <stdio.h>
-#include <string.h>
-#include <trap.h>
-#include <x86.h>
-#include <sync.h>
+#include <kern/debug/assert.h>
+#include <kern/driver/console.h>
+#include <libs/defs.h>
+#include <kern/driver/kbdreg.h>
+#include <kern/mm/memlayout.h>
+#include <kern/driver/picirq.h>
+#include <libs/stdio.h>
+#include <libs/string.h>
+#include <kern/trap/trap.h>
+#include <libs/x86.h>
+#include <kern/sync/sync.h>
 
 static uint16_t* crt_buf;
 static uint16_t crt_pos;

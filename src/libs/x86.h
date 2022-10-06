@@ -1,7 +1,7 @@
 #ifndef __LIBS_X86_H__
 #define __LIBS_X86_H__
 
-#include <defs.h>
+#include <libs/defs.h>
 
 struct pseudodesc {
 	uint16_t pd_lim;   // limit

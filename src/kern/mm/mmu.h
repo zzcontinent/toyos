@@ -59,7 +59,7 @@
 
 #else /* not __ASSEMBLER__ */
 
-#include <defs.h>
+#include <libs/defs.h>
 
 /* Gate descriptors for interrupts and traps */
 struct gatedesc {

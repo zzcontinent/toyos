@@ -1,6 +1,6 @@
-#include <defs.h>
-#include <picirq.h>
-#include <x86.h>
+#include <libs/defs.h>
+#include <kern/driver/picirq.h>
+#include <libs/x86.h>
 
 // I/O addresses of the two programmable interrupt controllers
 #define IO_PIC1 0x20 // master (IRQs 0-7)

@@ -1,21 +1,21 @@
-#include <assert.h>
-#include <clock.h>
-#include <console.h>
-#include <defs.h>
-#include <error.h>
-#include <kdebug.h>
-#include <memlayout.h>
-#include <mmu.h>
-#include <proc.h>
-#include <sched.h>
-#include <stdio.h>
-#include <swap.h>
-#include <sync.h>
-#include <syscall.h>
-#include <trap.h>
-#include <unistd.h>
-#include <vmm.h>
-#include <x86.h>
+#include <kern/debug/assert.h>
+#include <kern/driver/clock.h>
+#include <kern/driver/console.h>
+#include <libs/defs.h>
+#include <libs/error.h>
+#include <kern/debug/kdebug.h>
+#include <kern/mm/memlayout.h>
+#include <kern/mm/mmu.h>
+#include <kern/process/proc.h>
+#include <kern/schedule/sched.h>
+#include <libs/stdio.h>
+#include <kern/mm/swap.h>
+#include <kern/sync/sync.h>
+#include <kern/syscall/syscall.h>
+#include <kern/trap/trap.h>
+#include <libs/unistd.h>
+#include <kern/mm/vmm.h>
+#include <libs/x86.h>
 
 #define TICK_NUM 100
 

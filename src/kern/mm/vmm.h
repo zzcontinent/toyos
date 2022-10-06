@@ -8,12 +8,12 @@
 #define  __VMM_H__
 
 
-#include <defs.h>
-#include <list.h>
-#include <memlayout.h>
-#include <sync.h>
-#include <proc.h>
-#include <sem.h>
+#include <libs/defs.h>
+#include <libs/list.h>
+#include <kern/mm/memlayout.h>
+#include <kern/sync/sync.h>
+#include <kern/process/proc.h>
+#include <kern/sync/sem.h>
 
 struct mm_struct;
 

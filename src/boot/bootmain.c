@@ -1,6 +1,6 @@
-#include <defs.h>
-#include <x86.h>
-#include <elf.h>
+#include <libs/defs.h>
+#include <libs/x86.h>
+#include <libs/elf.h>
 
 #define SECTSIZE 512
 #define ELFHDR ((struct elfhdr*)0x10000) // scratch space
@@ -23,6 +23,7 @@ static void read_sect(void* dst, uint32_t secnum)
 
 	waitdisk();
 	insl(0x1F0, dst, SECTSIZE / 4);
+	waitdisk();
 }
 
 /*
