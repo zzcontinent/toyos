@@ -79,9 +79,7 @@ struct userstabdata {
  *      stab_binsearch(stabs, &left, &right, N_SO, 0xf0100184);
  * will exit setting left = 118, right = 554.
  * */
-	static void
-stab_binsearch(const struct stab* stabs, int* region_left, int* region_right,
-		int type, uintptr_t addr)
+static void stab_binsearch(const struct stab* stabs, int* region_left, int* region_right, int type, uintptr_t addr)
 {
 	int l = *region_left, r = *region_right, any_matches = 0;
 
