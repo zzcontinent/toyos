@@ -5,6 +5,7 @@
 
 size_t strlen(const char *s);
 size_t strnlen(const char *s, size_t len);
+u64 str2n(const char* s);
 
 char *strcpy(char *dst, const char *src);
 char *strncpy(char *dst, const char *src, size_t len);

@@ -1,15 +1,12 @@
+#include <libs/libs_all.h>
 #include <kern/debug/assert.h>
-#include <libs/defs.h>
 #include <kern/debug/kdebug.h>
-#include <kern/debug/kmonitor.h>
+#include <kern/debug/kcommand.h>
 #include <kern/mm/memlayout.h>
 #include <kern/process/proc.h>
 #include <kern/debug/stab.h>
-#include <libs/stdio.h>
-#include <libs/string.h>
 #include <kern/sync/sync.h>
 #include <kern/mm/vmm.h>
-#include <libs/x86.h>
 
 #define STACKFRAME_DEPTH 20
 
@@ -293,7 +290,7 @@ void print_debuginfo(uintptr_t eip)
 	}
 }
 
-static __noinline u32 read_eip(void)
+u32 read_eip(void)
 {
 	u32 eip;
 	asm volatile("movl 4(%%ebp), %0" : "=r" (eip));

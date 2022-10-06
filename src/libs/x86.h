@@ -100,7 +100,7 @@ static inline u32 read_ebp(void)
 	return ebp;
 }
 
-static inline read_dr(unsigned regnum)
+static inline u32 read_dr(unsigned regnum)
 {
 	u32 value = 0;
 	switch (regnum) {
@@ -132,7 +132,7 @@ static inline read_dr(unsigned regnum)
 	return value;
 }
 
-static void write_dr(unsigned regnum, u32 value)
+static inline void write_dr(unsigned regnum, u32 value)
 {
 	switch (regnum) {
 		case 0:

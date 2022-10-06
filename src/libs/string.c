@@ -18,6 +18,38 @@ size_t strnlen(const char* s, size_t len)
 	return cnt;
 }
 
+u64 str2n(const char* s)
+{
+	u64 ret = 0;
+	int base = 10;
+	if (s != 0 && *s == '0' && *(s+1) == 'x')
+	{
+		base=16;
+		s += 2;
+	}
+
+	while(*s != '\0')
+	{
+		ret *= base;
+		if (base == 10)
+		{
+			ret += (*s - '0');
+		} else if (base == 16) {
+			if ('0' <= *s && *s <= '9') {
+				ret += (*s - '0');
+			} else if ('a' <= *s && *s <= 'f') {
+				ret += (*s - 'a' + 10);
+			} else if ('A' <= *s && *s <= 'F') {
+				ret += (*s - 'A' + 10);
+			} else {
+				return ret;
+			}
+		}
+		s++;
+	}
+	return ret;
+}
+
 char* strcat(char* dst, const char* src)
 {
 	return strcpy(dst + strlen(dst), src);
@@ -52,7 +84,7 @@ int strcmp(const char* s1, const char* s2)
 #ifdef __HAVE_ARCH_STRCMP
 	return __strcmp(s1, s2);
 #else
-	while (*s1 !+'\0' && *s1 == *s2) {
+	while (*s1 != '\0' && *s1 == *s2) {
 		++s1, ++s2;
 	}
 	return (int)((unsigned char)*s1 - (unsigned char)*s2);

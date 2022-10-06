@@ -1,5 +1,13 @@
-#ifndef  __ULOG_H__
-#define  __ULOG_H__
+#ifndef  __UDEBUG_H__
+#define  __UDEBUG_H__
+
+#define ENDIANNESS ({\
+		union { char c[4]; unsigned long l; } endian_test = { { 'l', '?', '?', 'b' } }; \
+		(char)endian_test.l; \
+		})
+
+#define L2B32(little)  (((little&0xff)<<24) | ((little&0xff00)<<8) | ((little&0xff0000)>>8) | ((little&0xff000000)>>24))
+
 // ============================================================wait if
 #define wait_if(expr, cnt, desc) ({\
 		udebug("wait:%d, desc:%s", cnt, desc); \
@@ -30,8 +38,8 @@
 #define ulog(fmt, args...)
 #elif ULOG_LEVEL == LEVEL_DEBUG
 #define udebug(fmt, args...) printf("[D][%s:%d][%s] " fmt, __FILE__, __LINE__, __FUNCTION__, ##args)
-#define uinfo(fmt, args...) printf("[I][%s:%d][%s] " fmt, __FILE__, __LINE__, __FUNCTION__, ##args)
-#define uerror(fmt, args...) printf("[E][%s:%d][%s] " fmt, __FILE__, __LINE__, __FUNCTION__, ##args)
+#define uinfo(fmt, args...) printf("[I][%d][%s] " fmt, __LINE__, __FUNCTION__, ##args)
+#define uerror(fmt, args...) printf("[E][%d][%s] " fmt, __LINE__, __FUNCTION__, ##args)
 #define uclean printf
 #define ulog uinfo
 #elif ULOG_LEVEL == LEVEL_INFO
@@ -59,4 +67,5 @@
 #define uclean printf
 #define ulog printf
 #endif
-#endif  /* __ULOG_H__ */
+
+#endif  /* __UDEBUG_H__ */

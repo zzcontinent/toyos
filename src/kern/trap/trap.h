@@ -47,42 +47,42 @@
 
 /* registers as pushed by pushal */
 struct pushregs {
-    u32 reg_edi;
-    u32 reg_esi;
-    u32 reg_ebp;
-    u32 reg_oesp;          /* Useless */
-    u32 reg_ebx;
-    u32 reg_edx;
-    u32 reg_ecx;
-    u32 reg_eax;
+	u32 reg_edi;
+	u32 reg_esi;
+	u32 reg_ebp;
+	u32 reg_oesp;          /* Useless */
+	u32 reg_ebx;
+	u32 reg_edx;
+	u32 reg_ecx;
+	u32 reg_eax;
 };
 
 struct trapframe {
-    struct pushregs tf_regs;
-    u16 tf_gs;
-    u16 tf_padding0;
-    u16 tf_fs;
-    u16 tf_padding1;
-    u16 tf_es;
-    u16 tf_padding2;
-    u16 tf_ds;
-    u16 tf_padding3;
-    u32 tf_trapno;
-    /* below here defined by x86 hardware */
-    u32 tf_err;
-    uintptr_t tf_eip;
-    u16 tf_cs;
-    u16 tf_padding4;
-    u32 tf_eflags;
-    /* below here only when crossing rings, such as from user to kernel */
-    uintptr_t tf_esp;
-    u16 tf_ss;
-    u16 tf_padding5;
+	struct pushregs tf_regs;
+	u16 tf_gs;
+	u16 tf_padding0;
+	u16 tf_fs;
+	u16 tf_padding1;
+	u16 tf_es;
+	u16 tf_padding2;
+	u16 tf_ds;
+	u16 tf_padding3;
+	u32 tf_trapno;
+	/* below here defined by x86 hardware */
+	u32 tf_err;
+	uintptr_t tf_eip;
+	u16 tf_cs;
+	u16 tf_padding4;
+	u32 tf_eflags;
+	/* below here only when crossing rings, such as from user to kernel */
+	uintptr_t tf_esp;
+	u16 tf_ss;
+	u16 tf_padding5;
 } __attribute__((packed));
 
 void idt_init(void);
 void print_trapframe(struct trapframe *tf);
-void print_regs(struct pushregs *regs);
+void print_regs(struct trapframe *tf);
 bool trap_in_kernel(struct trapframe *tf);
 
 #endif /* !__KERN_TRAP_TRAP_H__ */

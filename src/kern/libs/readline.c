@@ -15,12 +15,12 @@ char * readline(const char *prompt) {
 			return NULL;
 		} else if (c >= ' ' && i < BUFSIZE - 1) {
 			cputchar(c);
-			buf[i ++] = c;
+			buf[i++] = c;
 		} else if (c == '\b' && i > 0) {
 			cputchar(c);
-			i --;
+			i--;
 		} else if (c == '\n' || c == '\r') {
-			cputchar(c);
+			cputchar('\n');
 			buf[i] = '\0';
 			return buf;
 		}

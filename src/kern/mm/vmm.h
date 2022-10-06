@@ -45,4 +45,4 @@ struct mm_struct {
 };
 
 
-#endif  /* __VMM_H__ */#ifndef __KERN_MM_VMM_H__
+#endif  /* __VMM_H__ */

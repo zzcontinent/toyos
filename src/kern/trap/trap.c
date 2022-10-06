@@ -1,3 +1,4 @@
+#include "trap.h"
 #include <libs/libs_all.h>
 #include <kern/debug/assert.h>
 #include <kern/driver/clock.h>
@@ -80,7 +81,7 @@ static struct pseudodesc idt_pd = {
 static volatile int in_swap_tick_event = 0;
 extern struct mm_struct* check_mm_struct;
 
-static void print_ticks()
+void print_ticks()
 {
 	cprintf("%d ticks\n", TICK_NUM);
 }
@@ -119,7 +120,7 @@ bool trap_in_kernel(struct trapframe* tf)
 void print_trapframe(struct trapframe* tf)
 {
 	cprintf("trapframe at %p\n", tf);
-	print_regs(&tf->tf_regs);
+	print_regs(tf);
 	cprintf("  ds   0x----%04x\n", tf->tf_ds);
 	cprintf("  es   0x----%04x\n", tf->tf_es);
 	cprintf("  fs   0x----%04x\n", tf->tf_fs);
@@ -144,16 +145,16 @@ void print_trapframe(struct trapframe* tf)
 	}
 }
 
-void print_regs(struct pushregs* regs)
+void print_regs(struct trapframe* tf)
 {
-	cprintf("  edi  0x%08x\n", regs->reg_edi);
-	cprintf("  esi  0x%08x\n", regs->reg_esi);
-	cprintf("  ebp  0x%08x\n", regs->reg_ebp);
-	cprintf("  oesp 0x%08x\n", regs->reg_oesp);
-	cprintf("  ebx  0x%08x\n", regs->reg_ebx);
-	cprintf("  edx  0x%08x\n", regs->reg_edx);
-	cprintf("  ecx  0x%08x\n", regs->reg_ecx);
-	cprintf("  eax  0x%08x\n", regs->reg_eax);
+	cprintf("  edi  0x%08x\n", tf->tf_regs.reg_edi);
+	cprintf("  esi  0x%08x\n", tf->tf_regs.reg_esi);
+	cprintf("  ebp  0x%08x\n", tf->tf_regs.reg_ebp);
+	cprintf("  oesp 0x%08x\n", tf->tf_regs.reg_oesp);
+	cprintf("  ebx  0x%08x\n", tf->tf_regs.reg_ebx);
+	cprintf("  edx  0x%08x\n", tf->tf_regs.reg_edx);
+	cprintf("  ecx  0x%08x\n", tf->tf_regs.reg_ecx);
+	cprintf("  eax  0x%08x\n", tf->tf_regs.reg_eax);
 }
 
 static inline void print_pgfault(struct trapframe* tf)
@@ -169,7 +170,7 @@ static inline void print_pgfault(struct trapframe* tf)
 			(tf->tf_err & PTE_P) ? "protection fault" : "no page found");
 }
 
-static int pgfault_handler(struct trapframe* tf)
+int pgfault_handler(struct trapframe* tf)
 {
 	//	extern struct mm_struct* check_mm_struct;
 	//	if (check_mm_struct != NULL) { //used for test check_swap
@@ -188,13 +189,14 @@ static int pgfault_handler(struct trapframe* tf)
 	//		mm = current->mm;
 	//	}
 	//	return do_pgfault(mm, tf->tf_err, rcr2());
+	return 0;
 }
 
 
-static void trap_dispatch(struct trapframe* tf)
+void trap_dispatch(struct trapframe* tf)
 {
 	char c;
-	int ret = 0;
+	//int ret = 0;
 	switch (tf->tf_trapno) {
 		//case T_PGFLT: //page fault
 		//	if ((ret = pgfault_handler(tf)) != 0) {
