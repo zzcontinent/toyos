@@ -4,10 +4,7 @@
  * DESCRIPTION : kernel entry
  * DATE        : 2022-01-08 00:38:27
  * *****************************************************************************************/
-#include <libs/defs.h>
-#include <libs/stdio.h>
-#include <libs/ulog.h>
-#include <libs/string.h>
+#include <libs/libs_all.h>
 #include <kern/debug/kdebug.h>
 #include <kern/driver/clock.h>
 #include <kern/driver/console.h>

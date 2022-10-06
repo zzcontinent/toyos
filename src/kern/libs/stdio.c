@@ -1,9 +1,6 @@
-#include "libs/stdarg.h"
+#include <libs/libs_all.h>
 #include <kern/debug/assert.h>
 #include <kern/driver/console.h>
-#include <libs/defs.h>
-#include <libs/stdio.h>
-#include <libs/unistd.h>
 
 /* high level console I/O */
 

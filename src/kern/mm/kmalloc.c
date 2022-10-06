@@ -1,11 +1,9 @@
-#include <libs/defs.h>
-#include <libs/list.h>
+#include <libs/libs_all.h>
 #include <kern/mm/memlayout.h>
 #include <kern/debug/assert.h>
 #include <kern/mm/kmalloc.h>
 #include <kern/sync/sync.h>
 #include <kern/mm/pmm.h>
-#include <libs/stdio.h>
 
 /*
  * SLOB Allocator: Simple List Of Blocks

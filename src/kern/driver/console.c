@@ -1,13 +1,10 @@
+#include <libs/libs_all.h>
 #include <kern/debug/assert.h>
 #include <kern/driver/console.h>
-#include <libs/defs.h>
 #include <kern/driver/kbdreg.h>
 #include <kern/mm/memlayout.h>
 #include <kern/driver/picirq.h>
-#include <libs/stdio.h>
-#include <libs/string.h>
 #include <kern/trap/trap.h>
-#include <libs/x86.h>
 #include <kern/sync/sync.h>
 
 static u16* crt_buf;

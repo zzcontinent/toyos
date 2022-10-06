@@ -1,19 +1,14 @@
+#include <libs/libs_all.h>
 #include <kern/driver/console.h>
 #include <kern/driver/intr.h>
 #include <kern/debug/assert.h>
 #include <kern/mm/default_pmm.h>
-#include <libs/defs.h>
-#include <libs/ulog.h>
 #include <kern/mm/kmalloc.h>
 #include <kern/mm/memlayout.h>
 #include <kern/mm/mmu.h>
 #include <kern/mm/pmm.h>
-#include <libs/error.h>
-#include <libs/stdio.h>
-#include <libs/string.h>
 #include <kern/sync/sync.h>
 #include <kern/mm/vmm.h>
-#include <libs/x86.h>
 #include <kern/mm/swap.h>
 
 /*
