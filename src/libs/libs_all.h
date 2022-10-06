@@ -13,7 +13,7 @@
 #include <libs/stdio.h>
 #include <libs/stdlib.h>
 #include <libs/string.h>
-#include <libs/ulog.h>
+#include <libs/udebug.h>
 #include <libs/unistd.h>
 #include <libs/x86.h>
 #endif  /* __LIBS_ALL_H__ */

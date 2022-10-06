@@ -44,8 +44,7 @@ static const char * const error_string[MAXERROR + 1] = {
  * @width:      maximum number of digits, if the actual width is less than @width, use @padc instead
  * @padc:       character that padded on the left if the actual width is less than @width
  * */
-static void
-printnum(void (*putch)(int, void*, int), int fd, void *putdat,
+static void printnum(void (*putch)(int, void*, int), int fd, void *putdat,
 		unsigned long long num, unsigned base, int width, int padc) {
 	unsigned long long result = num;
 	unsigned mod = do_div(result, base);
@@ -67,8 +66,7 @@ printnum(void (*putch)(int, void*, int), int fd, void *putdat,
  * @ap:         a varargs list pointer
  * @lflag:      determines the size of the vararg that @ap points to
  * */
-static unsigned long long
-getuint(va_list *ap, int lflag) {
+static unsigned long long getuint(va_list *ap, int lflag) {
 	if (lflag >= 2) {
 		return va_arg(*ap, unsigned long long);
 	}
@@ -85,8 +83,7 @@ getuint(va_list *ap, int lflag) {
  * @ap:         a varargs list pointer
  * @lflag:      determines the size of the vararg that @ap points to
  * */
-static long long
-getint(va_list *ap, int lflag) {
+static long long getint(va_list *ap, int lflag) {
 	if (lflag >= 2) {
 		return va_arg(*ap, long long);
 	}
@@ -105,8 +102,7 @@ getint(va_list *ap, int lflag) {
  * @putdat:     used by @putch function
  * @fmt:        the format string to use
  * */
-void
-printfmt(void (*putch)(int, void*, int), int fd, void *putdat, const char *fmt, ...) {
+void printfmt(void (*putch)(int, void*, int), int fd, void *putdat, const char *fmt, ...) {
 	va_list ap;
 
 	va_start(ap, fmt);
@@ -126,8 +122,7 @@ printfmt(void (*putch)(int, void*, int), int fd, void *putdat, const char *fmt, 
  * Call this function if you are already dealing with a va_list.
  * Or you probably want printfmt() instead.
  * */
-void
-vprintfmt(void (*putch)(int, void*, int), int fd, void *putdat, const char *fmt, va_list ap) {
+void vprintfmt(void (*putch)(int, void*, int), int fd, void *putdat, const char *fmt, va_list ap) {
 	register const char *p;
 	register int ch, err;
 	unsigned long long num;
@@ -300,8 +295,7 @@ struct sprintbuf {
  * @ch:         the character will be printed
  * @b:          the buffer to place the character @ch
  * */
-static void
-sprintputch(int ch, struct sprintbuf *b) {
+static void sprintputch(int ch, struct sprintbuf *b) {
 	b->cnt ++;
 	if (b->buf < b->ebuf) {
 		*b->buf ++ = ch;
@@ -314,8 +308,7 @@ sprintputch(int ch, struct sprintbuf *b) {
  * @size:       the size of buffer, including the trailing null space
  * @fmt:        the format string to use
  * */
-int
-snprintf(char *str, size_t size, const char *fmt, ...) {
+int snprintf(char *str, size_t size, const char *fmt, ...) {
 	va_list ap;
 	int cnt;
 	va_start(ap, fmt);
@@ -338,8 +331,7 @@ snprintf(char *str, size_t size, const char *fmt, ...) {
  * Call this function if you are already dealing with a va_list.
  * Or you probably want snprintf() instead.
  * */
-int
-vsnprintf(char *str, size_t size, const char *fmt, va_list ap) {
+int vsnprintf(char *str, size_t size, const char *fmt, va_list ap) {
 	struct sprintbuf b = {str, str + size - 1, 0};
 	if (str == NULL || b.buf > b.ebuf) {
 		return -E_INVAL;

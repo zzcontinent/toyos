@@ -6,6 +6,7 @@
  * *****************************************************************************************/
 #include <libs/libs_all.h>
 #include <kern/debug/kdebug.h>
+#include <kern/debug/kcommand.h>
 #include <kern/driver/clock.h>
 #include <kern/driver/console.h>
 #include <kern/driver/ide.h>
@@ -59,6 +60,7 @@ int kern_init(void)
 	//intr_enable();
 
 	//cpu_idle();
-	udebug("\r\n");
-	while(1);
+	while(1) {
+		KCMD_LOOP;
+	}
 }

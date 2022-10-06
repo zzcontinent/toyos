@@ -1,8 +1,7 @@
-#include <libs/stdarg.h>
-#include <libs/defs.h>
+#include <libs/libs_all.h>
+#include <kern/debug/kdebug.h>
+#include <kern/debug/kcommand.h>
 #include <kern/driver/intr.h>
-#include <kern/debug/kmonitor.h>
-#include <libs/stdio.h>
 
 static bool is_panic = 0;
 
@@ -24,7 +23,7 @@ void __panic(const char* file, int line, const char* fmt, ...)
 panic_dead:
 	intr_disable();
 	while (1) {
-		kmonitor(NULL);
+		kcmd_loop();
 	}
 }
 

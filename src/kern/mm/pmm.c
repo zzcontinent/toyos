@@ -253,7 +253,7 @@ static void boot_map_segment(pde_t* pgdir, uintptr_t la, size_t size, uintptr_t 
  * return: the kernel virtual address of this allocated page
  * note: this function is used to get the memory for PDT and PT
  * */
-static void* boot_alloc_page(void)
+void* boot_alloc_page(void)
 {
 	struct page_frame* p = alloc_page();
 	if (p == NULL) {
@@ -409,6 +409,14 @@ void unmap_range(pde_t *pgdir, uintptr_t start, uintptr_t end)
 	assert(USER_ACCESS(start, end));
 	do {
 		pte_t *ptep = get_pte(pgdir, start, 0);
+		if (ptep == NULL) {
+			start = ROUNDDOWN(start + PTSIZE, PTSIZE);
+			continue ;
+		}
+		if (*ptep != 0) {
+			page_remove_pte(pgdir, start, ptep);
+		}
+		start += PGSIZE;
 	} while (start != 0 && start < end);
 }
 
@@ -444,7 +452,6 @@ int copy_range(pde_t* to, pde_t *from, uintptr_t start, uintptr_t end, bool shar
 	do{
 		// call get_pte to find process A's pte according to the addr start
 		pte_t *ptep = get_pte(from, start, 0);
-		pte_t *nptep;
 		if (ptep == NULL)
 		{
 			start = ROUNDDOWN(start + PTSIZE, PTSIZE);
@@ -544,9 +551,9 @@ static void check_boot_pgdir(void)
 static const char* perm2str(int perm)
 {
 	static char str[4];
-	str[0] = (perm * PTE_U) ? 'u' : '-';
+	str[0] = (perm & PTE_U) ? 'u' : '-';
 	str[1] = 'r';
-	str[2] = (perm * PTE_W) ? 'w' : '-';
+	str[2] = (perm & PTE_W) ? 'w' : '-';
 	str[3] = '\0';
 	return str;
 }
