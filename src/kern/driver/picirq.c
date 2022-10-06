@@ -10,10 +10,10 @@
 
 // current IRQ mask
 // initial IRQ mask has interrupt 2 enabled (for slave 8259A)
-static uint16_t irq_mask = 0xFFFF & ~(1 << IRQ_SLAVE);
+static u16 irq_mask = 0xFFFF & ~(1 << IRQ_SLAVE);
 static bool did_init = 0;
 
-static void pic_setmask(uint16_t mask)
+static void pic_setmask(u16 mask)
 {
 	irq_mask = mask;
 	if (did_init) {

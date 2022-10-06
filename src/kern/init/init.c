@@ -20,13 +20,14 @@
 #include <kern/process/proc.h>
 #include <kern/trap/trap.h>
 
-static char *welcome = "\n"
-" _\n"
-"| |_ ___  _   _  ___  ___ \n"
-"| __/ _ \\| | | |/ _ \\/ __|\n"
-"| || (_) | |_| | (_) \\__ \\\n"
-" \\__\\___/ \\__, |\\___/|___/\n"
-"          |___/\n";
+//http://patorjk.com/software/taag
+static char *welcome ="\n"
+" ______     ______     ______   \n"
+"/\\___  \\   /\\  __ \\   /\\  ___\\   \n"
+"\\/_/  /__  \\ \\ \\/\\ \\  \\ \\___  \\  \n"
+"  /\\_____\\  \\ \\_____\\  \\/\\_____\\ \n"
+"  \\/_____/   \\/_____/   \\/_____/ \n"
+"                                ";
 
 int kern_init(void) __attribute__((noreturn));
 extern char bootstacktop[], bootstack[];

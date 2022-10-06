@@ -11,7 +11,7 @@ static void waitdisk(void)
 }
 
 /* read_sect -  read a single sector at @secnum into @dst*/
-static void read_sect(void* dst, uint32_t secnum)
+static void read_sect(void* dst, u32 secnum)
 {
 	waitdisk();
 	outb(0x1F2, 1);
@@ -30,11 +30,11 @@ static void read_sect(void* dst, uint32_t secnum)
  * read_seg - read @count bytes at @offset from kernel into virtual address @va,
  * might copy more than asked
  * */
-static void read_seg(uintptr_t va, uint32_t count, uint32_t offset)
+static void read_seg(uintptr_t va, u32 count, u32 offset)
 {
 	uintptr_t end_va = va + count;
 	va -= offset % SECTSIZE;
-	uint32_t secnum = (offset / SECTSIZE) + 1;
+	u32 secnum = (offset / SECTSIZE) + 1;
 	for (; va < end_va; va += SECTSIZE, secnum++) {
 		read_sect((void*)va, secnum);
 	}

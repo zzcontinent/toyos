@@ -271,7 +271,7 @@ void print_kerninfo(void)
 	cprintf("  etext  0x%08x (phys)\n", etext);
 	cprintf("  edata  0x%08x (phys)\n", edata);
 	cprintf("  end    0x%08x (phys)\n", end);
-	cprintf("Kernel executable memory footprint: %dKB\n", ((uint32_t)end - (uint32_t)kern_init + 1023) / 1024);
+	cprintf("Kernel executable memory footprint: %dKB\n", ((u32)end - (u32)kern_init + 1023) / 1024);
 }
 
 /* *
@@ -295,9 +295,9 @@ void print_debuginfo(uintptr_t eip)
 	}
 }
 
-static __noinline uint32_t read_eip(void)
+static __noinline u32 read_eip(void)
 {
-	uint32_t eip;
+	u32 eip;
 	asm volatile("movl 4(%%ebp), %0" : "=r" (eip));
 	return eip;
 }
@@ -337,30 +337,30 @@ static __noinline uint32_t read_eip(void)
  * to the kernel entry, the value of ebp has been set to zero, that's the boundary.
  * */
 
-void print_stack(uint32_t addr, uint32_t len)
+void print_stack(u32 addr, u32 len)
 {
 	while(len--)
 	{
 		cprintf("addr:0x%08x ", addr);
-		cprintf("val:0x%08x \n", *((uint32_t*)addr));
+		cprintf("val:0x%08x \n", *((u32*)addr));
 		addr += sizeof(addr);
 	}
 }
 
 void print_stackframe(void)
 {
-	uint32_t t_ebp = read_ebp();
-	uint32_t t_eip = read_eip();
+	u32 t_ebp = read_ebp();
+	u32 t_eip = read_eip();
 	int i = 0, j = 0;
 	for (i = 0; t_ebp != 0 && i < STACKFRAME_DEPTH; i++) {
 		cprintf("t_ebp:0x%x t_eip:0x%x args:", t_ebp, t_eip);
-		uint32_t* args = (uint32_t*)t_ebp + 2;
+		u32* args = (u32*)t_ebp + 2;
 		for (j = 0; j < 4; j++) {
 			cprintf("0x%08x ", args[j]);
 		}
 		print_debuginfo(t_eip - 1);
-		t_eip = ((uint32_t *)t_ebp)[1];
-		t_ebp = ((uint32_t *)t_ebp)[0];
+		t_eip = ((u32 *)t_ebp)[1];
+		t_ebp = ((u32 *)t_ebp)[0];
 	}
 }
 

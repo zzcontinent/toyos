@@ -37,11 +37,11 @@ size_t nr_free_pages(void);
 pte_t* get_pte(pde_t* pgdir, uintptr_t la, bool create);
 struct page_frame* get_page(pde_t* pgdir, uintptr_t la, pte_t** ptep_store);
 void page_remove(pde_t* pgdir, uintptr_t la);
-int page_insert(pde_t* pgdir, struct page_frame* page, uintptr_t la, uint32_t perm);
+int page_insert(pde_t* pgdir, struct page_frame* page, uintptr_t la, u32 perm);
 
 void load_esp0(uintptr_t esp0);
 void tlb_invalidate(pde_t* pgdir, uintptr_t la);
-struct page_frame* pgdir_alloc_page(pde_t* pgdir, uintptr_t la, uint32_t perm);
+struct page_frame* pgdir_alloc_page(pde_t* pgdir, uintptr_t la, u32 perm);
 void unmap_range(pde_t* pgdir, uintptr_t start, uintptr_t end);
 void exit_range(pde_t* pgdir, uintptr_t start, uintptr_t end);
 int copy_range(pde_t* to, pde_t* from, uintptr_t start, uintptr_t end, bool share);

@@ -85,7 +85,7 @@ struct gatedesc {
  * */
 #define SETGATE(gate, istrap, sel, off, dpl)             \
 {                                                    \
-	(gate).gd_off_15_0 = (uint32_t)(off)&0xffff;     \
+	(gate).gd_off_15_0 = (u32)(off)&0xffff;     \
 	(gate).gd_ss = (sel);                            \
 	(gate).gd_args = 0;                              \
 	(gate).gd_rsv1 = 0;                              \
@@ -93,13 +93,13 @@ struct gatedesc {
 	(gate).gd_s = 0;                                 \
 	(gate).gd_dpl = (dpl);                           \
 	(gate).gd_p = 1;                                 \
-	(gate).gd_off_31_16 = (uint32_t)(off) >> 16;     \
+	(gate).gd_off_31_16 = (u32)(off) >> 16;     \
 }
 
 /* Set up a call gate descriptor */
 #define SETCALLGATE(gate, ss, off, dpl)              \
 {                                                \
-	(gate).gd_off_15_0 = (uint32_t)(off)&0xffff; \
+	(gate).gd_off_15_0 = (u32)(off)&0xffff; \
 	(gate).gd_ss = (ss);                         \
 	(gate).gd_args = 0;                          \
 	(gate).gd_rsv1 = 0;                          \
@@ -107,7 +107,7 @@ struct gatedesc {
 	(gate).gd_s = 0;                             \
 	(gate).gd_dpl = (dpl);                       \
 	(gate).gd_p = 1;                             \
-	(gate).gd_off_31_16 = (uint32_t)(off) >> 16; \
+	(gate).gd_off_31_16 = (u32)(off) >> 16; \
 }
 
 /* segment descriptors */
@@ -150,43 +150,43 @@ struct segdesc {
 
 /* task state segment format (as described by the Pentium architecture book) */
 struct taskstate {
-	uint32_t ts_link;  // old ts selector
+	u32 ts_link;  // old ts selector
 	uintptr_t ts_esp0; // stack pointers and segment selectors
-	uint16_t ts_ss0;   // after an increase in privilege level
-	uint16_t ts_padding1;
+	u16 ts_ss0;   // after an increase in privilege level
+	u16 ts_padding1;
 	uintptr_t ts_esp1;
-	uint16_t ts_ss1;
-	uint16_t ts_padding2;
+	u16 ts_ss1;
+	u16 ts_padding2;
 	uintptr_t ts_esp2;
-	uint16_t ts_ss2;
-	uint16_t ts_padding3;
+	u16 ts_ss2;
+	u16 ts_padding3;
 	uintptr_t ts_cr3; // page directory base
 	uintptr_t ts_eip; // saved state from last task switch
-	uint32_t ts_eflags;
-	uint32_t ts_eax; // more saved state (registers)
-	uint32_t ts_ecx;
-	uint32_t ts_edx;
-	uint32_t ts_ebx;
+	u32 ts_eflags;
+	u32 ts_eax; // more saved state (registers)
+	u32 ts_ecx;
+	u32 ts_edx;
+	u32 ts_ebx;
 	uintptr_t ts_esp;
 	uintptr_t ts_ebp;
-	uint32_t ts_esi;
-	uint32_t ts_edi;
-	uint16_t ts_es; // even more saved state (segment selectors)
-	uint16_t ts_padding4;
-	uint16_t ts_cs;
-	uint16_t ts_padding5;
-	uint16_t ts_ss;
-	uint16_t ts_padding6;
-	uint16_t ts_ds;
-	uint16_t ts_padding7;
-	uint16_t ts_fs;
-	uint16_t ts_padding8;
-	uint16_t ts_gs;
-	uint16_t ts_padding9;
-	uint16_t ts_ldt;
-	uint16_t ts_padding10;
-	uint16_t ts_t;    // trap on task switch
-	uint16_t ts_iomb; // i/o map base address
+	u32 ts_esi;
+	u32 ts_edi;
+	u16 ts_es; // even more saved state (segment selectors)
+	u16 ts_padding4;
+	u16 ts_cs;
+	u16 ts_padding5;
+	u16 ts_ss;
+	u16 ts_padding6;
+	u16 ts_ds;
+	u16 ts_padding7;
+	u16 ts_fs;
+	u16 ts_padding8;
+	u16 ts_gs;
+	u16 ts_padding9;
+	u16 ts_ldt;
+	u16 ts_padding10;
+	u16 ts_t;    // trap on task switch
+	u16 ts_iomb; // i/o map base address
 } __attribute__((packed));
 
 #endif /* !__ASSEMBLER__ */

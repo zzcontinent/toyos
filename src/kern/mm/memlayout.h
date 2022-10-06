@@ -104,9 +104,9 @@ typedef pte_t swap_entry_t; // the pte can also be a swap entry
 struct e820map {
 	int nr_map;
 	struct {
-		uint64_t addr;
-		uint64_t size;
-		uint32_t type;  // 1:memory, 2:reserved(ROM, memory-mapped device), 3:ACPI Reclaim memory, 4:ACPI NVS memory
+		u64 addr;
+		u64 size;
+		u32 type;  // 1:memory, 2:reserved(ROM, memory-mapped device), 3:ACPI Reclaim memory, 4:ACPI NVS memory
 	} __attribute__((packed)) map[E820MAX];
 };
 
@@ -130,7 +130,7 @@ struct e820map {
  * */
 struct page_frame {
 	int ref;                          // page frame's reference counter
-	uint32_t flags;                   // array of flags that describe the status of the page frame
+	u32 flags;                   // array of flags that describe the status of the page frame
 	unsigned int property;            // used in buddy system, stores the order (the X in 2^X) of the continuous memory block
 	int zone_num;                     // used in buddy system, the No. of zone which the page belongs to
 	list_entry_t page_link;           // free list link
