@@ -1,20 +1,20 @@
-#include "console.h"
-#include "intr.h"
-#include <assert.h>
-#include <default_pmm.h>
-#include <defs.h>
-#include <kmalloc.h>
-#include <memlayout.h>
-#include <mmu.h>
-#include <pmm.h>
-#include <error.h>
-#include <stdio.h>
-#include <string.h>
-#include <sync.h>
-#include <vmm.h>
-#include <x86.h>
-#include <udebug.h>
-#include <swap.h>
+#include <kern/driver/console.h>
+#include <kern/driver/intr.h>
+#include <kern/debug/assert.h>
+#include <kern/mm/default_pmm.h>
+#include <libs/defs.h>
+#include <kern/mm/kmalloc.h>
+#include <kern/mm/memlayout.h>
+#include <kern/mm/mmu.h>
+#include <kern/mm/pmm.h>
+#include <libs/error.h>
+#include <libs/stdio.h>
+#include <libs/string.h>
+#include <kern/sync/sync.h>
+#include <kern/mm/vmm.h>
+#include <libs/x86.h>
+#include <kern/debug/udebug.h>
+#include <kern/mm/swap.h>
 
 /*
  * Task State Segment

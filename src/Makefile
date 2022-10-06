@@ -44,14 +44,11 @@ USER_BINS :=
 # UOBJS := $(call read_packet,ulibs)
 
 # +++ kernel include +++
-INCLUDE += libs/
-CFLAGS += $(addprefix -I,$(INCLUDE))
+CFLAGS += -I.
 LIBDIR := libs
 KSRCDIR := $(shell find kern/* -type d)
 
-KINCLUDE = $(KSRCDIR)
-KCFLAGS += $(addprefix -I,$(KINCLUDE))
-KCFLAGS += $(addprefix -I,libs)
+KCFLAGS += -I.
 target_kernel = $(call to_out_target,kernel)
 
 # +++ user include +++
@@ -126,7 +123,7 @@ endef
 
 ################ build rules start ################
 all:
-	make out/target/kernel -j
+	make out/target/kernel
 # +++ user +++
 $(call rule_compile_files,user,$(call listf_cc,$(USRCDIR)),$(CC),$(UCFLAGS))
 # $(foreach p,$(call read_packet,uprog),$(eval $(call user_prog_ld,$(p))))

@@ -1,8 +1,8 @@
-#include "stdarg.h"
-#include <defs.h>
-#include <intr.h>
-#include <kmonitor.h>
-#include <stdio.h>
+#include <libs/stdarg.h>
+#include <libs/defs.h>
+#include <kern/driver/intr.h>
+#include "./kmonitor.h"
+#include <libs/stdio.h>
 
 static bool is_panic = 0;
 

@@ -1,11 +1,11 @@
 #ifndef __KERN_MM_PMM_H__
 #define __KERN_MM_PMM_H__
 
-#include <defs.h>
-#include <mmu.h>
-#include <memlayout.h>
-#include <atomic.h>
-#include <assert.h>
+#include <libs/defs.h>
+#include <kern/mm/mmu.h>
+#include <kern/mm/memlayout.h>
+#include <libs/atomic.h>
+#include <kern/debug/assert.h>
 
 struct pmm_manager {
 	const char* name;

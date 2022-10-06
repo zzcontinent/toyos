@@ -1,7 +1,7 @@
-#include <pmm.h>
-#include <list.h>
-#include <string.h>
-#include <default_pmm.h>
+#include <kern/mm/pmm.h>
+#include <libs/list.h>
+#include <libs/string.h>
+#include <kern/mm/default_pmm.h>
 
 free_area_t free_area;
 

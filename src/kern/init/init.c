@@ -4,22 +4,21 @@
  * DESCRIPTION : kernel entry
  * DATE        : 2022-01-08 00:38:27
  * *****************************************************************************************/
-#include <clock.h>
-#include <console.h>
-#include <defs.h>
-//#include <fs.h>
-#include <ide.h>
-#include <intr.h>
-#include <kdebug.h>
-#include <picirq.h>
-#include <pmm.h>
-#include <proc.h>
-#include <stdio.h>
-#include <string.h>
-#include <swap.h>
-#include <trap.h>
-#include <vmm.h>
-#include <udebug.h>
+#include <libs/defs.h>
+#include <libs/stdio.h>
+#include <libs/string.h>
+#include <kern/debug/kdebug.h>
+#include <kern/debug/udebug.h>
+#include <kern/driver/clock.h>
+#include <kern/driver/console.h>
+#include <kern/driver/ide.h>
+#include <kern/driver/intr.h>
+#include <kern/driver/picirq.h>
+#include <kern/mm/pmm.h>
+#include <kern/mm/swap.h>
+#include <kern/mm/vmm.h>
+#include <kern/process/proc.h>
+#include <kern/trap/trap.h>
 
 static char *welcome = "\n"
 " _\n"

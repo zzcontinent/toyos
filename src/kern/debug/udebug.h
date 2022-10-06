@@ -42,27 +42,27 @@ typedef unsigned long __U64;
 #define uclean(fmt, args...)
 #define ulog(fmt, args...)
 #elif ULOG_LEVEL == LEVEL_DEBUG
-#define udebug(fmt, args...) printf("[DEBUG][%s:%d][%s] " fmt, __FILE__, __LINE__, __FUNCTION__, ##args)
-#define uinfo(fmt, args...) printf("[INFO][%s:%d][%s] " fmt, __FILE__, __LINE__, __FUNCTION__, ##args)
-#define uerror(fmt, args...) printf("[ERROR][%s:%d][%s] " fmt, __FILE__, __LINE__, __FUNCTION__, ##args)
+#define udebug(fmt, args...) printf("[D][%s:%d][%s] " fmt, __FILE__, __LINE__, __FUNCTION__, ##args)
+#define uinfo(fmt, args...) printf("[I][%s:%d][%s] " fmt, __FILE__, __LINE__, __FUNCTION__, ##args)
+#define uerror(fmt, args...) printf("[E][%s:%d][%s] " fmt, __FILE__, __LINE__, __FUNCTION__, ##args)
 #define uclean printf
 #define ulog uinfo
 #elif ULOG_LEVEL == LEVEL_INFO
 #define udebug(fmt, args...)
-#define uinfo(fmt, args...) printf("[INFO][%s:%d][%s] " fmt, __FILE__, __LINE__, __FUNCTION__, ##args)
-#define uerror(fmt, args...) printf("[ERROR][%s:%d][%s] " fmt, __FILE__, __LINE__, __FUNCTION__, ##args)
+#define uinfo(fmt, args...) printf("[I][%s:%d][%s] " fmt, __FILE__, __LINE__, __FUNCTION__, ##args)
+#define uerror(fmt, args...) printf("[E][%s:%d][%s] " fmt, __FILE__, __LINE__, __FUNCTION__, ##args)
 #define uclean printf
 #define ulog uinfo
 #elif ULOG_LEVEL == LEVEL_ERROR
 #define udebug(fmt, args...)
 #define uinfo(fmt, args...)
-#define uerror(fmt, args...) printf("[ERROR][%s:%d][%s] " fmt, __FILE__, __LINE__, __FUNCTION__, ##args)
+#define uerror(fmt, args...) printf("[E][%s:%d][%s] " fmt, __FILE__, __LINE__, __FUNCTION__, ##args)
 #define uclean printf
 #define ulog uinfo
 #elif ULOG_LEVEL == LEVEL_SIMPLE
-#define udebug(fmt, args...) printf("[DEBUG][%d] " fmt, __LINE__, ##args)
-#define uinfo(fmt, args...) printf("[INFO][%d] " fmt, __LINE__, ##args)
-#define uerror(fmt, args...) printf("[ERROR][%d] " fmt, __LINE__, ##args)
+#define udebug(fmt, args...) printf("[D][%d] " fmt, __LINE__, ##args)
+#define uinfo(fmt, args...) printf("[I][%d] " fmt, __LINE__, ##args)
+#define uerror(fmt, args...) printf("[E][%d] " fmt, __LINE__, ##args)
 #define uclean printf
 #define ulog uinfo
 #else

@@ -1,8 +1,8 @@
 #ifndef __LIBS_STDIIO_H__
 #define __LIBS_STDIIO_H__
 
-#include <defs.h>
-#include <stdarg.h>
+#include <libs/defs.h>
+#include <libs/stdarg.h>
 
 /* kern/libs/stdio.c */
 int cprintf(const char* fmt, ...);

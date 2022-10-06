@@ -1,9 +1,9 @@
 #ifndef __KERN_SYNC_SYNC_H__
 #define __KERN_SYNC_SYNC_H__
 
-#include <intr.h>
-#include <mmu.h>
-#include <x86.h>
+#include <kern/driver/intr.h>
+#include <kern/mm/mmu.h>
+#include <libs/x86.h>
 
 static inline bool __intr_save(void)
 {

@@ -1,7 +1,7 @@
 #ifndef __KERN_DEBUG_STAB_H__
 #define __KERN_DEBUG_STAB_H__
 
-#include <defs.h>
+#include <libs/defs.h>
 
 /* *
  * STABS debugging info

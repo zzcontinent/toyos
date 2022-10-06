@@ -34,10 +34,10 @@ ALLDEPS_$(1) += $$(call to_out_dep,$(2))
 ALLOBJS += $$(call to_out_obj,$(2))
 ALLDEPS += $$(call to_out_dep,$(2))
 $$(call to_out_dep,$(2)): $(2) | $$$$(dir $$$$@)
-	@echo + cc $@ : $$^
+	@echo "==>[$$@]:$$^"
 	@$(V)$(3) -I$$(dir $(2)) $(4) -MM $$< -MT "$$(patsubst %.d,%.o,$$@) $$@" > $$@
 $$(call to_out_obj,$(2)): $(2) | $$$$(dir $$$$@)
-	@echo + cc $@ : $$^
+	@echo "==>[$$@]:$$^"
 	@$(V)$(3) -I$$(dir $(2)) $(4) -c $$< -o $$@
 endef
 

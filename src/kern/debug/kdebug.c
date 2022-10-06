@@ -1,15 +1,15 @@
-#include <assert.h>
-#include <defs.h>
-#include <kdebug.h>
-#include <kmonitor.h>
-#include <memlayout.h>
-#include <proc.h>
-#include <stab.h>
-#include <stdio.h>
-#include <string.h>
-#include <sync.h>
-#include <vmm.h>
-#include <x86.h>
+#include <kern/debug/assert.h>
+#include <libs/defs.h>
+#include <kern/debug/kdebug.h>
+#include <kern/debug/kmonitor.h>
+#include <kern/mm/memlayout.h>
+#include <kern/process/proc.h>
+#include <kern/debug/stab.h>
+#include <libs/stdio.h>
+#include <libs/string.h>
+#include <kern/sync/sync.h>
+#include <kern/mm/vmm.h>
+#include <libs/x86.h>
 
 #define STACKFRAME_DEPTH 20
 

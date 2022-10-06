@@ -1,11 +1,11 @@
 #ifndef __KERN_PROCESS_PROC_H__
 #define __KERN_PROCESS_PROC_H__
 
-#include <defs.h>
-#include <list.h>
-#include <trap.h>
-#include <memlayout.h>
-#include <skew_heap.h>
+#include <libs/defs.h>
+#include <libs/list.h>
+#include <kern/trap/trap.h>
+#include <kern/mm/memlayout.h>
+#include <libs/skew_heap.h>
 
 #define PROC_NAME_LEN 50
 #define MAX_PROCESS 4096

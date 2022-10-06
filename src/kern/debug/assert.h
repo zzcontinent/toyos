@@ -1,8 +1,8 @@
 #ifndef __KERN_DEBUG_ASSERT_H__
 #define __KERN_DEBUG_ASSERT_H__
 
-#include "console.h"
-#include <defs.h>
+#include <kern/driver/console.h>
+#include <libs/defs.h>
 
 void __warn(const char* file, int line, const char* fmt, ...);
 void __noreturn __panic(const char* file, int line, const char* fmt, ...);
