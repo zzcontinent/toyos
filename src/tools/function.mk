@@ -34,11 +34,11 @@ ALLDEPS_$(1) += $$(call to_out_dep,$(2))
 ALLOBJS += $$(call to_out_obj,$(2))
 ALLDEPS += $$(call to_out_dep,$(2))
 $$(call to_out_dep,$(2)): $(2) | $$$$(dir $$$$@)
-	@echo "==>[$$@]:$$^"
-	@$(V)$(3) -I$$(dir $(2)) $(4) -MM $$< -MT "$$(patsubst %.d,%.o,$$@) $$@" > $$@
+	@echo "==>[$$@] : $$^"
+	$(V)$(3) -I$$(dir $(2)) $(4) -MM $$< -MT "$$(patsubst %.d,%.o,$$@) $$@" > $$@
 $$(call to_out_obj,$(2)): $(2) | $$$$(dir $$$$@)
-	@echo "==>[$$@]:$$^"
-	@$(V)$(3) -I$$(dir $(2)) $(4) -c $$< -o $$@
+	@echo "==>[$$@] : $$^"
+	$(V)$(3) -I$$(dir $(2)) $(4) -c $$< -o $$@
 endef
 
 # -------------------------------------------------------------------------
@@ -62,6 +62,7 @@ rule_compile_files_hostcc = $(call rule_compile_files,$(1),$(2),$(HOSTCC),$(HOST
 define template_do_link_target
 ifneq ($(3),)
 $$(call to_out_target,$(1)): $$(call to_out_obj,$(2)) | $$$$(dir $$$$@)
+	@echo "==>[$$@] : $$^"
 	$(V)$(3) $(4) $$^ -o $$@
 else
 $$(call to_out_target,$(1)): $$(call to_out_obj,$(2)) | $$$$(dir $$$$@)
