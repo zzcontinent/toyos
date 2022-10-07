@@ -47,6 +47,7 @@ void exit_range(pde_t* pgdir, uintptr_t start, uintptr_t end);
 int copy_range(pde_t* to, pde_t* from, uintptr_t start, uintptr_t end, bool share);
 
 void print_pgdir(void);
+void print_mem();
 
 /*
  * takes a kernel virtual address(above KERNBASE)

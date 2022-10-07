@@ -582,6 +582,21 @@ static int get_pgtable_items(size_t left, size_t right, size_t start, uintptr_t*
 	return 0;
 }
 
+
+void print_mem()
+{
+	struct e820map* memmap = (struct e820map*)(0x8000 + KERNBASE);
+	cprintf("e820map:\n");
+	int i;
+	for (i = 0; i < memmap->nr_map; i++) {
+		u64 begin = memmap->map[i].addr, end = begin + memmap->map[i].size;
+		cprintf("├──memory: size:%08llx(%8lldKB), [%08llx, %08llx], type = %d - %s\n",
+				(u64)memmap->map[i].size,
+				(u64)(memmap->map[i].size/1024),
+				begin, end - 1, memmap->map[i].type, E820MAP_TYPE(memmap->map[i].type));
+	}
+}
+
 void print_pgdir(void)
 {
 	cprintf("--------BEGIN--------\n");

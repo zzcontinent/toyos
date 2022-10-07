@@ -33,6 +33,7 @@ static struct command commands[COMMAND_MAX] = {
 	{"backtrace", "Print backtrace of stack frame", 1, cmd_backtrace},
 	{"exit", "exit console", 1, cmd_exit},
 	{"jump", "jump addr", 2, cmd_jump},
+	{"mem", "print memory", 1, cmd_mem},
 	{0, 0, 0, 0},
 };
 
@@ -160,6 +161,12 @@ int cmd_jump(int argc, char **argv)
 	u32 addr = str2n(argv[1]);
 	cprintf("jump to 0x%x\n", addr);
 	asm volatile("jmp %0\n" ::"r"(addr));
+	return CMD_SUCCEED;
+}
+
+int cmd_mem(int argc, char **argv)
+{
+	print_mem();
 	return CMD_SUCCEED;
 }
 
