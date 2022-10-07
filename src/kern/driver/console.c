@@ -373,7 +373,7 @@ int cons_getc(void)
 	local_intr_save(intr_flag);
 	{
 		serial_intr();
-		kbd_intr();
+		//kbd_intr();
 		if (cons.rpos != cons.wpos) {
 			c = cons.buf[cons.rpos++];
 			if (cons.rpos == CONSBUFFSIZE) {

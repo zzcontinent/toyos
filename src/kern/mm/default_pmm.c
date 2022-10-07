@@ -2,15 +2,15 @@
 #include <kern/mm/pmm.h>
 #include <kern/mm/default_pmm.h>
 
-free_area_t free_area;
+free_area_t g_free_area;
 
-#define free_list (free_area.free_list)
-#define nr_free (free_area.nr_free)
+#define g_free_list (g_free_area.free_list)
+#define g_nr_free (g_free_area.nr_free)
 
 static void default_init(void)
 {
-	list_init(&free_list);
-	nr_free = 0;
+	list_init(&g_free_list);
+	g_nr_free = 0;
 }
 
 static void default_init_memmap(struct page_frame *base, size_t n) {
@@ -23,20 +23,20 @@ static void default_init_memmap(struct page_frame *base, size_t n) {
 	}
 	base->property = n;
 	SET_PAGE_PROPERTY(base);
-	nr_free += n;
-	list_add_before(&free_list, &(base->page_link));
+	g_nr_free += n;
+	list_add_before(&g_free_list, &(base->page_link));
 }
 
 static struct page_frame * default_alloc_pages(size_t n)
 {
 	assert(n > 0);
-	if (n > nr_free) {
+	if (n > g_nr_free) {
 		return NULL;
 	}
 	struct page_frame *page = NULL;
-	list_entry_t *le = &free_list;
+	list_entry_t *le = &g_free_list;
 	// TODO: optimize (next-fit)
-	while ((le = list_next(le)) != &free_list) {
+	while ((le = list_next(le)) != &g_free_list) {
 		struct page_frame *p = le2page(le, page_link);
 		if (p->property >= n) {
 			page = p;
@@ -51,7 +51,7 @@ static struct page_frame * default_alloc_pages(size_t n)
 			list_add_after(&(page->page_link), &(p->page_link));
 		}
 		list_del(&(page->page_link));
-		nr_free -= n;
+		g_nr_free -= n;
 		CLEAR_PAGE_PROPERTY(page);
 	}
 	return page;
@@ -68,8 +68,8 @@ static void default_free_pages(struct page_frame *base, size_t n)
 	}
 	base->property = n;
 	SET_PAGE_PROPERTY(base);
-	list_entry_t *le = list_next(&free_list);
-	while (le != &free_list) {
+	list_entry_t *le = list_next(&g_free_list);
+	while (le != &g_free_list) {
 		p = le2page(le, page_link);
 		le = list_next(le);
 		// TODO: optimize
@@ -85,9 +85,9 @@ static void default_free_pages(struct page_frame *base, size_t n)
 			list_del(&(p->page_link));
 		}
 	}
-	nr_free += n;
-	le = list_next(&free_list);
-	while (le != &free_list) {
+	g_nr_free += n;
+	le = list_next(&g_free_list);
+	while (le != &g_free_list) {
 		p = le2page(le, page_link);
 		if (base + base->property <= p) {
 			assert(base + base->property != p);
@@ -100,7 +100,7 @@ static void default_free_pages(struct page_frame *base, size_t n)
 
 static size_t default_nr_free_pages(void)
 {
-	return nr_free;
+	return g_nr_free;
 }
 
 static void basic_check(void)
@@ -118,19 +118,19 @@ static void basic_check(void)
 	assert(page2pa(p1) < npage * PGSIZE);
 	assert(page2pa(p2) < npage * PGSIZE);
 
-	list_entry_t free_list_store = free_list;
-	list_init(&free_list);
-	assert(list_empty(&free_list));
+	list_entry_t free_list_store = g_free_list;
+	list_init(&g_free_list);
+	assert(list_empty(&g_free_list));
 
-	unsigned int nr_free_store = nr_free;
-	nr_free = 0;
+	unsigned int g_nr_free_store = g_nr_free;
+	g_nr_free = 0;
 
 	assert(alloc_page() == NULL);
 
 	free_page(p0);
 	free_page(p1);
 	free_page(p2);
-	assert(nr_free == 3);
+	assert(g_nr_free == 3);
 
 	assert((p0 = alloc_page()) != NULL);
 	assert((p1 = alloc_page()) != NULL);
@@ -139,28 +139,26 @@ static void basic_check(void)
 	assert(alloc_page() == NULL);
 
 	free_page(p0);
-	assert(!list_empty(&free_list));
+	assert(!list_empty(&g_free_list));
 
 	struct page_frame *p;
 	assert((p = alloc_page()) == p0);
 	assert(alloc_page() == NULL);
 
-	assert(nr_free == 0);
-	free_list = free_list_store;
-	nr_free = nr_free_store;
+	assert(g_nr_free == 0);
+	g_free_list = free_list_store;
+	g_nr_free = g_nr_free_store;
 
 	free_page(p);
 	free_page(p1);
 	free_page(p2);
 }
 
-// LAB2: below code is used to check the first fit allocation algorithm (your EXERCISE 1)
-// NOTICE: You SHOULD NOT CHANGE basic_check, default_check functions!
 static void default_check(void)
 {
 	int count = 0, total = 0;
-	list_entry_t *le = &free_list;
-	while ((le = list_next(le)) != &free_list) {
+	list_entry_t *le = &g_free_list;
+	while ((le = list_next(le)) != &g_free_list) {
 		struct page_frame *p = le2page(le, page_link);
 		assert(PAGE_PROPERTY(p));
 		count ++, total += p->property;
@@ -173,13 +171,13 @@ static void default_check(void)
 	assert(p0 != NULL);
 	assert(!PAGE_PROPERTY(p0));
 
-	list_entry_t free_list_store = free_list;
-	list_init(&free_list);
-	assert(list_empty(&free_list));
+	list_entry_t free_list_store = g_free_list;
+	list_init(&g_free_list);
+	assert(list_empty(&g_free_list));
 	assert(alloc_page() == NULL);
 
-	unsigned int nr_free_store = nr_free;
-	nr_free = 0;
+	unsigned int g_nr_free_store = g_nr_free;
+	g_nr_free = 0;
 
 	free_pages(p0 + 2, 3);
 	assert(alloc_pages(4) == NULL);
@@ -204,14 +202,14 @@ static void default_check(void)
 	assert((p0 = alloc_pages(5)) != NULL);
 	assert(alloc_page() == NULL);
 
-	assert(nr_free == 0);
-	nr_free = nr_free_store;
+	assert(g_nr_free == 0);
+	g_nr_free = g_nr_free_store;
 
-	free_list = free_list_store;
+	g_free_list = free_list_store;
 	free_pages(p0, 5);
 
-	le = &free_list;
-	while ((le = list_next(le)) != &free_list) {
+	le = &g_free_list;
+	while ((le = list_next(le)) != &g_free_list) {
 		struct page_frame *p = le2page(le, page_link);
 		count --, total -= p->property;
 	}
