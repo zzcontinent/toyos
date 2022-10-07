@@ -29,10 +29,10 @@ static char *welcome ="\n"
 
 int kern_init(void) __attribute__((noreturn));
 extern char bootstacktop[], bootstack[];
+extern char edata[], end[];
 
 int kern_init(void)
 {
-	extern char edata[], end[];
 	memset(edata, 0, end - edata);
 	cons_init();
 

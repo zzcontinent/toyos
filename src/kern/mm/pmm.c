@@ -38,7 +38,7 @@ pde_t* boot_pgdir = &__boot_pgdir;
 uintptr_t boot_cr3;
 
 // physical memory management
-const struct pmm_manager* pmm_manager;
+const struct pmm_manager* g_pmm_manager;
 
 /*
  * pde(page table entry)  corresponding to the virtual address range
@@ -116,15 +116,15 @@ static void gdt_init(void)
 
 static void init_pmm_manager(void)
 {
-	pmm_manager = &default_pmm_manager;
-	cprintf("memory management: %s\n", pmm_manager->name);
-	pmm_manager->init();
+	g_pmm_manager = &default_pmm_manager;
+	cprintf("memory management: %s\n", g_pmm_manager->name);
+	g_pmm_manager->init();
 }
 
 // call pmm->init_memmap to build Page struct for free memory
 static void init_memmap(struct page_frame* base, size_t n)
 {
-	pmm_manager->init_memmap(base, n);
+	g_pmm_manager->init_memmap(base, n);
 }
 
 // call pmm->alloc_pages to allocate a continuous n*PAGESIZE memory
@@ -136,7 +136,7 @@ struct page_frame* alloc_pages(size_t n)
 	for (;;) {
 		local_intr_save(intr_flag);
 		{
-			page = pmm_manager->alloc_pages(n);
+			page = g_pmm_manager->alloc_pages(n);
 		}
 		local_intr_restore(intr_flag);
 		// todo ...
@@ -153,7 +153,7 @@ void free_pages(struct page_frame* base, size_t n)
 	bool intr_flag;
 	local_intr_save(intr_flag);
 	{
-		pmm_manager->free_pages(base, n);
+		g_pmm_manager->free_pages(base, n);
 	}
 	local_intr_restore(intr_flag);
 }
@@ -164,7 +164,7 @@ size_t nr_free_pages(void)
 	bool intr_flag;
 	local_intr_save(intr_flag);
 	{
-		ret = pmm_manager->nr_free_pages();
+		ret = g_pmm_manager->nr_free_pages();
 	}
 	local_intr_restore(intr_flag);
 	return ret;
@@ -466,7 +466,7 @@ int copy_range(pde_t* to, pde_t *from, uintptr_t start, uintptr_t end, bool shar
 
 static void check_alloc_page(void)
 {
-	pmm_manager->check();
+	g_pmm_manager->check();
 	cprintf("check_alloc_page succeed!\n");
 }
 
