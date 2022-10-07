@@ -297,7 +297,7 @@ void pmm_init(void)
 	// check the correctness of the basic virtual memory map.
 	check_boot_pgdir();
 
-	print_pgdir();
+	print_pg();
 	kmalloc_init();
 }
 
@@ -597,18 +597,18 @@ void print_mem()
 	}
 }
 
-void print_pgdir(void)
+void print_pg(void)
 {
 	cprintf("--------BEGIN--------\n");
 	size_t left, right = 0, perm;
 	while ((perm = get_pgtable_items(0, NPDEENTRY, right, vpd, &left, &right)) != 0) {
-		cprintf("PDE(%03x) %08x-%08x %08x %s\n", right - left,
+		cprintf("PDE(%03x) %08x-%08x %08x(%8dKB) %s\n", right - left,
 				left * PTSIZE, right * PTSIZE,
-				(right - left) * PTSIZE, perm2str(perm));
+				(right - left) * PTSIZE, (right-left) *(PTSIZE/1024), perm2str(perm));
 		size_t l, r = left * NPTEENTRY;
 		while ((perm = get_pgtable_items(left * NPTEENTRY, right * NPTEENTRY, r, vpt, &l, &r)) != 0) {
-			cprintf("  |-- PTE(%05x) %08x-%08x %08x %s\n", r - l, l * PGSIZE, r * PGSIZE,
-					(r - l) * PGSIZE, perm2str(perm));
+			cprintf("  |-- PTE(%05x) %08x-%08x %08x(%8dKB) %s\n", r - l, l * PGSIZE, r * PGSIZE,
+					(r - l) * PGSIZE, (r-l)*PGSIZE/1024, perm2str(perm));
 		}
 	}
 	cprintf("--------END--------\n");

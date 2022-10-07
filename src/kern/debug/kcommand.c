@@ -34,6 +34,7 @@ static struct command commands[COMMAND_MAX] = {
 	{"exit", "exit console", 1, cmd_exit},
 	{"jump", "jump addr", 2, cmd_jump},
 	{"mem", "print memory", 1, cmd_mem},
+	{"page", "print page table", 1, cmd_print_pg},
 	{0, 0, 0, 0},
 };
 
@@ -167,6 +168,12 @@ int cmd_jump(int argc, char **argv)
 int cmd_mem(int argc, char **argv)
 {
 	print_mem();
+	return CMD_SUCCEED;
+}
+
+int cmd_print_pg(int argc, char **argv)
+{
+	print_pg();
 	return CMD_SUCCEED;
 }
 
