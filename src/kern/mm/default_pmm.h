@@ -1,10 +1,10 @@
-#ifndef __KERN_MM_DEFAULT_PMM_H__
-#define  __KERN_MM_DEFAULT_PMM_H__
+#ifndef  __DEFAULT_PMM_H__
+#define  __DEFAULT_PMM_H__
 
-#include <pmm.h>
+#include <kern/mm/pmm.h>
 
 extern const struct pmm_manager default_pmm_manager;
 extern free_area_t free_area;
-#endif /* ! __KERN_MM_DEFAULT_PMM_H__ */
+void print_free_pages();
 
-
+#endif  /* __DEFAULT_PMM_H__ */

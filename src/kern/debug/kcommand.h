@@ -11,6 +11,8 @@ int cmd_exit(int argc, char **argv);
 int cmd_jump(int argc, char **argv);
 int cmd_mem(int argc, char **argv);
 int cmd_print_pg(int argc, char **argv);
+int cmd_print_free_pages(int argc, char **argv);
+int cmd_call(int argc, char **argv);
 
 #define KCMD_LOOP { \
 	uinfo(""); \

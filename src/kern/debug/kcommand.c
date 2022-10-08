@@ -1,6 +1,7 @@
 #include <libs/stdio.h>
 #include <libs/string.h>
 #include <kern/mm/mmu.h>
+#include <kern/mm/default_pmm.h>
 #include <kern/trap/trap.h>
 #include <kern/debug/kcommand.h>
 #include <kern/debug/kdebug.h>
@@ -33,8 +34,10 @@ static struct command commands[COMMAND_MAX] = {
 	{"backtrace", "Print backtrace of stack frame", 1, cmd_backtrace},
 	{"exit", "exit console", 1, cmd_exit},
 	{"jump", "jump addr", 2, cmd_jump},
+	{"call", "call addr", 2, cmd_call},
 	{"mem", "print memory", 1, cmd_mem},
 	{"page", "print page table", 1, cmd_print_pg},
+	{"free_page", "print free pages", 1, cmd_print_free_pages},
 	{0, 0, 0, 0},
 };
 
@@ -160,8 +163,15 @@ int cmd_jump(int argc, char **argv)
 {
 	cprintf("jump to %s\n", argv[1]);
 	u32 addr = str2n(argv[1]);
-	cprintf("jump to 0x%x\n", addr);
-	asm volatile("jmp %0\n" ::"r"(addr));
+	asm volatile("jmp *%0\n" ::"r"(addr));
+	return CMD_SUCCEED;
+}
+
+int cmd_call(int argc, char **argv)
+{
+	cprintf("call to %s\n", argv[1]);
+	u32 addr = str2n(argv[1]);
+	asm volatile("call *%0\n" ::"r"(addr));
 	return CMD_SUCCEED;
 }
 
@@ -174,6 +184,12 @@ int cmd_mem(int argc, char **argv)
 int cmd_print_pg(int argc, char **argv)
 {
 	print_pg();
+	return CMD_SUCCEED;
+}
+
+int cmd_print_free_pages(int argc, char **argv)
+{
+	print_free_pages();
 	return CMD_SUCCEED;
 }
 

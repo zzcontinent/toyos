@@ -1,5 +1,5 @@
-#ifndef __KERN_MM_PMM_H__
-#define __KERN_MM_PMM_H__
+#ifndef  __PMM_H__
+#define  __PMM_H__
 
 #include <libs/defs.h>
 #include <kern/mm/mmu.h>
@@ -138,4 +138,4 @@ static inline struct page_frame * kva2page(void *kva) {
 }
 
 
-#endif /* __KERN_MM_PMM_H__ */
+#endif  /* __PMM_H__ */

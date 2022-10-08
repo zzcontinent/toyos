@@ -371,8 +371,7 @@ void page_remove(pde_t *pgdir, uintptr_t la)
 //  perm:  the permission of this Page which is setted in related pte
 // return value: always 0
 //note: PT is changed, so the TLB need to be invalidate
-int
-page_insert(pde_t *pgdir, struct page_frame *page, uintptr_t la, u32 perm) {
+int page_insert(pde_t *pgdir, struct page_frame *page, uintptr_t la, u32 perm) {
 	udebug("pgdir=0x%x, la=0x%x\r\n", pgdir, la);
 	pte_t *ptep = get_pte(pgdir, la, 1);
 	if (ptep == NULL) {
