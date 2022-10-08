@@ -1,6 +1,5 @@
-#ifndef __KERN_MM_MMU_H__
-#define __KERN_MM_MMU_H__
-
+#ifndef  __MMU_H__
+#define  __MMU_H__
 /* Eflags register */
 #define FL_CF 0x00000001	// Carry Flag
 #define FL_PF 0x00000004	// Parity Flag
@@ -272,4 +271,4 @@ struct taskstate {
 #define CR4_PVI 0x00000002 // Protected-Mode Virtual Interrupts
 #define CR4_VME 0x00000001 // V86 Mode Extensions
 
-#endif /* !__KERN_MM_MMU_H__ */
+#endif  /* __MMU_H__ */

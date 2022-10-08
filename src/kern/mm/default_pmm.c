@@ -1,3 +1,4 @@
+#include "memlayout.h"
 #include <libs/libs_all.h>
 #include <kern/mm/pmm.h>
 #include <kern/mm/default_pmm.h>
@@ -215,6 +216,33 @@ static void default_check(void)
 	}
 	assert(count == 0);
 	assert(total == 0);
+}
+
+void print_free_pages()
+{
+	list_entry_t *le = &g_free_list;
+	struct page_frame *p = le2page(le, page_link);
+	do {
+		p = le2page(le, page_link);
+		uclean(
+				"-------------------\n"
+				"page          :0x%x\n"
+				"ref           :0x%x\n"
+				"flags         :0x%x\n"
+				"property      :0x%x\n"
+				"zone_num      :0x%x\n"
+				"page_link     :0x%x\n"
+				"pra_page_link :0x%x\n"
+				"pra_vaddr     :0x%x\n",
+				p               ,
+				p->ref          ,
+				p->flags        ,
+				p->property     ,
+				p->zone_num     ,
+				p->page_link    ,
+				p->pra_page_link,
+				p->pra_vaddr    );
+	} while ((le = list_next(le)) != &g_free_list);
 }
 
 const struct pmm_manager default_pmm_manager = {

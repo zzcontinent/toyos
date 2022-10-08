@@ -129,13 +129,13 @@ struct e820map {
  * sturct page - page descriptor structures(physical page).
  * */
 struct page_frame {
-	int ref;                          // page frame's reference counter
-	u32 flags;                   // array of flags that describe the status of the page frame
-	unsigned int property;            // used in buddy system, stores the order (the X in 2^X) of the continuous memory block
-	int zone_num;                     // used in buddy system, the No. of zone which the page belongs to
-	list_entry_t page_link;           // free list link
-	list_entry_t pra_page_link;       // used for pra (page replace algorithm)
-	uintptr_t pra_vaddr;              // used for pra (page replace algorithm)
+	int            ref;                 // page frame's reference counter
+	u32            flags;               // array of flags that describe the status of the page frame
+	unsigned int   property;            // used in buddy system, stores the order (the X in 2^X) of the continuous memory block
+	int            zone_num;            // used in buddy system, the No. of zone which the page belongs to
+	list_entry_t   page_link;           // free list link
+	list_entry_t   pra_page_link;       // used for pra (page replace algorithm)
+	uintptr_t      pra_vaddr;           // used for pra (page replace algorithm)
 };
 
 /* flags describing the status of a page frame */

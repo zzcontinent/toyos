@@ -136,7 +136,7 @@ $(call rule_compile_files_cc,kernel,$(call listf_cc,$(LIBDIR)))
 $(target_kernel): tools/kernel.ld
 
 $(target_kernel): $(ALLOBJS_kernel)
-	@echo "[LINK] [$@] : $^"
+	@echo "[LD] [$@] : $^"
 	$(V)$(LD) $(LDFLAGS) -T tools/kernel.ld -o $@ $(ALLOBJS_kernel)
 	$(V)$(OBJDUMP) -S $@ > $(call asmfile,kern/kernel)
 	$(V)$(OBJDUMP) -t $@ | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > $(call symfile,kern/kernel)
@@ -147,7 +147,7 @@ $(call rule_link_target,kernel)
 $(call rule_compile_files,bootblock,$(bootfiles),$(CC),$(CFLAGS) -Os -nostdinc)
 
 $(target_bootblock): $(call to_out_obj,$(bootfiles)) | $(call to_out_target,sign)
-	@echo "[LINK] [$@] : $^"
+	@echo "[LD] [$@] : $^"
 	$(V)$(LD) $(LDFLAGS) -N -T tools/boot.ld $^ -o $(call to_out_obj,boot/bootblock)
 	$(V)$(OBJDUMP) -S $(call to_out_obj,boot/bootblock) > $(call asmfile,boot/bootblock)
 	$(V)$(OBJCOPY) -S -O binary $(call to_out_obj,boot/bootblock) $(call outfile,boot/bootblock)

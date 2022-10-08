@@ -1,5 +1,5 @@
-#ifndef __LIBS_DEFS_H__
-#define __LIBS_DEFS_H__
+#ifndef  __DEFS_H__
+#define  __DEFS_H__
 
 #ifndef NULL
 #define NULL ((void*)0)
@@ -65,4 +65,4 @@ typedef size_t ppn_t;
 #define to_struct(ptr, type, member) \
 	((type*)((char*)(ptr)-offsetof(type, member)))
 
-#endif /* !__LIBS_DEFS_H__ */
+#endif  /* __DEFS_H__ */
