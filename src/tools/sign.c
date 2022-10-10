@@ -22,7 +22,7 @@ int main(int argc, char* argv[])
 	FILE* fp_in = fopen(argv[1], "rb");
 	int size = fread(buf, 1, st.st_size, fp_in);
 	if (size != st.st_size) {
-		fprintf(stderr, "read %s error, size diff %d vs. %d\n", argv[1], st.st_size, size);
+		fprintf(stderr, "read %s error, size diff %ld vs. %d\n", argv[1], st.st_size, size);
 		return -1;
 	}
 	fclose(fp_in);

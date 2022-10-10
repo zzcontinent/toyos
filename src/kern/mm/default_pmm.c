@@ -115,15 +115,15 @@ static void basic_check(void)
 	assert(p0 != p1 && p0 != p2 && p1 != p2);
 	assert(page_ref(p0) == 0 && page_ref(p1) == 0 && page_ref(p2) == 0);
 
-	assert(page2pa(p0) < npage * PGSIZE);
-	assert(page2pa(p1) < npage * PGSIZE);
-	assert(page2pa(p2) < npage * PGSIZE);
+	assert(page2pa(p0) < g_npages * PGSIZE);
+	assert(page2pa(p1) < g_npages * PGSIZE);
+	assert(page2pa(p2) < g_npages * PGSIZE);
 
 	list_entry_t free_list_store = g_free_list;
 	list_init(&g_free_list);
 	assert(list_empty(&g_free_list));
 
-	unsigned int g_nr_free_store = g_nr_free;
+	unsigned int nr_free_store = g_nr_free;
 	g_nr_free = 0;
 
 	assert(alloc_page() == NULL);
@@ -148,7 +148,7 @@ static void basic_check(void)
 
 	assert(g_nr_free == 0);
 	g_free_list = free_list_store;
-	g_nr_free = g_nr_free_store;
+	g_nr_free = nr_free_store;
 
 	free_page(p);
 	free_page(p1);
@@ -177,7 +177,7 @@ static void default_check(void)
 	assert(list_empty(&g_free_list));
 	assert(alloc_page() == NULL);
 
-	unsigned int g_nr_free_store = g_nr_free;
+	unsigned int nr_free_store = g_nr_free;
 	g_nr_free = 0;
 
 	free_pages(p0 + 2, 3);
@@ -204,7 +204,7 @@ static void default_check(void)
 	assert(alloc_page() == NULL);
 
 	assert(g_nr_free == 0);
-	g_nr_free = g_nr_free_store;
+	g_nr_free = nr_free_store;
 
 	g_free_list = free_list_store;
 	free_pages(p0, 5);

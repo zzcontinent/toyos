@@ -21,8 +21,8 @@ extern const struct pmm_manager* pmm_manager;
 extern pde_t* boot_pgdir;
 extern uintptr_t boot_cr3;
 
-extern struct page_frame* pages;
-extern size_t npage;
+extern struct page_frame* g_page_frame_base;
+extern size_t g_npages;
 
 extern char bootstack[], bootstacktop[];
 
@@ -69,7 +69,7 @@ void print_mem();
 #define KADDR(pa) ({                                         \
 		uintptr_t __m_pa = (pa);                                 \
 		size_t __m_ppn = PPN(__m_pa);                            \
-		if (__m_ppn >= npage) {                                  \
+		if (__m_ppn >= g_npages) {                                  \
 		panic("KADDR called with invalid pa %08lx", __m_pa); \
 		}                                                        \
 		(void*)(__m_pa + KERNBASE);                              \
@@ -77,7 +77,7 @@ void print_mem();
 
 static inline ppn_t page2ppn(struct page_frame* page)
 {
-	return page - pages;
+	return page - g_page_frame_base;
 }
 
 static inline uintptr_t page2pa(struct page_frame* page)
@@ -87,10 +87,10 @@ static inline uintptr_t page2pa(struct page_frame* page)
 
 static inline struct page_frame* pa2page(uintptr_t pa)
 {
-	if (PPN(pa) >= npage) {
+	if (PPN(pa) >= g_npages) {
 		panic("pa2page called with invalid pa");
 	}
-	return &pages[PPN(pa)];
+	return &g_page_frame_base[PPN(pa)];
 }
 
 static inline void* page2kva(struct page_frame* page)

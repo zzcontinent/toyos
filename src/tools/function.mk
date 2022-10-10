@@ -62,7 +62,7 @@ rule_compile_files_hostcc = $(call rule_compile_files,$(1),$(2),$(HOSTCC),$(HOST
 define template_do_link_target
 ifneq ($(3),)
 $$(call to_out_target,$(1)): $$(call to_out_obj,$(2)) | $$$$(dir $$$$@)
-	@echo "[LINK] [$$@] : $$^"
+	@echo "[LD] [$$@] : $$^"
 	$(V)$(3) $(4) $$^ -o $$@
 else
 $$(call to_out_target,$(1)): $$(call to_out_obj,$(2)) | $$$$(dir $$$$@)

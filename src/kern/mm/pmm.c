@@ -27,9 +27,9 @@
 static struct taskstate ts = { 0 };
 
 // virtual address of physical page array
-struct page_frame* pages;
+struct page_frame* g_page_frame_base;
 // amount of physical memory(in pages)
-size_t npage = 0;
+size_t g_npages = 0;
 
 // virtual address of boot-time page directory
 extern pde_t __boot_pgdir;
@@ -199,13 +199,13 @@ static void page_init(void)
 		maxpa = KMEMSIZE;
 	}
 	extern char end[];
-	npage = maxpa / PGSIZE;
-	pages = (struct page_frame*)ROUNDUP((void*)end, PGSIZE);
-	for (i = 0; i < npage; i++) {
-		SET_PAGE_RESERVED(pages + i);
+	g_npages = maxpa / PGSIZE;
+	g_page_frame_base = (struct page_frame*)ROUNDUP((void*)end, PGSIZE);
+	for (i = 0; i < g_npages; i++) {
+		SET_PAGE_RESERVED(g_page_frame_base + i);
 	}
 
-	uintptr_t freemem = PADDR((uintptr_t)pages + sizeof(struct page_frame) * npage);
+	uintptr_t freemem = PADDR((uintptr_t)g_page_frame_base + sizeof(struct page_frame) * g_npages);
 
 	for (i = 0; i < memmap->nr_map; i ++) {
 		u64 begin = memmap->map[i].addr, end = begin + memmap->map[i].size;
@@ -471,7 +471,7 @@ static void check_alloc_page(void)
 
 static void check_pgdir(void)
 {
-	assert(npage <= KMEMSIZE / PGSIZE);
+	assert(g_npages <= KMEMSIZE / PGSIZE);
 	assert(boot_pgdir != NULL && (u32)PGOFF(boot_pgdir) == 0);
 	assert(get_page(boot_pgdir, 0x0, NULL) == NULL);
 
@@ -520,7 +520,7 @@ static void check_pgdir(void)
 static void check_boot_pgdir(void)
 {
 	pte_t* ptep;
-	for (int i = 0; i < npage; i += PGSIZE) {
+	for (int i = 0; i < g_npages; i += PGSIZE) {
 		assert((ptep = get_pte(boot_pgdir, (uintptr_t)KADDR(i), 0)) != NULL);
 		assert(PTE_ADDR(*ptep) == i);
 	}
