@@ -12,6 +12,12 @@ wiki/mips64.pdf filter=lfs diff=lfs merge=lfs -text
 wiki/ucore_os_docs.pdf filter=lfs diff=lfs merge=lfs -text
 wiki/armv8.pdf filter=lfs diff=lfs merge=lfs -text
 wiki/i386_manu.pdf filter=lfs diff=lfs merge=lfs -text
+lab8_result.pdf filter=lfs diff=lfs merge=lfs -text
+src.pdf filter=lfs diff=lfs merge=lfs -text
+lab8_result.ps filter=lfs diff=lfs merge=lfs -text
+src.ps filter=lfs diff=lfs merge=lfs -text
+lab8_result.txt filter=lfs diff=lfs merge=lfs -text
+src.txt filter=lfs diff=lfs merge=lfs -text
 *.pdf !text !filter !merge !diff
 *.ps|txt !text !filter !merge !diff
 *.ps !text !filter !merge !diff
