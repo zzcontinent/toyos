@@ -320,7 +320,7 @@ pte_t* get_pte(pde_t* pgdir, uintptr_t la, bool create)
 		memset(KADDR(pa), 0, PGSIZE);
 		*pdep = pa | PTE_U | PTE_W | PTE_P;
 	}
-	pte_t* ret = &((pte_t*)KADDR(PDE_ADDR(*pdep)))[PTX(la)];
+	pte_t* ret = &((pte_t*)KADDR(PTE_ADDR(*pdep)))[PTX(la)];
 	return ret;
 }
 
