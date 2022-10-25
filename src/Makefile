@@ -12,7 +12,7 @@ HOSTCC := gcc
 ## for mksfs program, -D_FILE_OFFSET_BITS=64 can guarantee sizeof(off_t)==8,  sizeof(ino_t) ==8
 ## for 64 bit gcc, to build 32-bit mksfs, you can use below line
 ## HOSTCFLAGS := -g -Wall -m32 -O2 -D_FILE_OFFSET_BITS=64
-HOSTCFLAGS := -g -Wall -O2 -D_FILE_OFFSET_BITS=64
+HOSTCFLAGS := -g -Wall -O0 -D_FILE_OFFSET_BITS=64
 
 GDB := ${GCCPREFIX}gdb
 CC := $(GCCPREFIX)gcc
@@ -122,8 +122,8 @@ endef
 
 
 ################ build rules start ################
-all:
-	make out/target/kernel
+all: $(target_kernel)
+
 # +++ user +++
 $(call rule_compile_files,user,$(call listf_cc,$(USRCDIR)),$(CC),$(UCFLAGS))
 # $(foreach p,$(call read_packet,uprog),$(eval $(call user_prog_ld,$(p))))
@@ -133,13 +133,19 @@ $(call rule_compile_files,user,$(call listf_cc,$(USRCDIR)),$(CC),$(UCFLAGS))
 $(call rule_compile_files,kernel,$(foreach d,$(KSRCDIR),$(call listf_cc,$(d))),$(CC),$(KCFLAGS))
 $(call rule_compile_files_cc,kernel,$(call listf_cc,$(LIBDIR)))
 
-$(target_kernel): tools/kernel.ld
-
-$(target_kernel): $(ALLOBJS_kernel)
+$(target_kernel): $(call to_out_obj,kern/init/entry) $(ALLOBJS_kernel)
 	@echo "[LD] [$@] : $^"
-	$(V)$(LD) $(LDFLAGS) -T tools/kernel.ld -o $@ $(ALLOBJS_kernel)
-	$(V)$(OBJDUMP) -S $@ > $(call asmfile,kern/kernel)
-	$(V)$(OBJDUMP) -t $@ | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > $(call symfile,kern/kernel)
+	$(V)$(LD) $(LDFLAGS) -T tools/kernel.ld -o $@ $^
+
+objdump:
+	@for f in `ls out/target`;\
+	do\
+		$(OBJDUMP) -S out/target/$${f} 2>/dev/null > out/target/$${f}.asm;\
+		[ `cat out/target/$${f}.asm|wc -c` -eq 0 ] && rm out/target/$${f}.asm;\
+		$(OBJDUMP) -t out/target/$${f} 2>/dev/null | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$$$/d' > out/target/$${f}.sym;\
+		[ `cat out/target/$${f}.sym|wc -c` -eq 0 ] && rm out/target/$${f}.sym;\
+	done\
+
 
 $(call rule_link_target,kernel)
 
@@ -148,10 +154,9 @@ $(call rule_compile_files,bootblock,$(bootfiles),$(CC),$(CFLAGS) -Os -nostdinc)
 
 $(target_bootblock): $(call to_out_obj,$(bootfiles)) | $(call to_out_target,sign)
 	@echo "[LD] [$@] : $^"
-	$(V)$(LD) $(LDFLAGS) -N -T tools/boot.ld $^ -o $(call to_out_obj,boot/bootblock)
-	$(V)$(OBJDUMP) -S $(call to_out_obj,boot/bootblock) > $(call asmfile,boot/bootblock)
-	$(V)$(OBJCOPY) -S -O binary $(call to_out_obj,boot/bootblock) $(call outfile,boot/bootblock)
-	$(V)$(call to_out_target,sign) $(call outfile,boot/bootblock) $(target_bootblock)
+	$(V)$(LD) $(LDFLAGS) -N -T tools/boot.ld $^ -o $(call to_out_target,boot)
+	$(V)$(OBJCOPY) -S -O binary $(call to_out_target,boot) $(target_bootblock)
+	$(V)$(call to_out_target,sign) $(target_bootblock) $(target_bootblock)
 
 $(call rule_link_target,bootblock)
 
@@ -193,7 +198,7 @@ $(call rule_link_target,sfs.img)
 $(call rule_finish_all)
 
 # +++ qemu +++
-.PHONY: all qemu qemu-nox debug debug-nox monitor lines
+.PHONY: all qemu qemu-nox debug debug-nox monitor lines objdump
 
 qemu: $(target_ucoreimg) $(SWAPIMG) $(SFSIMG)
 	$(V)$(QEMU) -serial stdio $(QEMUOPTS) -parallel null
