@@ -12,7 +12,7 @@ int cputs(const char* str);
 int getchar(void);
 
 /* kern/libs/readline.c */
-char* readline(const char* prompt);
+char* readline(const char* prompt, int need_print);
 
 /* libs/printfmt.c */
 void printfmt(void (*putch)(int, void*, int), int fd, void* putdat, const char* fmt, ...);
