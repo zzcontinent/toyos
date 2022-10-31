@@ -111,7 +111,7 @@ void kcmd_loop()
 	char promt_buf[64] = {0};
 	while (1) {
 		snprintf(promt_buf, 64, "[ksh:%d]$ ", ++index);
-		if ((buf = readline(promt_buf)) != NULL) {
+		if ((buf = readline(promt_buf, 1)) != NULL) {
 			enum CMD_RETURN_CODE ret_code = runcmd(buf);
 			if (ret_code == CMD_EXIT)
 			{
