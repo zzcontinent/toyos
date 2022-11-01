@@ -1,9 +1,16 @@
 #ifndef __KERN_SYNC_SYNC_H__
 #define __KERN_SYNC_SYNC_H__
 
-#include <kern/driver/intr.h>
 #include <kern/mm/mmu.h>
 #include <libs/x86.h>
+
+#define intr_enable() do { \
+	sti();             \
+} while(0)
+
+#define intr_disable() do { \
+	cli();              \
+} while(0)
 
 static inline bool __intr_save(void)
 {

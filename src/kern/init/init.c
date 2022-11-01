@@ -10,8 +10,7 @@
 #include <kern/driver/clock.h>
 #include <kern/driver/console.h>
 #include <kern/driver/ide.h>
-#include <kern/driver/intr.h>
-#include <kern/driver/picirq.h>
+#include <kern/driver/pic.h>
 #include <kern/mm/pmm.h>
 #include <kern/mm/swap.h>
 #include <kern/mm/vmm.h>

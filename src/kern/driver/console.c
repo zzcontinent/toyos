@@ -1,9 +1,9 @@
 #include <libs/libs_all.h>
 #include <kern/debug/assert.h>
 #include <kern/driver/console.h>
-#include <kern/driver/kbdreg.h>
+#include <kern/driver/keyboard.h>
 #include <kern/mm/memlayout.h>
-#include <kern/driver/picirq.h>
+#include <kern/driver/pic.h>
 #include <kern/trap/trap.h>
 #include <kern/sync/sync.h>
 

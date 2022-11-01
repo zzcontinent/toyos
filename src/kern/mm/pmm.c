@@ -1,6 +1,5 @@
 #include <libs/libs_all.h>
 #include <kern/driver/console.h>
-#include <kern/driver/intr.h>
 #include <kern/debug/assert.h>
 #include <kern/mm/default_pmm.h>
 #include <kern/mm/kmalloc.h>
