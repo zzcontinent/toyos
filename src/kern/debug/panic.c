@@ -1,7 +1,7 @@
 #include <libs/libs_all.h>
 #include <kern/debug/kdebug.h>
 #include <kern/debug/kcommand.h>
-#include <kern/driver/intr.h>
+#include <kern/sync/sync.h>
 
 static bool is_panic = 0;
 

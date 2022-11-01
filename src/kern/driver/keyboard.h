@@ -1,5 +1,5 @@
-#ifndef __KERN_DRIVER_KBDREG_H__
-#define __KERN_DRIVER_KBDREG_H__
+#ifndef  __KEYBOARD_H__
+#define  __KEYBOARD_H__
 
 // Special keycodes
 #define KEY_HOME            0xE0
@@ -80,5 +80,4 @@
 #define KBR_RSTDONE         0xAA    // reset complete
 #define KBR_ECHO            0xEE    // echo response
 
-#endif /* !__KERN_DRIVER_KBDREG_H__ */
-
+#endif  /* __KEYBOARD_H__ */
