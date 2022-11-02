@@ -116,7 +116,7 @@ static void gdt_init(void)
 static void init_pmm_manager(void)
 {
 	g_pmm_manager = &default_pmm_manager;
-	cprintf("memory management: %s\n", g_pmm_manager->name);
+	uinfo("memory management: %s\n", g_pmm_manager->name);
 	g_pmm_manager->init();
 }
 
@@ -465,7 +465,7 @@ int copy_range(pde_t* to, pde_t *from, uintptr_t start, uintptr_t end, bool shar
 static void check_alloc_page(void)
 {
 	g_pmm_manager->check();
-	cprintf("check_alloc_page succeed!\n");
+	uclean("check_alloc_page succeed!\n");
 }
 
 static void check_pgdir(void)
@@ -513,7 +513,7 @@ static void check_pgdir(void)
 	assert(page_ref(pde2page(boot_pgdir[0])) == 1);
 	free_page(pde2page(boot_pgdir[0]));
 	boot_pgdir[0] = 0;
-	cprintf("check_pgdir succeed!\n");
+	uinfo("check_pgdir succeed!\n");
 }
 
 static void check_boot_pgdir(void)

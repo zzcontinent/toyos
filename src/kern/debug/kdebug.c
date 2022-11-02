@@ -332,16 +332,6 @@ u32 read_eip(void)
  * to the kernel entry, the value of ebp has been set to zero, that's the boundary.
  * */
 
-void print_stack(u32 addr, u32 len)
-{
-	while(len--)
-	{
-		cprintf("addr:0x%08x ", addr);
-		cprintf("val:0x%08x \n", *((u32*)addr));
-		addr += sizeof(addr);
-	}
-}
-
 void print_stackframe(void)
 {
 	u32 t_ebp = read_ebp();
