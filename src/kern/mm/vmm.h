@@ -15,7 +15,26 @@
 #include <kern/process/proc.h>
 #include <kern/sync/sem.h>
 
+#define le2vma(le, member) \
+	to_struct(le, struct vma_struct, member)
+
+#define VM_READ    0x00000001
+#define VM_WRITE   0x00000002
+#define VM_EXEC    0x00000004
+#define VM_STACK   0x00000008
+
 struct mm_struct;
+
+struct mm_struct {
+	list_entry_t mmap_list;
+	struct vma_struct *mmap_cache;
+	pde_t *pgdir;
+	int map_count;
+	void *sm_priv;
+	int mm_count;
+	//semaphore_t mm_sem;
+	int locked_by;
+};
 
 struct vma_struct {
 	struct mm_struct *vm_mm;
@@ -25,24 +44,7 @@ struct vma_struct {
 	list_entry_t list_link;
 };
 
-#define le2vma(le, member) \
-	to_struct(le, struct vma_struct, member)
 
-#define VM_READ    0x00000001
-#define VM_WRITE   0x00000002
-#define VM_EXEC    0x00000004
-#define VM_STACK   0x00000008
-
-struct mm_struct {
-	list_entry_t mmap_list;
-	struct vma_struct *mmap_cache;
-	pde_t *pgdir;
-	int map_count;
-	void *sm_priv;
-	int mm_count;
-//	semaphore_t mm_sem;
-	int locked_by;
-};
 
 
 #endif  /* __VMM_H__ */
