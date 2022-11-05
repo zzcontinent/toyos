@@ -5,7 +5,6 @@
 #include <libs/dirent.h>
 #include <libs/elf.h>
 #include <libs/error.h>
-#include <libs/libs_all.h>
 #include <libs/list.h>
 #include <libs/skew_heap.h>
 #include <libs/stat.h>
@@ -13,7 +12,6 @@
 #include <libs/stdio.h>
 #include <libs/stdlib.h>
 #include <libs/string.h>
-#include <libs/udebug.h>
 #include <libs/unistd.h>
 #include <libs/x86.h>
 #endif  /* __LIBS_ALL_H__ */
