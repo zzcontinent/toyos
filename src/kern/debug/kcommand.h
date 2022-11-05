@@ -3,16 +3,16 @@
 #include <kern/trap/trap.h>
 #include <kern/mm/pmm.h>
 
-void kcmd_loop();
-int cmd_help(int argc, char **argv);
-int cmd_kerninfo(int argc, char **argv);
-int cmd_backtrace(int argc, char **argv);
-int cmd_exit(int argc, char **argv);
-int cmd_jump(int argc, char **argv);
-int cmd_mem(int argc, char **argv);
-int cmd_print_pg(int argc, char **argv);
-int cmd_print_free_pages(int argc, char **argv);
-int cmd_call(int argc, char **argv);
+extern void kcmd_loop();
+extern int cmd_help(int argc, char **argv);
+extern int cmd_kerninfo(int argc, char **argv);
+extern int cmd_backtrace(int argc, char **argv);
+extern int cmd_exit(int argc, char **argv);
+extern int cmd_jump(int argc, char **argv);
+extern int cmd_mem(int argc, char **argv);
+extern int cmd_print_pg(int argc, char **argv);
+extern int cmd_print_free_pages(int argc, char **argv);
+extern int cmd_call(int argc, char **argv);
 
 #define KCMD_LOOP { \
 	uinfo(""); \
