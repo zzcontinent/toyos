@@ -12,11 +12,12 @@ HOSTCC := gcc
 ## for mksfs program, -D_FILE_OFFSET_BITS=64 can guarantee sizeof(off_t)==8,  sizeof(ino_t) ==8
 ## for 64 bit gcc, to build 32-bit mksfs, you can use below line
 ## HOSTCFLAGS := -g -Wall -m32 -O2 -D_FILE_OFFSET_BITS=64
-HOSTCFLAGS := -g -Wall -O0 -D_FILE_OFFSET_BITS=64
+HOSTCFLAGS := -g -Wall -O2 -D_FILE_OFFSET_BITS=64
 
 GDB := ${GCCPREFIX}gdb
 CC := $(GCCPREFIX)gcc
-CFLAGS := -fno-builtin -fno-PIC -Wall -ggdb -m32 -gstabs -nostdinc $(DEFS)
+OPTIMIZE := -Os
+CFLAGS := -fno-builtin -fno-PIC -Wall -ggdb -m32 -gstabs -nostdinc $(DEFS) $(OPTIMIZE)
 CFLAGS += $(shell $(CC) -fno-stack-protector -E -x c /dev/null >/dev/null 2>&1 && echo -fno-stack-protector)
 CTYPE := c S
 
@@ -150,7 +151,7 @@ objdump:
 $(call rule_link_target,kernel)
 
 # +++ bootblock +++
-$(call rule_compile_files,bootblock,$(bootfiles),$(CC),$(CFLAGS) -Os -nostdinc)
+$(call rule_compile_files,bootblock,$(bootfiles),$(CC),$(CFLAGS) -nostdinc)
 
 $(target_bootblock): $(call to_out_obj,$(bootfiles)) | $(call to_out_target,sign)
 	@echo "[LD] [$@] : $^"

@@ -115,6 +115,43 @@ void insert_vma_struct(struct mm_struct *mm, struct vma_struct *vma)
 	mm->map_count ++;
 }
 
+int dup_mmap(struct mm_struct *to, struct mm_struct *from)
+{
+	assert(to != NULL && from != NULL);
+	list_entry_t *list = &(from->mmap_list), *le = list;
+	while ((le = list_prev(le)) != list) {
+		struct vma_struct *vma, *nvma;
+		vma = le2vma(le, list_link);
+		nvma = vma_create(vma->vm_start, vma->vm_end, vma->vm_flags);
+		if (nvma == NULL) {
+			return -E_NO_MEM;
+		}
+
+		insert_vma_struct(to, nvma);
+
+		bool share = 0;
+		if (copy_range(to->pgdir, from->pgdir, vma->vm_start, vma->vm_end, share) != 0) {
+			return -E_NO_MEM;
+		}
+	}
+	return 0;
+}
+
+void exit_mmap(struct mm_struct *mm)
+{
+	assert(mm != NULL && mm->mm_count == 0);
+	pde_t *pgdir = mm->pgdir;
+	list_entry_t *list = &(mm->mmap_list), *le = list;
+	while ((le = list_next(le)) != list) {
+		struct vma_struct *vma = le2vma(le, list_link);
+		unmap_range(pgdir, vma->vm_start, vma->vm_end);
+	}
+	while ((le = list_next(le)) != list) {
+		struct vma_struct *vma = le2vma(le, list_link);
+		exit_range(pgdir, vma->vm_start, vma->vm_end);
+	}
+}
+
 int do_pgfault(struct mm_struct *mm, u32 error_code, uintptr_t addr) {
 	int ret = -E_INVAL;
 	//try to find a vma which include addr
