@@ -7,12 +7,13 @@
 #include <libs/defs.h>
 #include <libs/error.h>
 #include <libs/stdio.h>
+#include <libs/string.h>
 #include <kern/mm/pmm.h>
 #include <kern/mm/kmalloc.h>
 #include <kern/mm/vmm.h>
 #include <kern/mm/swap.h>
 
-volatile u32 pgfault_num = 0;
+volatile u32 g_pgfault_num = 0;
 
 struct mm_struct* mm_create(void)
 {
@@ -152,12 +153,80 @@ void exit_mmap(struct mm_struct *mm)
 	}
 }
 
+bool is_user_mem(struct mm_struct *mm, uintptr_t addr, size_t len, bool write) {
+	if (mm != NULL) {
+		if (!USER_ACCESS(addr, addr + len)) {
+			return 0;
+		}
+		struct vma_struct *vma;
+		uintptr_t start = addr, end = addr + len;
+		while (start < end) {
+			if ((vma = find_vma(mm, start)) == NULL || start < vma->vm_start) {
+				return 0;
+			}
+			if (!(vma->vm_flags & ((write) ? VM_WRITE : VM_READ))) {
+				return 0;
+			}
+			if (write && (vma->vm_flags & VM_STACK)) {
+				if (start < vma->vm_start + PGSIZE) { //check stack start & size
+					return 0;
+				}
+			}
+			start = vma->vm_end;
+		}
+		return 1;
+	} else {
+		return KERN_ACCESS(addr, addr + len);
+	}
+}
+
+bool copy_from_user(struct mm_struct *mm, void *dst, const void *src, size_t len, bool writable)
+{
+	if (!is_user_mem(mm, (uintptr_t)src, len, writable)) {
+		return 0;
+	}
+	memcpy(dst, src, len);
+	return 1;
+}
+
+bool copy_to_user(struct mm_struct *mm, void *dst, const void *src, size_t len)
+{
+	if (!is_user_mem(mm, (uintptr_t)dst, len, 1)) {
+		return 0;
+	}
+	memcpy(dst, src, len);
+	return 1;
+}
+
+bool copy_string(struct mm_struct *mm, char *dst, const char *src, size_t maxn)
+{
+	size_t alen, part = ROUNDDOWN((uintptr_t)src + PGSIZE, PGSIZE) - (uintptr_t)src;
+	while (1) {
+		if (part > maxn) {
+			part = maxn;
+		}
+		if (!is_user_mem(mm, (uintptr_t)src, part, 0)) {
+			return 0;
+		}
+		if ((alen = strnlen(src, part)) < part) {
+			memcpy(dst, src, alen + 1);
+			return 1;
+		}
+		if (part == maxn) {
+			return 0;
+		}
+		memcpy(dst, src, part);
+		dst += part, src += part, maxn -= part;
+		part = PGSIZE;
+	}
+}
+
 int do_pgfault(struct mm_struct *mm, u32 error_code, uintptr_t addr) {
 	int ret = -E_INVAL;
 	//try to find a vma which include addr
 	struct vma_struct *vma = find_vma(mm, addr);
 
-	pgfault_num++;
+	g_pgfault_num++;
 	//If the addr is in the range of a mm's vma?
 	if (vma == NULL || vma->vm_start > addr) {
 		uerror("not valid addr %x, and  can not find it in vma\n", addr);
