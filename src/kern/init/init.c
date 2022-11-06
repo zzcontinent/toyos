@@ -59,5 +59,6 @@ int kern_init(void)
 	//intr_enable();
 
 	//cpu_idle();
-	while(1) KCMD_LOOP;
+	while(1)
+		DEBUG_CONSOLE;
 }

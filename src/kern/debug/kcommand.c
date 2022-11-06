@@ -105,12 +105,12 @@ static int runcmd(char *buf)
 
 void kcmd_loop()
 {
-	cprintf("Type 'help' for a list of commands.\n");
+	cprintf("type 'help' for a list of commands\n");
 	char *buf;
 	static int index = 0;
 	char promt_buf[64] = {0};
 	while (1) {
-		snprintf(promt_buf, 64, "[ksh:%d]$ ", ++index);
+		snprintf(promt_buf, 64, "[sh:%d]$ ", ++index);
 		if ((buf = readline(promt_buf, 1)) != NULL) {
 			enum CMD_RETURN_CODE ret_code = runcmd(buf);
 			if (ret_code == CMD_EXIT)

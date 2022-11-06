@@ -14,7 +14,7 @@ extern int cmd_print_pg(int argc, char **argv);
 extern int cmd_print_free_pages(int argc, char **argv);
 extern int cmd_call(int argc, char **argv);
 
-#define KCMD_LOOP { \
+#define DEBUG_CONSOLE { \
 	uinfo(""); \
 	kcmd_loop(); \
 }
