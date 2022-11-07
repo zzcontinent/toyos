@@ -185,21 +185,25 @@ void check_slab(void)
 	cprintf("check_slab() success\n");
 }
 
-void slab_init(void) {
+void slab_init(void)
+{
 	cprintf("use SLOB allocator\n");
 	check_slab();
 }
 
-inline void kmalloc_init(void) {
+inline void kmalloc_init(void)
+{
 	slab_init();
 	cprintf("kmalloc_init() succeeded!\n");
 }
 
-size_t slab_allocated(void) {
+size_t slab_allocated(void)
+{
 	return 0;
 }
 
-size_t kallocated(void) {
+size_t kallocated(void)
+{
 	return slab_allocated();
 }
 
@@ -211,7 +215,7 @@ static int find_order(int size)
 	return order;
 }
 
-static void *__kmalloc(size_t size, gfp_t gfp)
+static void* __kmalloc(size_t size, gfp_t gfp)
 {
 	struct slob_block *m;
 	struct bigblock *bb;
@@ -241,7 +245,7 @@ static void *__kmalloc(size_t size, gfp_t gfp)
 	return 0;
 }
 
-void * kmalloc(size_t size)
+void* kmalloc(size_t size)
 {
 	return __kmalloc(size, 0);
 }

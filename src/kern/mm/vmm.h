@@ -44,6 +44,7 @@ struct vma_struct {
 	list_entry_t list_link;
 };
 
+extern void vmm_init(void);
 
 
 

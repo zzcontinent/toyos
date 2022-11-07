@@ -53,30 +53,35 @@ extern int vsnprintf(char* str, size_t size, const char* fmt, va_list ap);
 #define uclean(fmt, args...)
 #define ulog(fmt, args...)
 #elif ULOG_LEVEL == LEVEL_DEBUG
+#define ufull(fmt, args...) printf("[F][%s:%d][%s] " fmt, __FILE__, __LINE__, __FUNCTION__, ##args)
 #define udebug(fmt, args...) printf("[D][%s:%d][%s] " fmt, __FILE__, __LINE__, __FUNCTION__, ##args)
 #define uinfo(fmt, args...) printf("[I][%d][%s] " fmt, __LINE__, __FUNCTION__, ##args)
 #define uerror(fmt, args...) printf("[E][%d][%s] " fmt, __LINE__, __FUNCTION__, ##args)
 #define uclean printf
 #define ulog uinfo
 #elif ULOG_LEVEL == LEVEL_INFO
+#define ufull(fmt, args...) printf("[F][%s:%d][%s] " fmt, __FILE__, __LINE__, __FUNCTION__, ##args)
 #define udebug(fmt, args...)
 #define uinfo(fmt, args...) printf("[I][%d][%s] " fmt, __LINE__, __FUNCTION__, ##args)
 #define uerror(fmt, args...) printf("[E][%d][%s] " fmt, __LINE__, __FUNCTION__, ##args)
 #define uclean printf
 #define ulog uinfo
 #elif ULOG_LEVEL == LEVEL_ERROR
+#define ufull(fmt, args...) printf("[F][%s:%d][%s] " fmt, __FILE__, __LINE__, __FUNCTION__, ##args)
 #define udebug(fmt, args...)
 #define uinfo(fmt, args...)
 #define uerror(fmt, args...) printf("[E][%d][%s] " fmt, __LINE__, __FUNCTION__, ##args)
 #define uclean printf
 #define ulog uinfo
 #elif ULOG_LEVEL == LEVEL_SIMPLE
+#define ufull(fmt, args...) printf("[F][%s:%d][%s] " fmt, __FILE__, __LINE__, __FUNCTION__, ##args)
 #define udebug(fmt, args...) printf("[D][%d] " fmt, __LINE__, ##args)
 #define uinfo(fmt, args...) printf("[I][%d] " fmt, __LINE__, ##args)
 #define uerror(fmt, args...) printf("[E][%d] " fmt, __LINE__, ##args)
 #define uclean printf
 #define ulog uinfo
 #else
+#define ufull(fmt, args...) printf("[F][%s:%d][%s] " fmt, __FILE__, __LINE__, __FUNCTION__, ##args)
 #define udebug printf
 #define uinfo printf
 #define uerror printf
