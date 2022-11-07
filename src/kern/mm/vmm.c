@@ -14,6 +14,7 @@
 #include <kern/mm/swap.h>
 
 volatile u32 g_pgfault_num = 0;
+struct mm_struct* g_check_mm_struct;
 
 struct mm_struct* mm_create(void)
 {
@@ -32,6 +33,18 @@ struct mm_struct* mm_create(void)
 		//sem_init(&(mm->mm_sem), 1);
 	}
 	return mm;
+}
+
+void mm_destroy(struct mm_struct *mm)
+{
+	assert(mm->mm_count == 0);
+	list_entry_t *list = &(mm->mmap_list), *le;
+	while ((le = list_next(list)) != list) {
+		list_del(le);
+		kfree(le2vma(le, list_link));
+	}
+	kfree(mm);
+	mm=NULL;
 }
 
 struct vma_struct* vma_create(uintptr_t vm_start, uintptr_t vm_end, u32 vm_flags)
@@ -93,8 +106,8 @@ void insert_vma_struct(struct mm_struct *mm, struct vma_struct *vma)
 	list_entry_t *le = list;
 	while ((le = list_next(le)) != list)
 	{
-		struct vma_struct *mmap_cur = le2vma(le, list_link);
-		if (mmap_cur->vm_start > vma->vm_start)
+		struct vma_struct *vma_cur = le2vma(le, list_link);
+		if (vma_cur->vm_start > vma->vm_start)
 		{
 			break;
 		}
@@ -303,5 +316,113 @@ int do_pgfault(struct mm_struct *mm, u32 error_code, uintptr_t addr) {
 	ret = 0;
 failed:
 	return ret;
+}
+
+void check_vma_struct(void)
+{
+	struct mm_struct *mm = mm_create();
+	assert(mm != NULL);
+
+	int step1 = 10, step2 = step1 * 10;
+
+	int i;
+	for (i = step1; i >= 1; i --)
+	{
+		struct vma_struct *vma = vma_create(i * 5, i * 5 + 2, 0);
+		assert(vma != NULL);
+		insert_vma_struct(mm, vma);
+	}
+
+	for (i = step1 + 1; i <= step2; i ++)
+	{
+		struct vma_struct *vma = vma_create(i * 5, i * 5 + 2, 0);
+		assert(vma != NULL);
+		insert_vma_struct(mm, vma);
+	}
+
+	list_entry_t *le = list_next(&(mm->mmap_list));
+
+	for (i = 1; i <= step2; i ++) {
+		assert(le != &(mm->mmap_list));
+		struct vma_struct *mmap = le2vma(le, list_link);
+		assert(mmap->vm_start == i * 5 && mmap->vm_end == i * 5 + 2);
+		le = list_next(le);
+	}
+
+	for (i = 5; i <= 5 * step2; i +=5) {
+		struct vma_struct *vma1 = find_vma(mm, i);
+		assert(vma1 != NULL);
+		struct vma_struct *vma2 = find_vma(mm, i+1);
+		assert(vma2 != NULL);
+		struct vma_struct *vma3 = find_vma(mm, i+2);
+		assert(vma3 == NULL);
+		struct vma_struct *vma4 = find_vma(mm, i+3);
+		assert(vma4 == NULL);
+		struct vma_struct *vma5 = find_vma(mm, i+4);
+		assert(vma5 == NULL);
+
+		assert(vma1->vm_start == i  && vma1->vm_end == i  + 2);
+		assert(vma2->vm_start == i  && vma2->vm_end == i  + 2);
+	}
+
+	for (i =4; i>=0; i--) {
+		struct vma_struct *vma_below_5= find_vma(mm,i);
+		if (vma_below_5 != NULL ) {
+			cprintf("vma_below_5: i %x, start %x, end %x\n",i, vma_below_5->vm_start, vma_below_5->vm_end);
+		}
+		assert(vma_below_5 == NULL);
+	}
+
+	mm_destroy(mm);
+	cprintf("check_vma_struct() succeeded!\n");
+}
+
+static void check_pgfault(void)
+{
+	size_t nr_free_pages_store = nr_free_pages();
+
+	g_check_mm_struct = mm_create();
+	assert(g_check_mm_struct != NULL);
+
+	struct mm_struct* mm = g_check_mm_struct;
+	pde_t *pgdir = mm->pgdir = boot_pgdir;
+	assert(pgdir[0] == 0);
+
+	struct vma_struct *vma = vma_create(0, PTSIZE, VM_WRITE);
+	assert(vma != NULL);
+
+	insert_vma_struct(mm, vma);
+
+	uintptr_t addr = 0x100;
+	assert(find_vma(mm, addr) == vma);
+
+	int i, sum = 0;
+	for (i = 0; i < 100; i ++) {
+		*(char *)(addr + i) = i;
+		sum += i;
+	}
+	for (i = 0; i < 100; i ++) {
+		sum -= *(char *)(addr + i);
+	}
+	assert(sum == 0);
+
+	page_remove(pgdir, ROUNDDOWN(addr, PGSIZE));
+	free_page(pde2page(pgdir[0]));
+	pgdir[0] = 0;
+
+	mm->pgdir = NULL;
+	mm_destroy(mm);
+	g_check_mm_struct = NULL;
+
+	assert(nr_free_pages_store == nr_free_pages());
+
+	cprintf("check_pgfault() succeeded!\n");
+}
+
+void vmm_init(void)
+{
+	check_vma_struct();
+	check_pgfault();
+	uinfo("vmm_init succeeded.\n");
 }
 

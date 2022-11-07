@@ -79,7 +79,7 @@ static struct pseudodesc idt_pd = {
 };
 
 static volatile int in_swap_tick_event = 0;
-extern struct mm_struct* check_mm_struct;
+extern volatile struct mm_struct* g_check_mm_struct;
 
 void print_ticks()
 {
