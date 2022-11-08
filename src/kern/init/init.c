@@ -46,7 +46,6 @@ int kern_init(void)
 	pic_init();
 	idt_init();                 // init interrupt descriptor table
 
-
 	vmm_init();
 	//sched_init();
 	//proc_init();

@@ -16,12 +16,14 @@ HOSTCFLAGS := -g -Wall -O2 -D_FILE_OFFSET_BITS=64
 
 GDB := ${GCCPREFIX}gdb
 CC := $(GCCPREFIX)gcc
-OPTIMIZE := -Os
-CFLAGS := -fno-builtin -fno-PIC -Wall -ggdb -m32 -gstabs -nostdinc $(DEFS) $(OPTIMIZE)
+CFLAGS := -fno-builtin -fno-PIC -Wall -ggdb -m32 -gstabs -nostdinc $(DEFS)
 CFLAGS += $(shell $(CC) -fno-stack-protector -E -x c /dev/null >/dev/null 2>&1 && echo -fno-stack-protector)
 CTYPE := c S
 
-KCFLAGS := $(CFLAGS)
+BOPTIMIZE := -Os
+KOPTIMIZE := -O0
+BCFLAGS = $(CFLAGS) $(BOPTIMIZE)
+KCFLAGS = $(CFLAGS) $(KOPTIMIZE)
 
 LD := $(GCCPREFIX)ld
 LDFLAGS := -m $(shell $(LD) -V | grep elf_i386 2>/dev/null | head -n 1)
@@ -123,7 +125,7 @@ endef
 
 
 ################ build rules start ################
-all: $(target_kernel)
+all: $(target_bootblock) $(target_kernel)
 
 # +++ user +++
 $(call rule_compile_files,user,$(call listf_cc,$(USRCDIR)),$(CC),$(UCFLAGS))
@@ -139,19 +141,19 @@ $(target_kernel): $(call to_out_obj,kern/init/entry) $(ALLOBJS_kernel)
 	$(V)$(LD) $(LDFLAGS) -T tools/kernel.ld -o $@ $^
 
 objdump:
-	@for f in `ls out/target`;\
+	@-for f in `ls out/target`;\
 	do\
 		$(OBJDUMP) -S out/target/$${f} 2>/dev/null > out/target/$${f}.asm;\
 		[ `cat out/target/$${f}.asm|wc -c` -eq 0 ] && rm out/target/$${f}.asm;\
 		$(OBJDUMP) -t out/target/$${f} 2>/dev/null | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$$$/d' > out/target/$${f}.sym;\
 		[ `cat out/target/$${f}.sym|wc -c` -eq 0 ] && rm out/target/$${f}.sym;\
-	done\
+	done
 
 
 $(call rule_link_target,kernel)
 
 # +++ bootblock +++
-$(call rule_compile_files,bootblock,$(bootfiles),$(CC),$(CFLAGS) -nostdinc)
+$(call rule_compile_files,bootblock,$(bootfiles),$(CC),$(BCFLAGS) -nostdinc)
 
 $(target_bootblock): $(call to_out_obj,$(bootfiles)) | $(call to_out_target,sign)
 	@echo "[LD] [$@] : $^"
