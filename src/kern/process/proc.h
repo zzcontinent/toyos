@@ -10,6 +10,7 @@
 #define PROC_NAME_LEN 50
 #define MAX_PROCESS 4096
 #define MAX_PID (MAX_PROCESS * 2)
+#define PF_EXITING                  0x00000001      // getting shutdown
 
 extern struct proc_struct *idleproc, *initproc, *current;
 
