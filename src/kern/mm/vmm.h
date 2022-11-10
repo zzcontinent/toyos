@@ -1,13 +1,11 @@
-/* ******************************************************************************************
+/* *************************************************
  * FILE NAME   : vmm.h
  * PROGRAMMER  : zhaozz
  * DESCRIPTION : kernel vmm
- * DATE        : 2022-01-08 00:37:46
- * *****************************************************************************************/
+ * DATE        : 2022-11-10 23:00:35
+ * *************************************************/
 #ifndef  __VMM_H__
 #define  __VMM_H__
-
-
 #include <libs/defs.h>
 #include <libs/list.h>
 #include <kern/mm/memlayout.h>
@@ -45,7 +43,6 @@ struct vma_struct {
 };
 
 extern void vmm_init(void);
-
-
+extern int do_pgfault(struct mm_struct *mm, u32 error_code, uintptr_t addr);
 
 #endif  /* __VMM_H__ */

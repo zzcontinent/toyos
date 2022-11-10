@@ -78,7 +78,7 @@ static struct pseudodesc idt_pd = {
 };
 
 static volatile int in_swap_tick_event = 0;
-extern volatile struct mm_struct* g_check_mm_struct;
+extern struct mm_struct* g_check_mm_struct;
 
 void print_ticks()
 {
@@ -169,75 +169,73 @@ static inline void print_pgfault(struct trapframe* tf)
 
 int pgfault_handler(struct trapframe* tf)
 {
-	//	extern struct mm_struct* check_mm_struct;
-	//	if (check_mm_struct != NULL) { //used for test check_swap
-	//		print_pgfault(tf);
-	//	}
-	//	struct mm_struct* mm;
-	//	if (check_mm_struct != NULL) {
-	//		assert(current == idleproc);
-	//		mm = check_mm_struct;
-	//	} else {
-	//		if (current == NULL) {
-	//			print_trapframe(tf);
-	//			print_pgfault(tf);
-	//			panic("unhandled page fault.\n");
-	//		}
-	//		mm = current->mm;
-	//	}
-	//	return do_pgfault(mm, tf->tf_err, rcr2());
-	return 0;
+	if (g_check_mm_struct != NULL) { //used for test check_swap
+		print_pgfault(tf);
+	}
+	struct mm_struct* mm;
+	if (g_check_mm_struct != NULL) {
+		//assert(current == idleproc);
+		//mm = g_check_mm_struct;
+	} else {
+		if (current == NULL) {
+			print_trapframe(tf);
+			print_pgfault(tf);
+			panic("unhandled page fault.\n");
+		}
+		mm = current->mm;
+	}
+	return do_pgfault(mm, tf->tf_err, rcr2());
 }
 
 
 void trap_dispatch(struct trapframe* tf)
 {
 	char c;
-	//int ret = 0;
+	int ret = 0;
 	switch (tf->tf_trapno) {
-		//case T_PGFLT: //page fault
-		//	if ((ret = pgfault_handler(tf)) != 0) {
-		//		print_trapframe(tf);
-		//		if (current == NULL) {
-		//			panic("handle pgfault failed. ret=%d\n", ret);
-		//		} else {
-		//			if (trap_in_kernel(tf)) {
-		//				panic("handle pgfault failed in kernel mode. ret=%d\n", ret);
-		//			}
-		//			cprintf("killed by kernel.\n");
-		//			panic("handle user mode pgfault failed. ret=%d\n", ret);
-		//			do_exit(-E_KILLED);
-		//		}
-		//	}
-		//	break;
-		//case T_SYSCALL:
-		//	syscall();
-		//	break;
-		//case IRQ_OFFSET + IRQ_TIMER:
-		//	ticks++;
-		//	assert(current != NULL);
-		//	run_timer_list();
-		//	break;
+		case T_PGFLT: //page fault
+			if ((ret = pgfault_handler(tf)) != 0) {
+				print_trapframe(tf);
+				if (current == NULL) {
+					panic("handle pgfault failed. ret=%d\n", ret);
+				} else {
+					if (trap_in_kernel(tf)) {
+						panic("handle pgfault failed in kernel mode. ret=%d\n", ret);
+					}
+					cprintf("killed by kernel.\n");
+					panic("handle user mode pgfault failed. ret=%d\n", ret);
+					//do_exit(-E_KILLED);
+				}
+			}
+			break;
+		case T_SYSCALL:
+			//syscall();
+			break;
+		case IRQ_OFFSET + IRQ_TIMER:
+			ticks++;
+			assert(current != NULL);
+			//run_timer_list();
+			break;
 		case IRQ_OFFSET + IRQ_COM1:
 			c = cons_getc();
 			cprintf("serial [%03d] %c\n", c, c);
 			break;
-			//case IRQ_OFFSET + IRQ_KBD:
-			//	c = cons_getc();
-			//	cprintf("kbd [%03d] %c\n", c, c);
-			//	{
-			//		extern void dev_stdin_write(char c);
-			//		dev_stdin_write(c);
-			//	}
-			//	break;
-			//case T_SWITCH_TOU:
-			//case T_SWITCH_TOK:
-			//	panic("T_SWITCH_** ??\n");
-			//	break;
-			//case IRQ_OFFSET + IRQ_IDE1:
-			//case IRQ_OFFSET + IRQ_IDE2:
-			//	/* do nothing */
-			//	break;
+		case IRQ_OFFSET + IRQ_KBD:
+			c = cons_getc();
+			cprintf("kbd [%03d] %c\n", c, c);
+			//{
+			//	//extern void dev_stdin_write(char c);
+			//	//dev_stdin_write(c);
+			//}
+			break;
+		case T_SWITCH_TOU:
+		case T_SWITCH_TOK:
+			panic("T_SWITCH_** ??\n");
+			break;
+		case IRQ_OFFSET + IRQ_IDE1:
+		case IRQ_OFFSET + IRQ_IDE2:
+			/* do nothing */
+			break;
 		default:
 			print_trapframe(tf);
 			if (current != NULL) {
@@ -256,8 +254,6 @@ void trap_dispatch(struct trapframe* tf)
  * */
 void trap(struct trapframe* tf)
 {
-	udebug("trap enter\n");
-	print_trapframe(tf);
 	// dispatch based on what type of trap occurred
 	// used for previous projects
 	if (current == NULL) {
@@ -274,12 +270,12 @@ void trap(struct trapframe* tf)
 		current->tf = otf;
 		if (!in_kernel) {
 			if (current->flags & PF_EXITING) {
-				do_exit(-E_KILLED);
+				//do_exit(-E_KILLED);
 			}
 			if (current->need_resched) {
-				schedule();
+				//schedule();
 			}
 		}
 	}
-	udebug("trap exit\n");
+	//udebug("trap exit\n");
 }
