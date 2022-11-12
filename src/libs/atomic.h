@@ -1,7 +1,7 @@
-#ifndef __LIBS_ATOMIC_H__
-#define __LIBS_ATOMIC_H__
+#ifndef  __ATOMIC_H__
+#define  __ATOMIC_H__
 
-#include "defs.h"
+#include <libs/defs.h>
 static inline void set_bit(int nr, volatile void *addr) __attribute__((always_inline));
 static inline void clear_bit(int nr, volatile void *addr) __attribute__((always_inline));
 static inline void change_bit(int nr, volatile void *addr) __attribute__((always_inline));
@@ -45,4 +45,4 @@ static inline bool test_bit(int nr, volatile void *addr)
 	return oldbit != 0;
 }
 
-#endif /* !__LIBS_ATOMIC_H__ */
+#endif  /* __ATOMIC_H__ */

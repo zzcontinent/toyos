@@ -1,9 +1,9 @@
-/* *************************************************
+/* ********************************************************************************
  * FILE NAME   : vmm.h
  * PROGRAMMER  : zhaozz
- * DESCRIPTION : kernel vmm
- * DATE        : 2022-11-10 23:00:35
- * *************************************************/
+ * DESCRIPTION : vmm header
+ * DATE        : 2022-11-12 11:38:33
+ * *******************************************************************************/
 #ifndef  __VMM_H__
 #define  __VMM_H__
 #include <libs/defs.h>
@@ -30,7 +30,7 @@ struct mm_struct {
 	int map_count;
 	void *sm_priv;
 	int mm_count;
-	//semaphore_t mm_sem;
+	semaphore_t mm_sem;
 	int locked_by;
 };
 

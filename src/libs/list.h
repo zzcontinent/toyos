@@ -1,12 +1,8 @@
-#ifndef __LIBS_LIST_H__
-#define __LIBS_LIST_H__
+#ifndef  __LIST_H__
+#define  __LIST_H__
 
 #ifndef __ASSEMBLER__
 #include <libs/defs.h>
-
-/*
- * simple doubly linked list implementation.
- * */
 
 struct list_entry {
 	struct list_entry *prev, *next;
@@ -24,7 +20,6 @@ static inline list_entry_t * list_next(list_entry_t *listelm) __attribute((alway
 static inline list_entry_t * list_prev(list_entry_t *listelm) __attribute((always_inline));
 static inline void __list_add(list_entry_t *elm, list_entry_t * prev, list_entry_t* next) __attribute((always_inline));
 static inline void __list_del(list_entry_t * prev, list_entry_t* next) __attribute((always_inline));
-
 
 static inline void list_init(list_entry_t* elm)
 {
@@ -86,6 +81,6 @@ static inline list_entry_t* list_prev(list_entry_t* listelm)
 	return listelm->prev;
 }
 
-#endif /* !__ASSEMBLER__ */
-#endif /* !__LIBS_LIST_H__ */
+#endif /* __ASSEMBLER__ */
+#endif  /* __LIST_H__ */
 

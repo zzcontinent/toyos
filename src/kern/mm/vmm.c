@@ -1,9 +1,9 @@
-/* *************************************************
+/* ********************************************************************************
  * FILE NAME   : vmm.c
  * PROGRAMMER  : zhaozz
- * DESCRIPTION : kernel vmm implement
- * DATE        : 2022-11-10 22:59:53
- * *************************************************/
+ * DESCRIPTION : vmm implement
+ * DATE        : 2022-11-12 11:37:47
+ * *******************************************************************************/
 #include <libs/defs.h>
 #include <libs/error.h>
 #include <libs/stdio.h>
@@ -12,6 +12,7 @@
 #include <kern/mm/kmalloc.h>
 #include <kern/mm/vmm.h>
 #include <kern/mm/swap.h>
+#include <kern/debug/assert.h>
 
 volatile u32 g_pgfault_num = 0;
 struct mm_struct* g_check_mm_struct;
@@ -29,8 +30,8 @@ struct mm_struct* mm_create(void)
 		//if (swap_init_ok) swap_init_mm(mm);
 		//else mm->sm_priv = NULL;
 
-		//set_mm_count(mm, 0);
-		//sem_init(&(mm->mm_sem), 1);
+		mm->mm_count = 0;
+		sem_init(&(mm->mm_sem), 1);
 	}
 	return mm;
 }

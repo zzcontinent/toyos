@@ -277,7 +277,7 @@ void print_debuginfo(uintptr_t eip)
 {
 	struct eipdebuginfo info;
 	if (debuginfo_eip(eip, &info) != 0) {
-		cprintf("    <unknow>: -- 0x%08x --\n", eip);
+		cprintf("|-<unknow>: -- 0x%08x --\n", eip);
 	} else {
 		char fnname[256];
 		int j;
@@ -285,7 +285,7 @@ void print_debuginfo(uintptr_t eip)
 			fnname[j] = info.eip_fn_name[j];
 		}
 		fnname[j] = '\0';
-		cprintf("    %s:%d: %s+%d\n", info.eip_file, info.eip_line,
+		cprintf("|-%s:%d: %s+%d\n", info.eip_file, info.eip_line,
 				fnname, eip - info.eip_fn_addr);
 	}
 }
@@ -338,11 +338,12 @@ void print_stackframe(void)
 	u32 t_eip = read_eip();
 	int i = 0, j = 0;
 	for (i = 0; t_ebp != 0 && i < STACKFRAME_DEPTH; i++) {
-		cprintf("t_ebp:0x%x t_eip:0x%x args:", t_ebp, t_eip);
+		cprintf("[%d]t_ebp:0x%x t_eip:0x%x args:", i, t_ebp, t_eip);
 		u32* args = (u32*)t_ebp + 2;
 		for (j = 0; j < 4; j++) {
 			cprintf("0x%08x ", args[j]);
 		}
+		cprintf("\n");
 		print_debuginfo(t_eip - 1);
 		t_eip = ((u32 *)t_ebp)[1];
 		t_ebp = ((u32 *)t_ebp)[0];
