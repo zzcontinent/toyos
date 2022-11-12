@@ -1,5 +1,5 @@
-#ifndef __KERN_PROCESS_PROC_H__
-#define __KERN_PROCESS_PROC_H__
+#ifndef  __PROC_H__
+#define  __PROC_H__
 
 #include <libs/defs.h>
 #include <libs/list.h>
@@ -10,8 +10,17 @@
 #define PROC_NAME_LEN 50
 #define MAX_PROCESS 4096
 #define MAX_PID (MAX_PROCESS * 2)
-#define PF_EXITING                  0x00000001      // getting shutdown
+#define PF_EXITING            0x00000001      // getting shutdown
+#define WT_INTERRUPTED        0x80000000     // the wait state could be interrupted
+#define WT_CHILD              (0x00000001 | WT_INTERRUPTED)  // wait child process
+#define WT_KSEM               0x00000100                    // wait kernel semaphore
+#define WT_TIMER              (0x00000002 | WT_INTERRUPTED)  // wait timer
+#define WT_KBD                (0x00000004 | WT_INTERRUPTED)  // wait the input of keyboard
 
+
+
+#define le2proc(le, member)         \
+    to_struct((le), struct proc_struct, member)
 extern struct proc_struct *idleproc, *initproc, *current;
 
 struct inode;
@@ -61,7 +70,20 @@ struct proc_struct {
 	struct files_struct *filesp;
 };
 
-void cpu_idle(void) __attribute__((noreturn));
+extern void proc_init(void);
+extern void proc_run(struct proc_struct *proc);
+extern int kernel_thread(int (*fn)(void *), void *arg, uint32_t clone_flags);
+extern char *set_proc_name(struct proc_struct *proc, const char *name);
+extern char *get_proc_name(struct proc_struct *proc);
+extern void cpu_idle(void) __attribute__((noreturn));
+extern struct proc_struct *find_proc(int pid);
+extern int do_fork(uint32_t clone_flags, uintptr_t stack, struct trapframe *tf);
+extern int do_exit(int error_code);
+extern int do_yield(void);
+extern int do_execve(const char *name, int argc, const char **argv);
+extern int do_wait(int pid, int *code_store);
+extern int do_kill(int pid);
+extern void lab6_set_priority(uint32_t priority);
+extern int do_sleep(unsigned int time);
 
-
-#endif /*__KERN_PROCESS_PROC_H__*/
+#endif  /* __PROC_H__ */
