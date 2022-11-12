@@ -134,7 +134,7 @@ $(call rule_compile_files,user,$(call listf_cc,$(USRCDIR)),$(CC),$(UCFLAGS))
 # +++ kernel +++
 # libs/*.c
 $(call rule_compile_files,kernel,$(foreach d,$(KSRCDIR),$(call listf_cc,$(d))),$(CC),$(KCFLAGS))
-$(call rule_compile_files_cc,kernel,$(call listf_cc,$(LIBDIR)))
+$(call rule_compile_files,kernel,$(call listf_cc,$(LIBDIR)),$(CC),$(KCFLAGS))
 
 $(target_kernel): $(call to_out_obj,kern/init/entry) $(ALLOBJS_kernel)
 	@echo "[LD] [$@] : $^"

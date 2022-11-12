@@ -161,7 +161,7 @@ static inline void print_pgfault(struct trapframe* tf)
 	 * bit 1 == 0 means read, 1 means write
 	 * bit 2 == 0 means kernel, 1 means user
 	 * */
-	cprintf("page fault at 0x%08x: %c/%c [%s].\n", rcr2(),
+	uerror("page fault at 0x%08x: %c/%c [%s].\n", rcr2(),
 			(tf->tf_err & PTE_U) ? 'U' : 'K',
 			(tf->tf_err & PTE_W) ? 'W' : 'R',
 			(tf->tf_err & PTE_P) ? "protection fault" : "no page found");
@@ -172,10 +172,10 @@ int pgfault_handler(struct trapframe* tf)
 	if (g_check_mm_struct != NULL) { //used for test check_swap
 		print_pgfault(tf);
 	}
-	struct mm_struct* mm;
+	struct mm_struct* mm = NULL;
 	if (g_check_mm_struct != NULL) {
 		//assert(current == idleproc);
-		//mm = g_check_mm_struct;
+		mm = g_check_mm_struct;
 	} else {
 		if (current == NULL) {
 			print_trapframe(tf);
@@ -195,7 +195,6 @@ void trap_dispatch(struct trapframe* tf)
 	switch (tf->tf_trapno) {
 		case T_PGFLT: //page fault
 			if ((ret = pgfault_handler(tf)) != 0) {
-				print_trapframe(tf);
 				if (current == NULL) {
 					panic("handle pgfault failed. ret=%d\n", ret);
 				} else {
