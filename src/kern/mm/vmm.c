@@ -244,7 +244,7 @@ int do_pgfault(struct mm_struct *mm, u32 error_code, uintptr_t addr)
 	g_pgfault_num++;
 	//If the addr is in the range of a mm's vma?
 	if (vma == NULL || vma->vm_start > addr) {
-		uerror("not valid addr %x, and  can not find it in vma\n", addr);
+		uerror("not valid addr 0x%x, and  can not find it in vma 0x%x\n", addr, vma);
 		goto failed;
 	}
 	//check the error_code
@@ -379,7 +379,7 @@ void check_vma_struct(void)
 	cprintf("check_vma_struct() succeeded!\n");
 }
 
-static void check_pgfault(void)
+void check_pgfault(void)
 {
 	size_t nr_free_pages_store = nr_free_pages();
 
