@@ -12,6 +12,7 @@
 #include <kern/syscall/syscall.h>
 #include <kern/trap/trap.h>
 #include <kern/mm/vmm.h>
+#include <kern/debug/kcommand.h>
 
 #define TICK_NUM 100
 
@@ -154,7 +155,7 @@ void print_regs(struct trapframe* tf)
 	cprintf("|-eax  0x%08x\n", tf->tf_regs.reg_eax);
 }
 
-static inline void print_pgfault(struct trapframe* tf)
+static void inline print_pgfault(struct trapframe* tf)
 {
 	/* error_code:
 	 * bit 0 == 0 means no page found, 1 means protection fault
@@ -174,7 +175,7 @@ int pgfault_handler(struct trapframe* tf)
 	}
 	struct mm_struct* mm = NULL;
 	if (g_check_mm_struct != NULL) {
-		//assert(current == idleproc);
+		assert(current == idleproc);
 		mm = g_check_mm_struct;
 	} else {
 		if (current == NULL) {

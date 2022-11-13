@@ -289,10 +289,10 @@ int do_pgfault(struct mm_struct *mm, u32 error_code, uintptr_t addr)
 	}
 
 	if (*ptep == 0) { // if the phy addr isn't exist, then alloc a page & map the phy addr with logical addr
-		//if (pgdir_alloc_page(mm->pgdir, addr, perm) == NULL) {
-		//	uinfo("pgdir_alloc_page in do_pgfault failed\n");
-		//	goto failed;
-		//}
+		if (pgdir_alloc_page(mm->pgdir, addr, perm) == NULL) {
+			uerror("pgdir_alloc_page in do_pgfault failed\n");
+			goto failed;
+		}
 	} else {
 		struct page_frame *page=NULL;
 		uinfo("do pgfault: ptep %x, pte %x\n",ptep, *ptep);
