@@ -42,6 +42,7 @@ struct vma_struct {
 	list_entry_t list_link;
 };
 
+extern struct mm_struct* g_check_mm_struct;
 extern void vmm_init(void);
 extern int do_pgfault(struct mm_struct *mm, u32 error_code, uintptr_t addr);
 

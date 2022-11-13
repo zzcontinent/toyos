@@ -462,6 +462,34 @@ int copy_range(pde_t* to, pde_t *from, uintptr_t start, uintptr_t end, bool shar
 	return 0;
 }
 
+struct page_frame *pgdir_alloc_page(pde_t *pgdir, uintptr_t la, uint32_t perm)
+{
+	struct page_frame *page = alloc_page();
+	if (page != NULL) {
+		if (page_insert(pgdir, page, la, perm) != 0) {
+			free_page(page);
+			return NULL;
+		}
+#if 0
+		if (swap_init_ok){
+			if(g_check_mm_struct!=NULL) {
+				swap_map_swappable(g_check_mm_struct, la, page, 0);
+				page->pra_vaddr=la;
+				assert(page_ref(page) == 1);
+			}
+			else  {  //now current is existed, should fix it in the future
+				swap_map_swappable(current->mm, la, page, 0);
+				//page->pra_vaddr=la;
+				//assert(page_ref(page) == 1);
+				//panic("pgdir_alloc_page: no pages. now current is existed, should fix it in the future\n");
+			}
+		}
+#endif
+	}
+
+	return page;
+}
+
 static void check_alloc_page(void)
 {
 	g_pmm_manager->check();

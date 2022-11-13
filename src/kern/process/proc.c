@@ -1,5 +1,6 @@
 #include <proc.h>
 //
+struct proc_struct *idleproc = NULL;
 struct proc_struct *current = NULL;
 //
 //void cpu_idle(void)
