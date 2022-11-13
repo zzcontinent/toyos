@@ -20,7 +20,10 @@ char* readline(const char *prompt, int need_print) {
 			if (need_print) cputchar(c);
 			i--;
 		} else if (c == '\n' || c == '\r') {
-			if (need_print) cputchar(c);
+			if (need_print) {
+				cputchar('\r');
+				cputchar('\n');
+			}
 			buf[i] = '\0';
 			return buf;
 		}
