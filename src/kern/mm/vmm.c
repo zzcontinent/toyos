@@ -294,7 +294,7 @@ int do_pgfault(struct mm_struct *mm, u32 error_code, uintptr_t addr)
 			goto failed;
 		}
 	} else {
-		struct page_frame *page=NULL;
+		struct page *page=NULL;
 		uinfo("do pgfault: ptep %x, pte %x\n",ptep, *ptep);
 		if (*ptep & PTE_P) {
 			panic("error write a non-writable pte");

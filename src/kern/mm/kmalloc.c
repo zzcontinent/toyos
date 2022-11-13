@@ -76,7 +76,7 @@ static struct bigblock *bigblocks;
 
 static void* __slob_get_free_pages(gfp_t gfp, int order)
 {
-	struct page_frame * page = alloc_pages(1 << order);
+	struct page * page = alloc_pages(1 << order);
 	if(!page)
 		return NULL;
 	return page2kva(page);
