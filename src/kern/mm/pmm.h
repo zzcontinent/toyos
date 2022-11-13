@@ -10,9 +10,9 @@
 struct pmm_manager {
 	const char* name;
 	void (*init)(void);
-	void (*init_memmap)(struct page_frame* base, size_t n);
-	struct page_frame* (*alloc_pages)(size_t n);
-	void (*free_pages)(struct page_frame* base, size_t n);
+	void (*init_memmap)(struct page* base, size_t n);
+	struct page* (*alloc_pages)(size_t n);
+	void (*free_pages)(struct page* base, size_t n);
 	size_t (*nr_free_pages)(void);
 	void (*check)(void);
 };
@@ -21,27 +21,27 @@ extern const struct pmm_manager* pmm_manager;
 extern pde_t* boot_pgdir;
 extern uintptr_t boot_cr3;
 
-extern struct page_frame* g_page_frame_base;
+extern struct page* g_page_base;
 extern size_t g_npages;
 
 extern char bootstack[], bootstacktop[];
 
 void pmm_init(void);
-struct page_frame* alloc_pages(size_t n);
-void free_pages(struct page_frame* base, size_t n);
+struct page* alloc_pages(size_t n);
+void free_pages(struct page* base, size_t n);
 size_t nr_free_pages(void);
 
 #define alloc_page() alloc_pages(1)
 #define free_page(page) free_pages(page, 1)
 
 pte_t* get_pte(pde_t* pgdir, uintptr_t la, bool create);
-struct page_frame* get_page(pde_t* pgdir, uintptr_t la, pte_t** ptep_store);
+struct page* get_page(pde_t* pgdir, uintptr_t la, pte_t** ptep_store);
 void page_remove(pde_t* pgdir, uintptr_t la);
-int page_insert(pde_t* pgdir, struct page_frame* page, uintptr_t la, u32 perm);
+int page_insert(pde_t* pgdir, struct page* page, uintptr_t la, u32 perm);
 
 void load_esp0(uintptr_t esp0);
 void tlb_invalidate(pde_t* pgdir, uintptr_t la);
-struct page_frame* pgdir_alloc_page(pde_t* pgdir, uintptr_t la, u32 perm);
+struct page* pgdir_alloc_page(pde_t* pgdir, uintptr_t la, u32 perm);
 void unmap_range(pde_t* pgdir, uintptr_t start, uintptr_t end);
 void exit_range(pde_t* pgdir, uintptr_t start, uintptr_t end);
 int copy_range(pde_t* to, pde_t* from, uintptr_t start, uintptr_t end, bool share);
@@ -75,30 +75,30 @@ void print_mem();
 		(void*)(__m_pa + KERNBASE);                              \
 		})
 
-static inline ppn_t page2ppn(struct page_frame* page)
+static inline ppn_t page2ppn(struct page* page)
 {
-	return page - g_page_frame_base;
+	return page - g_page_base;
 }
 
-static inline uintptr_t page2pa(struct page_frame* page)
+static inline uintptr_t page2pa(struct page* page)
 {
 	return page2ppn(page) << PGSHIFT;
 }
 
-static inline struct page_frame* pa2page(uintptr_t pa)
+static inline struct page* pa2page(uintptr_t pa)
 {
 	if (PPN(pa) >= g_npages) {
 		panic("pa2page called with invalid pa");
 	}
-	return &g_page_frame_base[PPN(pa)];
+	return &g_page_base[PPN(pa)];
 }
 
-static inline void* page2kva(struct page_frame* page)
+static inline void* page2kva(struct page* page)
 {
 	return KADDR(page2pa(page));
 }
 
-static inline struct page_frame* pte2page(pte_t pte)
+static inline struct page* pte2page(pte_t pte)
 {
 	if (!(pte & PTE_P)) {
 		panic("pte2page call with invalid pte");
@@ -106,34 +106,34 @@ static inline struct page_frame* pte2page(pte_t pte)
 	return pa2page(PTE_ADDR(pte));
 }
 
-static inline struct page_frame* pde2page(pde_t pde)
+static inline struct page* pde2page(pde_t pde)
 {
 	return pa2page(PDE_ADDR(pde));
 }
 
-static inline int page_ref(struct page_frame* page)
+static inline int page_ref(struct page* page)
 {
 	return page->ref;
 }
 
-static inline void set_page_ref(struct page_frame* page, int val)
+static inline void set_page_ref(struct page* page, int val)
 {
 	page->ref = val;
 }
 
-static inline int page_ref_inc(struct page_frame* page)
+static inline int page_ref_inc(struct page* page)
 {
 	page->ref += 1;
 	return page->ref;
 }
 
-static inline int page_ref_dec(struct page_frame* page)
+static inline int page_ref_dec(struct page* page)
 {
 	page->ref -= 1;
 	return page->ref;
 }
 
-static inline struct page_frame * kva2page(void *kva) {
+static inline struct page * kva2page(void *kva) {
 	return pa2page(PADDR(kva));
 }
 
