@@ -1,6 +1,5 @@
-#ifndef __LIBS_STDIIO_H__
-#define __LIBS_STDIIO_H__
-
+#ifndef  __STDIO_H__
+#define  __STDIO_H__
 #include <libs/defs.h>
 #include <libs/stdarg.h>
 #include <libs/log.h>
@@ -25,6 +24,4 @@ extern int vsnprintf(char* str, size_t size, const char* fmt, va_list ap);
 
 #define L2B32(little)  (((little&0xff)<<24) | ((little&0xff00)<<8) | ((little&0xff0000)>>8) | ((little&0xff000000)>>24))
 
-// ============================================================wait if
-
-#endif
+#endif  /* __STDIO_H__ */

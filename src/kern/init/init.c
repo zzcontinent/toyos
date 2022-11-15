@@ -47,7 +47,7 @@ int kern_init(void)
 	idt_init();                 // init interrupt descriptor table
 
 	vmm_init();
-	//sched_init();
+	sched_init();
 	//proc_init();
 
 	//ide_init();

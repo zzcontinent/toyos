@@ -64,7 +64,7 @@ struct proc_struct {
 	u32 wait_state;
 	struct run_queue *rq;
 	int time_slice;
-	//skew_heap_entry_t lab6_run_pool;
+	skew_heap_entry_t lab6_run_pool;
 	u32 lab6_stride;
 	u32 lab6_priority;
 	struct files_struct *filesp;
