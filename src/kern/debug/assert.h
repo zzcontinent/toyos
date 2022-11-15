@@ -1,6 +1,5 @@
-#ifndef __KERN_DEBUG_ASSERT_H__
-#define __KERN_DEBUG_ASSERT_H__
-
+#ifndef  __ASSERT_H__
+#define  __ASSERT_H__
 #include <kern/driver/console.h>
 #include <libs/defs.h>
 
@@ -24,4 +23,4 @@ void __noreturn __panic(const char* file, int line, const char* fmt, ...);
 		case (x):;           \
 	}
 
-#endif /* __KERN_DEBUG_ASSERT_H__ */
+#endif  /* __ASSERT_H__ */
