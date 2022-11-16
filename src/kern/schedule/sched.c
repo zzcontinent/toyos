@@ -24,12 +24,12 @@ static inline void sched_class_dequeue(struct proc_struct *proc)
 	g_psched_class->dequeue(rq, proc);
 }
 
-static inline struct proc_struct * sched_class_pick_next(void) 
+static inline struct proc_struct * sched_class_pick_next(void)
 {
 	return g_psched_class->pick_next(rq);
 }
 
-static void sched_class_proc_tick(struct proc_struct *proc) 
+static void sched_class_proc_tick(struct proc_struct *proc)
 {
 	if (proc != idleproc) {
 		g_psched_class->proc_tick(rq, proc);
@@ -41,7 +41,7 @@ static void sched_class_proc_tick(struct proc_struct *proc)
 
 static struct run_queue __rq;
 
-void sched_init(void) 
+void sched_init(void)
 {
 	list_init(&timer_list);
 	g_psched_class = &default_sched_class;
@@ -89,7 +89,7 @@ void schedule(void)
 		}
 		next->runs ++;
 		if (next != current) {
-			//proc_run(next);
+			proc_run(next);
 		}
 	}
 	local_intr_restore(intr_flag);

@@ -57,10 +57,10 @@ struct run_queue {
 	skew_heap_entry_t *lab6_run_pool;
 };
 
-void sched_init(void);
-void wakeup_proc(struct proc_struct *proc);
-void schedule(void);
-void add_timer(timer_t *timer);
-void del_timer(timer_t *timer);
-void run_timer_list(void);
+extern void sched_init(void);
+extern void wakeup_proc(struct proc_struct *proc);
+extern void schedule(void);
+extern void add_timer(timer_t *timer);
+extern void del_timer(timer_t *timer);
+extern void run_timer_list(void);
 #endif  /* __SCHED_H__ */

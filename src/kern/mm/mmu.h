@@ -1,27 +1,27 @@
 #ifndef  __MMU_H__
 #define  __MMU_H__
 /* Eflags register */
-#define FL_CF 0x00000001	// Carry Flag
-#define FL_PF 0x00000004	// Parity Flag
-#define FL_AF 0x00000010	// Auxiliary carry Flag
-#define FL_ZF 0x00000040	// Zero Flag
-#define FL_SF 0x00000080	// Sign Flag
-#define FL_TF 0x00000100	// Trap Flag
-#define FL_IF 0x00000200	// Interrupt Flag
-#define FL_DF 0x00000400	// Direction Flag
-#define FL_OF 0x00000800	// Overflow Flag
+#define FL_CF 0x00000001    // Carry Flag
+#define FL_PF 0x00000004    // Parity Flag
+#define FL_AF 0x00000010    // Auxiliary carry Flag
+#define FL_ZF 0x00000040    // Zero Flag
+#define FL_SF 0x00000080    // Sign Flag
+#define FL_TF 0x00000100    // Trap Flag
+#define FL_IF 0x00000200    // Interrupt Flag
+#define FL_DF 0x00000400    // Direction Flag
+#define FL_OF 0x00000800    // Overflow Flag
 #define FL_IOPL_MASK 0x00003000 // I/O Privilege Level bitmask
-#define FL_IOPL_0 0x00000000	//   IOPL == 0
-#define FL_IOPL_1 0x00001000	//   IOPL == 1
-#define FL_IOPL_2 0x00002000	//   IOPL == 2
-#define FL_IOPL_3 0x00003000	//   IOPL == 3
-#define FL_NT 0x00004000	// Nested Task
-#define FL_RF 0x00010000	// Resume Flag
-#define FL_VM 0x00020000	// Virtual 8086 mode
-#define FL_AC 0x00040000	// Alignment Check
-#define FL_VIF 0x00080000	// Virtual Interrupt Flag
-#define FL_VIP 0x00100000	// Virtual Interrupt Pending
-#define FL_ID 0x00200000	// ID flag
+#define FL_IOPL_0 0x00000000    //   IOPL == 0
+#define FL_IOPL_1 0x00001000    //   IOPL == 1
+#define FL_IOPL_2 0x00002000    //   IOPL == 2
+#define FL_IOPL_3 0x00003000    //   IOPL == 3
+#define FL_NT 0x00004000    // Nested Task
+#define FL_RF 0x00010000    // Resume Flag
+#define FL_VM 0x00020000    // Virtual 8086 mode
+#define FL_AC 0x00040000    // Alignment Check
+#define FL_VIF 0x00080000    // Virtual Interrupt Flag
+#define FL_VIP 0x00100000    // Virtual Interrupt Pending
+#define FL_ID 0x00200000    // ID flag
 
 /* Application segment type bits */
 #define STA_X 0x8 // Executable segment
@@ -111,18 +111,18 @@ struct gatedesc {
 
 /* segment descriptors */
 struct segdesc {
-	unsigned sd_lim_15_0 : 16;	// low bits of segment limit
+	unsigned sd_lim_15_0 : 16;    // low bits of segment limit
 	unsigned sd_base_15_0 : 16; // low bits of segment base address
 	unsigned sd_base_23_16 : 8; // middle bits of segment base address
-	unsigned sd_type : 4;	// segment type (see STS_ constants)
-	unsigned sd_s : 1;		// 0 = system, 1 = application
-	unsigned sd_dpl : 2;	// descriptor Privilege Level
-	unsigned sd_p : 1;		// present
-	unsigned sd_lim_19_16 : 4;	// high bits of segment limit
-	unsigned sd_avl : 1;	// unused (available for software use)
-	unsigned sd_rsv1 : 1;	// reserved
-	unsigned sd_db : 1;		// 0 = 16-bit segment, 1 = 32-bit segment
-	unsigned sd_g : 1;		// granularity: limit scaled by 4K when set
+	unsigned sd_type : 4;    // segment type (see STS_ constants)
+	unsigned sd_s : 1;        // 0 = system, 1 = application
+	unsigned sd_dpl : 2;    // descriptor Privilege Level
+	unsigned sd_p : 1;        // present
+	unsigned sd_lim_19_16 : 4;    // high bits of segment limit
+	unsigned sd_avl : 1;    // unused (available for software use)
+	unsigned sd_rsv1 : 1;    // reserved
+	unsigned sd_db : 1;        // 0 = 16-bit segment, 1 = 32-bit segment
+	unsigned sd_g : 1;        // granularity: limit scaled by 4K when set
 	unsigned sd_base_31_24 : 8; // high bits of segment base address
 };
 
@@ -226,24 +226,24 @@ struct taskstate {
 #define NPDEENTRY 1024 // page directory entries per page directory
 #define NPTEENTRY 1024 // page table entries per page table
 
-#define PGSIZE 4096		    // bytes mapped by a page
-#define PGSHIFT 12		    // log2(PGSIZE)
+#define PGSIZE 4096            // bytes mapped by a page
+#define PGSHIFT 12            // log2(PGSIZE)
 #define PTSIZE (PGSIZE * NPTEENTRY) // bytes mapped by a page directory entry
-#define PTSHIFT 22		    // log2(PTSIZE)
+#define PTSHIFT 22            // log2(PTSIZE)
 
 #define PTXSHIFT 12 // offset of PTX in a linear address
 #define PDXSHIFT 22 // offset of PDX in a linear address
 
 /* page table/directory entry flags */
-#define PTE_P 0x001	// Present
-#define PTE_W 0x002	// Writeable
-#define PTE_U 0x004	// User
-#define PTE_PWT 0x008	// Write-Through
-#define PTE_PCD 0x010	// Cache-Disable
-#define PTE_A 0x020	// Accessed
-#define PTE_D 0x040	// Dirty
-#define PTE_PS 0x080	// Page Size
-#define PTE_MBZ 0x180	// Bits must be zero
+#define PTE_P 0x001    // Present
+#define PTE_W 0x002    // Writeable
+#define PTE_U 0x004    // User
+#define PTE_PWT 0x008    // Write-Through
+#define PTE_PCD 0x010    // Cache-Disable
+#define PTE_A 0x020    // Accessed
+#define PTE_D 0x040    // Dirty
+#define PTE_PS 0x080    // Page Size
+#define PTE_MBZ 0x180    // Bits must be zero
 #define PTE_AVAIL 0xE00 // Available for software use
 // The PTE_AVAIL bits aren't used by the kernel or interpreted by the
 // hardware, so user processes are allowed to set them arbitrarily.
