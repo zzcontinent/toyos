@@ -1,5 +1,6 @@
 #ifndef __KERN_MM_MEMLAYOUT_H__
 #define __KERN_MM_MEMLAYOUT_H__
+#include <kern/mm/mmu.h>
 
 /* global segment number */
 #define SEG_KTEXT 1

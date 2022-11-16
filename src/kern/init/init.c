@@ -16,6 +16,7 @@
 #include <kern/mm/vmm.h>
 #include <kern/process/proc.h>
 #include <kern/trap/trap.h>
+#include <kern/schedule/sched.h>
 
 //http://patorjk.com/software/taag
 static char *welcome ="\n"
