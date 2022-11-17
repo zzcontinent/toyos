@@ -49,7 +49,7 @@ int kern_init(void)
 
 	vmm_init();
 	sched_init();
-	//proc_init();
+	proc_init();
 
 	//ide_init();
 	//swap_init();
