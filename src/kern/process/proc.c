@@ -1,4 +1,5 @@
 #include <libs/string.h>
+#include <libs/unistd.h>
 #include <kern/sync/sync.h>
 #include <kern/mm/memlayout.h>
 #include <kern/mm/pmm.h>
@@ -99,10 +100,29 @@ static struct proc_struct * alloc_proc(void)
 	return proc;
 }
 
+void kernel_thread_entry(void);
+
+int kernel_thread(int (*fn)(void *), void *arg, uint32_t clone_flags)
+{
+	struct trapframe tf;
+	memset(&tf, 0, sizeof(struct trapframe));
+	tf.tf_cs = KERNEL_CS;
+	tf.tf_ds = tf.tf_es = tf.tf_ss = KERNEL_DS;
+	tf.tf_regs.reg_ebx = (uint32_t)fn;
+	tf.tf_regs.reg_edx = (uint32_t)arg;
+	tf.tf_eip = (uint32_t)kernel_thread_entry;
+	return do_fork(clone_flags | CLONE_VM, 0, &tf);
+}
+
+char *set_proc_name(struct proc_struct *proc, const char *name)
+{
+	memset(proc->name, 0, sizeof(proc->name));
+	return memcpy(proc->name, name, PROC_NAME_LEN);
+}
+
 void proc_init(void)
 {
 	int i;
-
 	list_init(&g_proc_list);
 	for (i = 0; i < HASH_LIST_SIZE; i ++) {
 		list_init(g_hash_list + i);
