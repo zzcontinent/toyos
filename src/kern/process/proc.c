@@ -1,4 +1,5 @@
 #include <libs/string.h>
+#include <libs/error.h>
 #include <libs/unistd.h>
 #include <kern/sync/sync.h>
 #include <kern/mm/memlayout.h>
@@ -12,6 +13,7 @@
 #define pid_hashfn(x)       (hash32(x, HASH_SHIFT))
 
 extern void switch_to(struct context *from, struct context *to);
+extern void kernel_thread_entry(void);
 struct proc_struct *idleproc = NULL;
 struct proc_struct *current = NULL;
 
@@ -100,7 +102,91 @@ static struct proc_struct * alloc_proc(void)
 	return proc;
 }
 
-void kernel_thread_entry(void);
+static int setup_kstack(struct proc_struct *proc)
+{
+	struct page *page = alloc_pages(KSTACKPAGE);
+	if (page != NULL) {
+		proc->kstack = (uintptr_t)page2kva(page);
+		return 0;
+	}
+	return -E_NO_MEM;
+}
+
+int do_fork(uint32_t clone_flags, uintptr_t stack, struct trapframe *tf)
+{
+	int ret = -E_NO_FREE_PROC;
+	struct proc_struct *proc;
+	if (g_nr_process >= MAX_PROCESS) {
+		goto fork_out;
+	}
+	ret = -E_NO_MEM;
+	/*
+	 * Some Useful MACROs, Functions and DEFINEs, you can use them in below implementation.
+	 * MACROs or Functions:
+	 *   alloc_proc:   create a proc struct and init fields (lab4:exercise1)
+	 *   setup_kstack: alloc pages with size KSTACKPAGE as process kernel stack
+	 *   copy_mm:      process "proc" duplicate OR share process "current"'s mm according clone_flags
+	 *                 if clone_flags & CLONE_VM, then "share" ; else "duplicate"
+	 *   copy_thread:  setup the trapframe on the  process's kernel stack top and
+	 *                 setup the kernel entry point and stack of process
+	 *   hash_proc:    add proc into proc hash_list
+	 *   get_pid:      alloc a unique pid for process
+	 *   wakeup_proc:  set proc->state = PROC_RUNNABLE
+	 * VARIABLES:
+	 *   proc_list:    the process set's list
+	 *   nr_process:   the number of process set
+	 */
+
+	//    1. call alloc_proc to allocate a proc_struct
+	//    2. call setup_kstack to allocate a kernel stack for child process
+	//    3. call copy_mm to dup OR share mm according clone_flag
+	//    4. call copy_thread to setup tf & context in proc_struct
+	//    5. insert proc_struct into hash_list && proc_list
+	//    6. call wakeup_proc to make the new child process RUNNABLE
+	//    7. set ret vaule using child proc's pid
+
+	if ((proc = alloc_proc()) == NULL) {
+		goto fork_out;
+	}
+
+	proc->parent = current;
+	assert(current->wait_state == 0);
+
+	if (setup_kstack(proc) != 0) {
+		goto bad_fork_cleanup_proc;
+	}
+	//if (copy_fs(clone_flags, proc) != 0) { //for LAB8
+	//	goto bad_fork_cleanup_kstack;
+	//}
+	//if (copy_mm(clone_flags, proc) != 0) {
+	//	goto bad_fork_cleanup_fs;
+	//}
+	copy_thread(proc, stack, tf);
+
+	bool intr_flag;
+	local_intr_save(intr_flag);
+	{
+		proc->pid = get_pid();
+		hash_proc(proc);
+		set_links(proc);
+
+	}
+	local_intr_restore(intr_flag);
+
+	wakeup_proc(proc);
+
+	ret = proc->pid;
+fork_out:
+	return ret;
+
+bad_fork_cleanup_fs:  //for LAB8
+	put_fs(proc);
+bad_fork_cleanup_kstack:
+	put_kstack(proc);
+bad_fork_cleanup_proc:
+	kfree(proc);
+	goto fork_out;
+}
 
 int kernel_thread(int (*fn)(void *), void *arg, uint32_t clone_flags)
 {
