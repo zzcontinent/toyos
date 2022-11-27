@@ -6,17 +6,19 @@
 #include <kern/sync/sync.h>
 #include <kern/mm/memlayout.h>
 #include <kern/mm/pmm.h>
+#include <kern/mm/vmm.h>
 #include <kern/mm/kmalloc.h>
 #include <kern/process/proc.h>
 #include <kern/schedule/sched.h>
 
 extern void switch_to(struct context *from, struct context *to);
 extern void kernel_thread_entry(void);
+struct proc_struct *g_initproc = NULL;
 struct proc_struct *g_idleproc = NULL;
 struct proc_struct *g_current = NULL;
 
 list_entry_t g_proc_list;
-list_entry_t g_hash_list[HASH_LIST_SIZE];
+static list_entry_t hash_list[HASH_LIST_SIZE];
 int g_nr_process = 0;
 
 void proc_run(struct proc_struct *proc)
@@ -61,10 +63,10 @@ static int init_main(void *arg)
 	fs_cleanup();
 
 	cprintf("all user-mode processes have quit.\n");
-	assert(initproc->cptr == NULL && initproc->yptr == NULL && initproc->optr == NULL);
+	assert(g_initproc->cptr == NULL && g_initproc->yptr == NULL && g_initproc->optr == NULL);
 	assert(nr_process == 2);
-	assert(list_next(&proc_list) == &(initproc->list_link));
-	assert(list_prev(&proc_list) == &(initproc->list_link));
+	assert(list_next(&g_proc_list) == &(g_initproc->list_link));
+	assert(list_prev(&g_proc_list) == &(g_initproc->list_link));
 	assert(nr_free_pages_store == nr_free_pages());
 	assert(kernel_allocated_store == kallocated());
 	cprintf("init check memory pass.\n");
@@ -128,57 +130,22 @@ static void copy_thread(struct proc_struct *proc, uintptr_t esp, struct trapfram
 	proc->context.esp = (uintptr_t)(proc->tf);
 }
 
-static int get_pid(void)
-{
-	static_assert(MAX_PID > MAX_PROCESS);
-	struct proc_struct *proc;
-	list_entry_t *list = &g_proc_list, *le;
-	static int next_safe = MAX_PID, last_pid = MAX_PID;
-	if (++ last_pid >= MAX_PID) {
-		last_pid = 1;
-		goto inside;
-	}
-	if (last_pid >= next_safe) {
-inside:
-		next_safe = MAX_PID;
-repeat:
-		le = list;
-		while ((le = list_next(le)) != list) {
-			proc = le2proc(le, list_link);
-			if (proc->pid == last_pid) {
-				if (++ last_pid >= next_safe) {
-					if (last_pid >= MAX_PID) {
-						last_pid = 1;
-					}
-					next_safe = MAX_PID;
-					goto repeat;
-				}
-			}
-			else if (proc->pid > last_pid && next_safe > proc->pid) {
-				next_safe = proc->pid;
-			}
-		}
-	}
-	return last_pid;
-}
-
 static void hash_proc(struct proc_struct *proc)
 {
-	list_add(g_hash_list + hash32(proc->pid), &(proc->hash_link));
+	list_add(hash_list + hash32(proc->pid), &(proc->hash_link));
 }
 
 static void set_links(struct proc_struct *proc)
 {
-	list_add(&proc_list, &(proc->list_link));
+	list_add(&g_proc_list, &(proc->list_link));
 	proc->yptr = NULL;
 	if ((proc->optr = proc->parent->cptr) != NULL) {
 		proc->optr->yptr = proc;
 	}
 	proc->parent->cptr = proc;
-	nr_process ++;
+	++g_nr_process;
 }
 
-// remove_links - clean the relation links of process
 static void remove_links(struct proc_struct *proc)
 {
 	list_del(&(proc->list_link));
@@ -191,15 +158,14 @@ static void remove_links(struct proc_struct *proc)
 	else {
 		proc->parent->cptr = proc->optr;
 	}
-	nr_process --;
+	--g_nr_process;
 }
 
-// get_pid - alloc a unique pid for process
 static int get_pid(void)
 {
 	static_assert(MAX_PID > MAX_PROCESS);
 	struct proc_struct *proc;
-	list_entry_t *list = &proc_list, *le;
+	list_entry_t *list = &g_proc_list, *le;
 	static int next_safe = MAX_PID, last_pid = MAX_PID;
 	if (++ last_pid >= MAX_PID) {
 		last_pid = 1;
@@ -227,6 +193,52 @@ repeat:
 	}
 	return last_pid;
 }
+
+static int copy_mm(uint32_t clone_flags, struct proc_struct *proc)
+{
+	struct mm_struct *mm, *oldmm = g_current->mm;
+
+	/* current is a kernel thread */
+	if (oldmm == NULL) {
+		return 0;
+	}
+	if (clone_flags & CLONE_VM) {
+		mm = oldmm;
+		goto good_mm;
+	}
+
+	int ret = -E_NO_MEM;
+	if ((mm = mm_create()) == NULL) {
+		goto bad_mm;
+	}
+	if (setup_pgdir(mm) != 0) {
+		goto bad_pgdir_cleanup_mm;
+	}
+
+	lock_mm(oldmm);
+	{
+		ret = dup_mmap(mm, oldmm);
+	}
+	unlock_mm(oldmm);
+
+	if (ret != 0) {
+		goto bad_dup_cleanup_mmap;
+	}
+
+good_mm:
+	mm_count_inc(mm);
+	proc->mm = mm;
+	proc->cr3 = PADDR((uintptr_t)(mm->pgdir));
+	return 0;
+bad_dup_cleanup_mmap:
+	exit_mmap(mm);
+	put_pgdir(mm);
+bad_pgdir_cleanup_mm:
+	mm_destroy(mm);
+bad_mm:
+	return ret;
+}
+
 
 int do_fork(uint32_t clone_flags, uintptr_t stack, struct trapframe *tf)
 {
@@ -274,9 +286,9 @@ int do_fork(uint32_t clone_flags, uintptr_t stack, struct trapframe *tf)
 	//if (copy_fs(clone_flags, proc) != 0) { //for LAB8
 	//	goto bad_fork_cleanup_kstack;
 	//}
-	//if (copy_mm(clone_flags, proc) != 0) {
-	//	goto bad_fork_cleanup_fs;
-	//}
+	if (copy_mm(clone_flags, proc) != 0) {
+		goto bad_fork_cleanup_fs;
+	}
 	copy_thread(proc, stack, tf);
 
 	bool intr_flag;
@@ -322,12 +334,26 @@ char *set_proc_name(struct proc_struct *proc, const char *name)
 	return memcpy(proc->name, name, PROC_NAME_LEN);
 }
 
+struct proc_struct * find_proc(int pid)
+{
+	if (0 < pid && pid < MAX_PID) {
+		list_entry_t *list = hash_list + hash32(pid), *le = list;
+		while ((le = list_next(le)) != list) {
+			struct proc_struct *proc = le2proc(le, hash_link);
+			if (proc->pid == pid) {
+				return proc;
+			}
+		}
+	}
+	return NULL;
+}
+
 void proc_init(void)
 {
 	int i;
 	list_init(&g_proc_list);
 	for (i = 0; i < HASH_LIST_SIZE; i ++) {
-		list_init(g_hash_list + i);
+		list_init(hash_list + i);
 	}
 
 	if ((g_idleproc = alloc_proc()) == NULL) {
@@ -356,11 +382,11 @@ void proc_init(void)
 		panic("create init_main failed.\n");
 	}
 
-	initproc = find_proc(pid);
-	set_proc_name(initproc, "init");
+	g_initproc = find_proc(pid);
+	set_proc_name(g_initproc, "init");
 
 	assert(g_idleproc != NULL && g_idleproc->pid == 0);
-	assert(initproc != NULL && initproc->pid == 1);
+	assert(g_initproc != NULL && g_initproc->pid == 1);
 }
 
 void cpu_idle(void)

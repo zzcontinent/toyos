@@ -175,7 +175,7 @@ int pgfault_handler(struct trapframe* tf)
 	}
 	struct mm_struct* mm = NULL;
 	if (g_check_mm_struct != NULL) {
-		assert(g_current == idleproc);
+		assert(g_current == g_idleproc);
 		mm = g_check_mm_struct;
 	} else {
 		if (g_current == NULL) {

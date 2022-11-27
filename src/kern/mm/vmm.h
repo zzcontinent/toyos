@@ -42,8 +42,54 @@ struct vma_struct {
 	list_entry_t list_link;
 };
 
+static inline int mm_count(struct mm_struct *mm)
+{
+	return mm->mm_count;
+}
+
+static inline void set_mm_count(struct mm_struct *mm, int val)
+{
+	mm->mm_count = val;
+}
+
+static inline int mm_count_inc(struct mm_struct *mm)
+{
+	mm->mm_count += 1;
+	return mm->mm_count;
+}
+
+static inline int mm_count_dec(struct mm_struct *mm)
+{
+	mm->mm_count -= 1;
+	return mm->mm_count;
+}
+
+static inline void lock_mm(struct mm_struct *mm)
+{
+	if (mm != NULL) {
+		down(&(mm->mm_sem));
+		if (g_current != NULL) {
+			mm->locked_by = g_current->pid;
+		}
+	}
+}
+
+static inline void unlock_mm(struct mm_struct *mm)
+{
+	if (mm != NULL) {
+		up(&(mm->mm_sem));
+		mm->locked_by = 0;
+	}
+}
+
 extern struct mm_struct* g_check_mm_struct;
 extern void vmm_init(void);
 extern int do_pgfault(struct mm_struct *mm, u32 error_code, uintptr_t addr);
+extern struct mm_struct* mm_create(void);
+extern void mm_destroy(struct mm_struct *mm);
+extern struct vma_struct* vma_create(uintptr_t vm_start, uintptr_t vm_end, u32 vm_flags);
+extern struct vma_struct* find_vma(struct mm_struct *mm, uintptr_t addr);
+extern int dup_mmap(struct mm_struct *to, struct mm_struct *from);
+extern void exit_mmap(struct mm_struct *mm);
 
 #endif  /* __VMM_H__ */
