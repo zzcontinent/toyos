@@ -54,12 +54,6 @@ typedef unsigned long long u64;
 #define warn(...)           __error(warn, 0, __VA_ARGS__)
 #define bug(...)            __error(bug, 1, __VA_ARGS__)
 
-/*
-   static_assert(cond, msg) is defined in /usr/include/assert.h
-#define static_assert(x)                                                                \
-switch (x) {case 0: case (x): ; }
-*/
-
 /* 2^31 + 2^29 - 2^25 + 2^22 - 2^19 - 2^16 + 1 */
 #define GOLDEN_RATIO_PRIME_32       0x9e370001UL
 

@@ -1,6 +1,8 @@
 #include <libs/string.h>
 #include <libs/error.h>
 #include <libs/unistd.h>
+#include <libs/hash.h>
+#include <libs/log.h>
 #include <kern/sync/sync.h>
 #include <kern/mm/memlayout.h>
 #include <kern/mm/pmm.h>
@@ -8,27 +10,23 @@
 #include <kern/process/proc.h>
 #include <kern/schedule/sched.h>
 
-#define HASH_SHIFT          10
-#define HASH_LIST_SIZE      (1 << HASH_SHIFT)
-#define pid_hashfn(x)       (hash32(x, HASH_SHIFT))
-
 extern void switch_to(struct context *from, struct context *to);
 extern void kernel_thread_entry(void);
-struct proc_struct *idleproc = NULL;
-struct proc_struct *current = NULL;
+struct proc_struct *g_idleproc = NULL;
+struct proc_struct *g_current = NULL;
 
 list_entry_t g_proc_list;
-static list_entry_t g_hash_list[HASH_LIST_SIZE];
-static int g_nr_process = 0;
+list_entry_t g_hash_list[HASH_LIST_SIZE];
+int g_nr_process = 0;
 
 void proc_run(struct proc_struct *proc)
 {
-	if (proc != current) {
+	if (proc != g_current) {
 		bool intr_flag;
-		struct proc_struct *prev = current, *next = proc;
+		struct proc_struct *prev = g_current, *next = proc;
 		local_intr_save(intr_flag);
 		{
-			current = proc;
+			g_current = proc;
 			load_esp0(next->kstack + KSTACKSIZE);
 			lcr3(next->cr3);
 			switch_to(&(prev->context), &(next->context));
@@ -39,6 +37,7 @@ void proc_run(struct proc_struct *proc)
 
 static int init_main(void *arg)
 {
+	udebug("\r\n");
 #if 0
 	int ret;
 	if ((ret = vfs_set_bootfs("disk0:")) != 0) {
@@ -112,6 +111,123 @@ static int setup_kstack(struct proc_struct *proc)
 	return -E_NO_MEM;
 }
 
+static void forkret(void)
+{
+	forkrets(g_current->tf);
+}
+
+static void copy_thread(struct proc_struct *proc, uintptr_t esp, struct trapframe *tf)
+{
+	proc->tf = (struct trapframe *)(proc->kstack + KSTACKSIZE) - 1;
+	*(proc->tf) = *tf;
+	proc->tf->tf_regs.reg_eax = 0;
+	proc->tf->tf_esp = esp;
+	proc->tf->tf_eflags |= FL_IF;
+
+	proc->context.eip = (uintptr_t)forkret;
+	proc->context.esp = (uintptr_t)(proc->tf);
+}
+
+static int get_pid(void)
+{
+	static_assert(MAX_PID > MAX_PROCESS);
+	struct proc_struct *proc;
+	list_entry_t *list = &g_proc_list, *le;
+	static int next_safe = MAX_PID, last_pid = MAX_PID;
+	if (++ last_pid >= MAX_PID) {
+		last_pid = 1;
+		goto inside;
+	}
+	if (last_pid >= next_safe) {
+inside:
+		next_safe = MAX_PID;
+repeat:
+		le = list;
+		while ((le = list_next(le)) != list) {
+			proc = le2proc(le, list_link);
+			if (proc->pid == last_pid) {
+				if (++ last_pid >= next_safe) {
+					if (last_pid >= MAX_PID) {
+						last_pid = 1;
+					}
+					next_safe = MAX_PID;
+					goto repeat;
+				}
+			}
+			else if (proc->pid > last_pid && next_safe > proc->pid) {
+				next_safe = proc->pid;
+			}
+		}
+	}
+	return last_pid;
+}
+
+static void hash_proc(struct proc_struct *proc)
+{
+	list_add(g_hash_list + hash32(proc->pid), &(proc->hash_link));
+}
+
+static void set_links(struct proc_struct *proc)
+{
+	list_add(&proc_list, &(proc->list_link));
+	proc->yptr = NULL;
+	if ((proc->optr = proc->parent->cptr) != NULL) {
+		proc->optr->yptr = proc;
+	}
+	proc->parent->cptr = proc;
+	nr_process ++;
+}
+
+// remove_links - clean the relation links of process
+static void remove_links(struct proc_struct *proc)
+{
+	list_del(&(proc->list_link));
+	if (proc->optr != NULL) {
+		proc->optr->yptr = proc->yptr;
+	}
+	if (proc->yptr != NULL) {
+		proc->yptr->optr = proc->optr;
+	}
+	else {
+		proc->parent->cptr = proc->optr;
+	}
+	nr_process --;
+}
+
+// get_pid - alloc a unique pid for process
+static int get_pid(void)
+{
+	static_assert(MAX_PID > MAX_PROCESS);
+	struct proc_struct *proc;
+	list_entry_t *list = &proc_list, *le;
+	static int next_safe = MAX_PID, last_pid = MAX_PID;
+	if (++ last_pid >= MAX_PID) {
+		last_pid = 1;
+		goto inside;
+	}
+	if (last_pid >= next_safe) {
+inside:
+		next_safe = MAX_PID;
+repeat:
+		le = list;
+		while ((le = list_next(le)) != list) {
+			proc = le2proc(le, list_link);
+			if (proc->pid == last_pid) {
+				if (++ last_pid >= next_safe) {
+					if (last_pid >= MAX_PID) {
+						last_pid = 1;
+					}
+					next_safe = MAX_PID;
+					goto repeat;
+				}
+			} else if (proc->pid > last_pid && next_safe > proc->pid) {
+				next_safe = proc->pid;
+			}
+		}
+	}
+	return last_pid;
+}
+
 int do_fork(uint32_t clone_flags, uintptr_t stack, struct trapframe *tf)
 {
 	int ret = -E_NO_FREE_PROC;
@@ -125,7 +241,7 @@ int do_fork(uint32_t clone_flags, uintptr_t stack, struct trapframe *tf)
 	 * MACROs or Functions:
 	 *   alloc_proc:   create a proc struct and init fields (lab4:exercise1)
 	 *   setup_kstack: alloc pages with size KSTACKPAGE as process kernel stack
-	 *   copy_mm:      process "proc" duplicate OR share process "current"'s mm according clone_flags
+	 *   copy_mm:      process "proc" duplicate OR share process "g_current"'s mm according clone_flags
 	 *                 if clone_flags & CLONE_VM, then "share" ; else "duplicate"
 	 *   copy_thread:  setup the trapframe on the  process's kernel stack top and
 	 *                 setup the kernel entry point and stack of process
@@ -149,8 +265,8 @@ int do_fork(uint32_t clone_flags, uintptr_t stack, struct trapframe *tf)
 		goto fork_out;
 	}
 
-	proc->parent = current;
-	assert(current->wait_state == 0);
+	proc->parent = g_current;
+	assert(g_current->wait_state == 0);
 
 	if (setup_kstack(proc) != 0) {
 		goto bad_fork_cleanup_proc;
@@ -214,26 +330,26 @@ void proc_init(void)
 		list_init(g_hash_list + i);
 	}
 
-	if ((idleproc = alloc_proc()) == NULL) {
-		panic("cannot alloc idleproc.\n");
+	if ((g_idleproc = alloc_proc()) == NULL) {
+		panic("cannot alloc g_idleproc.\n");
 	}
 
-	idleproc->pid = 0;
-	idleproc->state = PROC_RUNNABLE;
-	idleproc->kstack = (uintptr_t)bootstack;
-	idleproc->need_resched = 1;
+	g_idleproc->pid = 0;
+	g_idleproc->state = PROC_RUNNABLE;
+	g_idleproc->kstack = (uintptr_t)bootstack;
+	g_idleproc->need_resched = 1;
 
 #if 0
-	if ((idleproc->filesp = files_create()) == NULL) {
-		panic("create filesp (idleproc) failed.\n");
+	if ((g_idleproc->filesp = files_create()) == NULL) {
+		panic("create filesp (g_idleproc) failed.\n");
 	}
-	files_count_inc(idleproc->filesp);
+	files_count_inc(g_idleproc->filesp);
 #endif
 
-	set_proc_name(idleproc, "idle");
+	set_proc_name(g_idleproc, "idle");
 	g_nr_process ++;
 
-	current = idleproc;
+	g_current = g_idleproc;
 
 	int pid = kernel_thread(init_main, NULL, 0);
 	if (pid <= 0) {
@@ -243,15 +359,14 @@ void proc_init(void)
 	initproc = find_proc(pid);
 	set_proc_name(initproc, "init");
 
-	assert(idleproc != NULL && idleproc->pid == 0);
+	assert(g_idleproc != NULL && g_idleproc->pid == 0);
 	assert(initproc != NULL && initproc->pid == 1);
 }
 
-// cpu_idle - at the end of kern_init, the first kernel thread idleproc will do below works
 void cpu_idle(void)
 {
 	while (1) {
-		if (current->need_resched) {
+		if (g_current->need_resched) {
 			schedule();
 		}
 	}

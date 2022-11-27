@@ -121,10 +121,10 @@ void wakeup_queue(wait_queue_t *queue, u32 wakeup_flags, bool del)
 
 void wait_current_set(wait_queue_t *queue, wait_t *wait, u32 wait_state)
 {
-	assert(current != NULL);
-	wait_init(wait, current);
-	current->state = PROC_SLEEPING;
-	current->wait_state = wait_state;
+	assert(g_current != NULL);
+	wait_init(wait, g_current);
+	g_current->state = PROC_SLEEPING;
+	g_current->wait_state = wait_state;
 	wait_queue_add(queue, wait);
 }
 

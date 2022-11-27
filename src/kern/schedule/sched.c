@@ -60,7 +60,7 @@ void wakeup_proc(struct proc_struct *proc)
 		if (proc->state != PROC_RUNNABLE) {
 			proc->state = PROC_RUNNABLE;
 			proc->wait_state = 0;
-			if (proc != current) {
+			if (proc != g_current) {
 				sched_class_enqueue(proc);
 			}
 		}
@@ -77,9 +77,9 @@ void schedule(void)
 	struct proc_struct *next;
 	local_intr_save(intr_flag);
 	{
-		current->need_resched = 0;
-		if (current->state == PROC_RUNNABLE) {
-			sched_class_enqueue(current);
+		g_current->need_resched = 0;
+		if (g_current->state == PROC_RUNNABLE) {
+			sched_class_enqueue(g_current);
 		}
 		if ((next = sched_class_pick_next()) != NULL) {
 			sched_class_dequeue(next);
@@ -88,7 +88,7 @@ void schedule(void)
 			next = idleproc;
 		}
 		next->runs ++;
-		if (next != current) {
+		if (next != g_current) {
 			proc_run(next);
 		}
 	}
@@ -163,7 +163,7 @@ void run_timer_list(void)
 				timer = le2timer(le, timer_link);
 			}
 		}
-		sched_class_proc_tick(current);
+		sched_class_proc_tick(g_current);
 	}
 	local_intr_restore(intr_flag);
 }
