@@ -21,7 +21,7 @@
 
 #define le2proc(le, member)         \
     to_struct((le), struct proc_struct, member)
-extern struct proc_struct *idleproc, *initproc, *current;
+extern struct proc_struct *idleproc, *initproc, *g_current;
 
 struct inode;
 
@@ -85,5 +85,6 @@ extern int do_wait(int pid, int *code_store);
 extern int do_kill(int pid);
 extern void lab6_set_priority(uint32_t priority);
 extern int do_sleep(unsigned int time);
+extern void forkrets(struct trapframe *tf);
 
 #endif  /* __PROC_H__ */

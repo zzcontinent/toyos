@@ -175,15 +175,15 @@ int pgfault_handler(struct trapframe* tf)
 	}
 	struct mm_struct* mm = NULL;
 	if (g_check_mm_struct != NULL) {
-		assert(current == idleproc);
+		assert(g_current == idleproc);
 		mm = g_check_mm_struct;
 	} else {
-		if (current == NULL) {
+		if (g_current == NULL) {
 			print_trapframe(tf);
 			print_pgfault(tf);
 			panic("unhandled page fault.\n");
 		}
-		mm = current->mm;
+		mm = g_current->mm;
 	}
 	return do_pgfault(mm, tf->tf_err, rcr2());
 }
@@ -196,7 +196,7 @@ void trap_dispatch(struct trapframe* tf)
 	switch (tf->tf_trapno) {
 		case T_PGFLT: //page fault
 			if ((ret = pgfault_handler(tf)) != 0) {
-				if (current == NULL) {
+				if (g_current == NULL) {
 					panic("handle pgfault failed. ret=%d\n", ret);
 				} else {
 					if (trap_in_kernel(tf)) {
@@ -213,7 +213,7 @@ void trap_dispatch(struct trapframe* tf)
 			break;
 		case IRQ_OFFSET + IRQ_TIMER:
 			ticks++;
-			assert(current != NULL);
+			assert(g_current != NULL);
 			//run_timer_list();
 			break;
 		case IRQ_OFFSET + IRQ_COM1:
@@ -238,7 +238,7 @@ void trap_dispatch(struct trapframe* tf)
 			break;
 		default:
 			print_trapframe(tf);
-			if (current != NULL) {
+			if (g_current != NULL) {
 				cprintf("unhandled trap.\n");
 				//do_exit(-E_KILLED);
 			}
@@ -256,23 +256,23 @@ void trap(struct trapframe* tf)
 {
 	// dispatch based on what type of trap occurred
 	// used for previous projects
-	if (current == NULL) {
+	if (g_current == NULL) {
 		trap_dispatch(tf);
 	} else {
 		// keep a trapframe chain in stack
-		struct trapframe* otf = current->tf;
-		current->tf = tf;
+		struct trapframe* otf = g_current->tf;
+		g_current->tf = tf;
 
 		bool in_kernel = trap_in_kernel(tf);
 
 		trap_dispatch(tf);
 
-		current->tf = otf;
+		g_current->tf = otf;
 		if (!in_kernel) {
-			if (current->flags & PF_EXITING) {
+			if (g_current->flags & PF_EXITING) {
 				//do_exit(-E_KILLED);
 			}
-			if (current->need_resched) {
+			if (g_current->need_resched) {
 				//schedule();
 			}
 		}

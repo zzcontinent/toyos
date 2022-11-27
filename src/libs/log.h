@@ -28,6 +28,8 @@
 //#define ULOG_LEVEL LEVEL_SIMPLE
 //#define ULOG_LEVEL LEVEL_OFF
 
+
+extern int cprintf(const char* fmt, ...);
 #define printf cprintf
 
 #if ULOG_LEVEL == LEVEL_OFF
