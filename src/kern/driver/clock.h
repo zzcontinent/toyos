@@ -1,11 +1,8 @@
-#ifndef __KERN_DRIVER_CLOCK_H__
-#define __KERN_DRIVER_CLOCK_H__
-
+#ifndef  __CLOCK_H__
+#define  __CLOCK_H__
 #include <libs/defs.h>
 
-extern volatile size_t ticks;
+extern volatile size_t g_ticks;
+extern void clock_init(void);
 
-
-#endif /* !__KERN_DRIVER_CLOCK_H__ */
-
-
+#endif  /* __CLOCK_H__ */

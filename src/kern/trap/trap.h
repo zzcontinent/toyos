@@ -79,6 +79,18 @@ struct trapframe {
 	u16 tf_padding5;
 } __attribute__((packed));
 
+/* error_code:
+ * bit 0 == 0 means no page found, 1 means protection fault
+ * bit 1 == 0 means read, 1 means write
+ * bit 2 == 0 means kernel, 1 means user
+ * */
+#define print_pgfault(tf) do { \
+	udebug("page fault at 0x%08x: %c/%c [%s].\n", rcr2(),\
+			(tf->tf_err & PTE_U) ? 'U' : 'K',    \
+			(tf->tf_err & PTE_W) ? 'W' : 'R',    \
+			(tf->tf_err & PTE_P) ? "protection fault" : "no page found"); \
+} while(0)
+
 extern void idt_init(void);
 extern void print_trapframe(struct trapframe *tf);
 extern void print_regs(struct trapframe *tf);

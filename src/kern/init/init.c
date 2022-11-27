@@ -55,10 +55,10 @@ int kern_init(void)
 	//swap_init();
 	//fs_init();
 
-	//clock_init();
-	//intr_enable();
+	clock_init();
+	intr_enable();
 
-	//cpu_idle();
+	cpu_idle();
 	while(1)
 		DEBUG_CONSOLE;
 }
