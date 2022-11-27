@@ -21,7 +21,7 @@
 
 #define le2proc(le, member)         \
     to_struct((le), struct proc_struct, member)
-extern struct proc_struct *idleproc, *initproc, *g_current;
+extern struct proc_struct *g_idleproc, *g_initproc, *g_current;
 
 struct inode;
 

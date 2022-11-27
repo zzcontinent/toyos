@@ -14,7 +14,7 @@ static struct run_queue *rq;
 
 static inline void sched_class_enqueue(struct proc_struct *proc)
 {
-	if (proc != idleproc) {
+	if (proc != g_idleproc) {
 		g_psched_class->enqueue(rq, proc);
 	}
 }
@@ -31,7 +31,7 @@ static inline struct proc_struct * sched_class_pick_next(void)
 
 static void sched_class_proc_tick(struct proc_struct *proc)
 {
-	if (proc != idleproc) {
+	if (proc != g_idleproc) {
 		g_psched_class->proc_tick(rq, proc);
 	}
 	else {
@@ -85,7 +85,7 @@ void schedule(void)
 			sched_class_dequeue(next);
 		}
 		if (next == NULL) {
-			next = idleproc;
+			next = g_idleproc;
 		}
 		next->runs ++;
 		if (next != g_current) {
