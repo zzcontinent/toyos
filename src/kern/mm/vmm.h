@@ -91,5 +91,6 @@ extern struct vma_struct* vma_create(uintptr_t vm_start, uintptr_t vm_end, u32 v
 extern struct vma_struct* find_vma(struct mm_struct *mm, uintptr_t addr);
 extern int dup_mmap(struct mm_struct *to, struct mm_struct *from);
 extern void exit_mmap(struct mm_struct *mm);
+extern bool user_mem_check(struct mm_struct *mm, uintptr_t addr, size_t len, bool write);
 
 #endif  /* __VMM_H__ */

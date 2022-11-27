@@ -421,6 +421,33 @@ void check_pgfault(void)
 	cprintf("check_pgfault() succeeded!\n");
 }
 
+bool user_mem_check(struct mm_struct *mm, uintptr_t addr, size_t len, bool write)
+{
+	if (mm != NULL) {
+		if (!USER_ACCESS(addr, addr + len)) {
+			return 0;
+		}
+		struct vma_struct *vma;
+		uintptr_t start = addr, end = addr + len;
+		while (start < end) {
+			if ((vma = find_vma(mm, start)) == NULL || start < vma->vm_start) {
+				return 0;
+			}
+			if (!(vma->vm_flags & ((write) ? VM_WRITE : VM_READ))) {
+				return 0;
+			}
+			if (write && (vma->vm_flags & VM_STACK)) {
+				if (start < vma->vm_start + PGSIZE) { //check stack start & size
+					return 0;
+				}
+			}
+			start = vma->vm_end;
+		}
+		return 1;
+	}
+	return KERN_ACCESS(addr, addr + len);
+}
+
 void vmm_init(void)
 {
 	check_vma_struct();

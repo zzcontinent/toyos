@@ -1,10 +1,9 @@
-#ifndef __KERN_TRAP_TRAP_H__
-#define __KERN_TRAP_TRAP_H__
+#ifndef  __TRAP_H__
+#define  __TRAP_H__
 
 #include <libs/defs.h>
 
 /* Trap Numbers */
-
 /* Processor-defined: */
 #define T_DIVIDE                0   // divide error
 #define T_DEBUG                 1   // debug exception
@@ -80,10 +79,9 @@ struct trapframe {
 	u16 tf_padding5;
 } __attribute__((packed));
 
-void idt_init(void);
-void print_trapframe(struct trapframe *tf);
-void print_regs(struct trapframe *tf);
-bool trap_in_kernel(struct trapframe *tf);
+extern void idt_init(void);
+extern void print_trapframe(struct trapframe *tf);
+extern void print_regs(struct trapframe *tf);
+extern bool trap_in_kernel(struct trapframe *tf);
 
-#endif /* !__KERN_TRAP_TRAP_H__ */
-
+#endif  /* __TRAP_H__ */
