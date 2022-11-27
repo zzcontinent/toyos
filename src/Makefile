@@ -241,5 +241,8 @@ lines:
 clean:
 	@-rm -r $(OUT_DIR)
 
+log:
+	make clean && make 2>&1 | less -p 'warn|err'
+
 ################ build rules end ################
 

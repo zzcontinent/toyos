@@ -135,6 +135,11 @@ static void hash_proc(struct proc_struct *proc)
 	list_add(hash_list + hash32(proc->pid), &(proc->hash_link));
 }
 
+static void unhash_proc(struct proc_struct *proc)
+{
+	list_del(&(proc->hash_link));
+}
+
 static void set_links(struct proc_struct *proc)
 {
 	list_add(&g_proc_list, &(proc->list_link));
@@ -194,6 +199,29 @@ repeat:
 	return last_pid;
 }
 
+static int setup_pgdir(struct mm_struct *mm)
+{
+	struct page *page;
+	if ((page = alloc_page()) == NULL) {
+		return -E_NO_MEM;
+	}
+	pde_t *pgdir = page2kva(page);
+	memcpy(pgdir, boot_pgdir, PGSIZE);
+	pgdir[PDX(VPT)] = PADDR(pgdir) | PTE_P | PTE_W;
+	mm->pgdir = pgdir;
+	return 0;
+}
+
+static void free_pgdir(struct mm_struct *mm)
+{
+	free_page(kva2page(mm->pgdir));
+}
+
+static void free_kstack(struct proc_struct *proc)
+{
+	free_pages(kva2page((void *)(proc->kstack)), KSTACKPAGE);
+}
+
 static int copy_mm(uint32_t clone_flags, struct proc_struct *proc)
 {
 	struct mm_struct *mm, *oldmm = g_current->mm;
@@ -232,13 +260,12 @@ good_mm:
 	return 0;
 bad_dup_cleanup_mmap:
 	exit_mmap(mm);
-	put_pgdir(mm);
+	free_pgdir(mm);
 bad_pgdir_cleanup_mm:
 	mm_destroy(mm);
 bad_mm:
 	return ret;
 }
-
 
 int do_fork(uint32_t clone_flags, uintptr_t stack, struct trapframe *tf)
 {
@@ -308,9 +335,9 @@ fork_out:
 	return ret;
 
 bad_fork_cleanup_fs:  //for LAB8
-	put_fs(proc);
+	//put_fs(proc);
 bad_fork_cleanup_kstack:
-	put_kstack(proc);
+	free_kstack(proc);
 bad_fork_cleanup_proc:
 	kfree(proc);
 	goto fork_out;
@@ -389,6 +416,60 @@ void proc_init(void)
 	assert(g_initproc != NULL && g_initproc->pid == 1);
 }
 
+int do_exit(int error_code)
+{
+	if (g_current == g_idleproc) {
+		panic("idleproc exit.\n");
+	}
+	if (g_current == g_initproc) {
+		panic("g_initproc exit.\n");
+	}
+
+	struct mm_struct *mm = g_current->mm;
+	if (mm != NULL) {
+		lcr3(boot_cr3);
+		if (mm_count_dec(mm) == 0) {
+			exit_mmap(mm);
+			free_pgdir(mm);
+			mm_destroy(mm);
+		}
+		g_current->mm = NULL;
+	}
+	//put_fs(g_current); //for LAB8
+	g_current->state = PROC_ZOMBIE;
+	g_current->exit_code = error_code;
+
+	bool intr_flag;
+	struct proc_struct *proc;
+	local_intr_save(intr_flag);
+	{
+		proc = g_current->parent;
+		if (proc->wait_state == WT_CHILD) {
+			wakeup_proc(proc);
+		}
+		while (g_current->cptr != NULL) {
+			proc = g_current->cptr;
+			g_current->cptr = proc->optr;
+
+			proc->yptr = NULL;
+			if ((proc->optr = g_initproc->cptr) != NULL) {
+				g_initproc->cptr->yptr = proc;
+			}
+			proc->parent = g_initproc;
+			g_initproc->cptr = proc;
+			if (proc->state == PROC_ZOMBIE) {
+				if (g_initproc->wait_state == WT_CHILD) {
+					wakeup_proc(g_initproc);
+				}
+			}
+		}
+	}
+	local_intr_restore(intr_flag);
+
+	schedule();
+	panic("do_exit will not return!! %d.\n", g_current->pid);
+}
+
 void cpu_idle(void)
 {
 	while (1) {
@@ -396,5 +477,82 @@ void cpu_idle(void)
 			schedule();
 		}
 	}
+}
+
+int do_wait(int pid, int *code_store)
+{
+	struct mm_struct *mm = g_current->mm;
+	if (code_store != NULL) {
+		if (!user_mem_check(mm, (uintptr_t)code_store, sizeof(int), 1)) {
+			return -E_INVAL;
+		}
+	}
+
+	struct proc_struct *proc;
+	bool intr_flag, haskid;
+repeat:
+	haskid = 0;
+	if (pid != 0) {
+		proc = find_proc(pid);
+		if (proc != NULL && proc->parent == g_current) {
+			haskid = 1;
+			if (proc->state == PROC_ZOMBIE) {
+				goto found;
+			}
+		}
+	}
+	else {
+		proc = g_current->cptr;
+		for (; proc != NULL; proc = proc->optr) {
+			haskid = 1;
+			if (proc->state == PROC_ZOMBIE) {
+				goto found;
+			}
+		}
+	}
+	if (haskid) {
+		g_current->state = PROC_SLEEPING;
+		g_current->wait_state = WT_CHILD;
+		schedule();
+		if (g_current->flags & PF_EXITING) {
+			do_exit(-E_KILLED);
+		}
+		goto repeat;
+	}
+	return -E_BAD_PROC;
+
+found:
+	if (proc == g_idleproc || proc == g_initproc) {
+		panic("wait idleproc or initproc.\n");
+	}
+	if (code_store != NULL) {
+		*code_store = proc->exit_code;
+	}
+	local_intr_save(intr_flag);
+	{
+		unhash_proc(proc);
+		remove_links(proc);
+	}
+	local_intr_restore(intr_flag);
+	free_kstack(proc);
+	kfree(proc);
+	return 0;
+}
+
+// do_kill - kill process with pid by set this process's flags with PF_EXITING
+int do_kill(int pid)
+{
+	struct proc_struct *proc;
+	if ((proc = find_proc(pid)) != NULL) {
+		if (!(proc->flags & PF_EXITING)) {
+			proc->flags |= PF_EXITING;
+			if (proc->wait_state & WT_INTERRUPTED) {
+				wakeup_proc(proc);
+			}
+			return 0;
+		}
+		return -E_KILLED;
+	}
+	return -E_INVAL;
 }
 
