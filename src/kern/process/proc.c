@@ -40,37 +40,35 @@ void proc_run(struct proc_struct *proc)
 static int init_main(void *arg)
 {
 	udebug("\r\n");
-#if 0
-	int ret;
-	if ((ret = vfs_set_bootfs("disk0:")) != 0) {
-		panic("set boot fs failed: %e.\n", ret);
-	}
+	//int ret;
+	//if ((ret = vfs_set_bootfs("disk0:")) != 0) {
+	//	panic("set boot fs failed: %e.\n", ret);
+	//}
 
 	size_t nr_free_pages_store = nr_free_pages();
-	size_t kernel_allocated_store = kallocated();
 
-	int pid = kernel_thread(user_main, NULL, 0);
-	if (pid <= 0) {
-		panic("create user_main failed.\n");
-	}
-	extern void check_sync(void);
-	check_sync();                // check philosopher sync problem
+	//int pid = kernel_thread(user_main, NULL, 0);
+	//if (pid <= 0) {
+	//	panic("create user_main failed.\n");
+	//}
+	//extern void check_sync(void);
+	//check_sync();                // check philosopher sync problem
 
+	udebug("\r\n");
 	while (do_wait(0, NULL) == 0) {
+		udebug("\r\n");
 		schedule();
 	}
 
-	fs_cleanup();
+	//fs_cleanup();
 
 	cprintf("all user-mode processes have quit.\n");
 	assert(g_initproc->cptr == NULL && g_initproc->yptr == NULL && g_initproc->optr == NULL);
-	assert(nr_process == 2);
+	assert(g_nr_process == 2);
 	assert(list_next(&g_proc_list) == &(g_initproc->list_link));
 	assert(list_prev(&g_proc_list) == &(g_initproc->list_link));
 	assert(nr_free_pages_store == nr_free_pages());
-	assert(kernel_allocated_store == kallocated());
 	cprintf("init check memory pass.\n");
-#endif
 	return 0;
 }
 
@@ -481,18 +479,21 @@ void cpu_idle(void)
 
 int do_wait(int pid, int *code_store)
 {
+	udebug("\r\n");
 	struct mm_struct *mm = g_current->mm;
 	if (code_store != NULL) {
 		if (!user_mem_check(mm, (uintptr_t)code_store, sizeof(int), 1)) {
 			return -E_INVAL;
 		}
 	}
+	udebug("\r\n");
 
 	struct proc_struct *proc;
 	bool intr_flag, haskid;
 repeat:
 	haskid = 0;
 	if (pid != 0) {
+		udebug("\r\n");
 		proc = find_proc(pid);
 		if (proc != NULL && proc->parent == g_current) {
 			haskid = 1;
@@ -500,28 +501,35 @@ repeat:
 				goto found;
 			}
 		}
-	}
-	else {
+	} else {
+		udebug("\r\n");
 		proc = g_current->cptr;
 		for (; proc != NULL; proc = proc->optr) {
 			haskid = 1;
 			if (proc->state == PROC_ZOMBIE) {
+				udebug("\r\n");
 				goto found;
 			}
 		}
+		udebug("\r\n");
 	}
+	udebug("\r\n");
 	if (haskid) {
+		udebug("\r\n");
 		g_current->state = PROC_SLEEPING;
 		g_current->wait_state = WT_CHILD;
 		schedule();
 		if (g_current->flags & PF_EXITING) {
+			udebug("\r\n");
 			do_exit(-E_KILLED);
 		}
 		goto repeat;
 	}
+	udebug("\r\n");
 	return -E_BAD_PROC;
 
 found:
+	udebug("\r\n");
 	if (proc == g_idleproc || proc == g_initproc) {
 		panic("wait idleproc or initproc.\n");
 	}

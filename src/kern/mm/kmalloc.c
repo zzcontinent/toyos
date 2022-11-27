@@ -197,16 +197,6 @@ inline void kmalloc_init(void)
 	cprintf("kmalloc_init() succeeded!\n");
 }
 
-size_t slab_allocated(void)
-{
-	return 0;
-}
-
-size_t kallocated(void)
-{
-	return slab_allocated();
-}
-
 static int find_order(int size)
 {
 	int order = 0;

@@ -116,7 +116,6 @@ bool trap_in_kernel(struct trapframe* tf)
 	return (tf->tf_cs == (u16)KERNEL_CS);
 }
 
-
 void print_trapframe(struct trapframe* tf)
 {
 	cprintf("trapframe at %p\n", tf);
@@ -155,17 +154,6 @@ void print_regs(struct trapframe* tf)
 	cprintf("|-eax  0x%08x\n", tf->tf_regs.reg_eax);
 }
 
-/* error_code:
- * bit 0 == 0 means no page found, 1 means protection fault
- * bit 1 == 0 means read, 1 means write
- * bit 2 == 0 means kernel, 1 means user
- * */
-#define print_pgfault(tf) do { \
-	udebug("page fault at 0x%08x: %c/%c [%s].\n", rcr2(),\
-			(tf->tf_err & PTE_U) ? 'U' : 'K',    \
-			(tf->tf_err & PTE_W) ? 'W' : 'R',    \
-			(tf->tf_err & PTE_P) ? "protection fault" : "no page found"); \
-} while(0)
 
 int pgfault_handler(struct trapframe* tf)
 {
@@ -211,7 +199,7 @@ void trap_dispatch(struct trapframe* tf)
 			//syscall();
 			break;
 		case IRQ_OFFSET + IRQ_TIMER:
-			ticks++;
+			g_ticks++;
 			assert(g_current != NULL);
 			//run_timer_list();
 			break;
@@ -223,8 +211,8 @@ void trap_dispatch(struct trapframe* tf)
 			c = cons_getc();
 			cprintf("kbd [%03d] %c\n", c, c);
 			//{
-			//	//extern void dev_stdin_write(char c);
-			//	//dev_stdin_write(c);
+			//extern void dev_stdin_write(char c);
+			//dev_stdin_write(c);
 			//}
 			break;
 		case T_SWITCH_TOU:
