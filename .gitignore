@@ -16,3 +16,4 @@ tags
 *disk0
 src/out
 *.out
+src/tmp.log
