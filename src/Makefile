@@ -228,9 +228,14 @@ debug-ucore: $(target_ucoreimg)
 	$(TERMINAL) --new-tab -e "gdb -q -x tools/gdbinit"
 
 debug-nox: $(target_ucoreimg) $(SWAPIMG) $(SFSIMG)
-	$(V)$(QEMU) -S -s -serial mon:stdio $(QEMUOPTS) -nographic &
+	$(V)$(QEMU) -S -s -serial mon:stdio $(QEMUOPTS) -nographic > /dev/null
 	$(V)sleep 1
 	$(V)$(TERMINAL) -e "$(GDB) -q -x tools/gdbinit"
+
+debug-nox-bash: $(target_ucoreimg) $(SWAPIMG) $(SFSIMG)
+	$(V)$(QEMU) -S -s -serial mon:stdio $(QEMUOPTS) -nographic >./tmp.log 2>&1 &
+	$(V)sleep 1
+	$(GDB) -q -x tools/gdbinit
 
 qemukill:
 	-@ps ax | grep qemu-system-i386 | grep -v grep | awk '{print $$1}' | xargs kill -9 2>/dev/null
