@@ -1,7 +1,7 @@
 
 ################ variables start ################
 # +++ cc +++
-GCCPREFIX := ''
+GCCPREFIX :=
 QEMU := qemu-system-i386
 V := @
 
@@ -215,27 +215,17 @@ debug: $(target_ucoreimg) $(SWAPIMG) $(SFSIMG)
 	$(V)sleep 2
 	$(V)$(TERMINAL) -e "$(GDB) -q -x tools/gdbinit"
 
-debug-bootblock: $(bootblock)
-	make qemukill
-	$(V)$(QEMU) -S -s -serial mon:stdio -hda out/target/bootblock -nographic &
-	sleep 1
-	$(TERMINAL) --new-tab -e "gdb -q -x tools/gdbinit"
-
-debug-ucore: $(target_ucoreimg)
-	make qemukill
-	$(V)$(QEMU) -S -s -serial mon:stdio -hda $< -nographic &
-	sleep 1
-	$(TERMINAL) --new-tab -e "gdb -q -x tools/gdbinit"
-
 debug-nox: $(target_ucoreimg) $(SWAPIMG) $(SFSIMG)
-	$(V)$(QEMU) -S -s -serial mon:stdio $(QEMUOPTS) -nographic > /dev/null
+	make qemukill
+	$(V)$(QEMU) -S -s -serial mon:stdio $(QEMUOPTS) -nographic > /dev/null &
 	$(V)sleep 1
 	$(V)$(TERMINAL) -e "$(GDB) -q -x tools/gdbinit"
 
 debug-nox-bash: $(target_ucoreimg) $(SWAPIMG) $(SFSIMG)
-	$(V)$(QEMU) -S -s -serial mon:stdio $(QEMUOPTS) -nographic >./tmp.log 2>&1 &
+	make qemukill
+	$(V)$(QEMU) -S -s -serial mon:stdio $(QEMUOPTS) -nographic >/dev/null &
 	$(V)sleep 1
-	$(GDB) -q -x tools/gdbinit
+	$(V)$(GDB) -q -x tools/gdbinit
 
 qemukill:
 	-@ps ax | grep qemu-system-i386 | grep -v grep | awk '{print $$1}' | xargs kill -9 2>/dev/null
