@@ -10,6 +10,7 @@
 #include <kern/mm/kmalloc.h>
 #include <kern/process/proc.h>
 #include <kern/schedule/sched.h>
+#include <kern/debug/kcommand.h>
 
 extern void switch_to(struct context *from, struct context *to);
 extern void kernel_thread_entry(void);
@@ -37,6 +38,13 @@ void proc_run(struct proc_struct *proc)
 	}
 }
 
+static int user_main(void *arg)
+{
+	while(1)
+		DEBUG_CONSOLE;
+	panic("user_main execve failed.\n");
+}
+
 static int init_main(void *arg)
 {
 	udebug("\r\n");
@@ -47,10 +55,10 @@ static int init_main(void *arg)
 
 	size_t nr_free_pages_store = nr_free_pages();
 
-	//int pid = kernel_thread(user_main, NULL, 0);
-	//if (pid <= 0) {
-	//	panic("create user_main failed.\n");
-	//}
+	int pid = kernel_thread(user_main, NULL, 0);
+	if (pid <= 0) {
+		panic("create user_main failed.\n");
+	}
 	//extern void check_sync(void);
 	//check_sync();                // check philosopher sync problem
 
@@ -333,7 +341,7 @@ fork_out:
 	return ret;
 
 bad_fork_cleanup_fs:  //for LAB8
-	//put_fs(proc);
+		      //put_fs(proc);
 bad_fork_cleanup_kstack:
 	free_kstack(proc);
 bad_fork_cleanup_proc:
