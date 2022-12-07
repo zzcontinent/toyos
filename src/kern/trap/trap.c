@@ -204,8 +204,8 @@ void trap_dispatch(struct trapframe* tf)
 			//run_timer_list();
 			break;
 		case IRQ_OFFSET + IRQ_COM1:
-			c = cons_getc();
-			cprintf("serial [%03d] %c\n", c, c);
+			//c = cons_getc();
+			//cprintf("serial [%03d] %c\n", c, c);
 			break;
 		case IRQ_OFFSET + IRQ_KBD:
 			c = cons_getc();
