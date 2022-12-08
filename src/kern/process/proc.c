@@ -47,7 +47,6 @@ static int user_main(void *arg)
 
 static int init_main(void *arg)
 {
-	udebug("\r\n");
 	//int ret;
 	//if ((ret = vfs_set_bootfs("disk0:")) != 0) {
 	//	panic("set boot fs failed: %e.\n", ret);
@@ -62,9 +61,7 @@ static int init_main(void *arg)
 	//extern void check_sync(void);
 	//check_sync();                // check philosopher sync problem
 
-	udebug("\r\n");
 	while (do_wait(0, NULL) == 0) {
-		udebug("\r\n");
 		schedule();
 	}
 
@@ -342,8 +339,8 @@ fork_out:
 
 bad_fork_cleanup_fs:  //for LAB8
 		      //put_fs(proc);
-bad_fork_cleanup_kstack:
-	free_kstack(proc);
+//bad_fork_cleanup_kstack:
+//	free_kstack(proc);
 bad_fork_cleanup_proc:
 	kfree(proc);
 	goto fork_out;
@@ -487,21 +484,18 @@ void cpu_idle(void)
 
 int do_wait(int pid, int *code_store)
 {
-	udebug("\r\n");
 	struct mm_struct *mm = g_current->mm;
 	if (code_store != NULL) {
 		if (!user_mem_check(mm, (uintptr_t)code_store, sizeof(int), 1)) {
 			return -E_INVAL;
 		}
 	}
-	udebug("\r\n");
 
 	struct proc_struct *proc;
 	bool intr_flag, haskid;
 repeat:
 	haskid = 0;
 	if (pid != 0) {
-		udebug("\r\n");
 		proc = find_proc(pid);
 		if (proc != NULL && proc->parent == g_current) {
 			haskid = 1;
@@ -510,34 +504,26 @@ repeat:
 			}
 		}
 	} else {
-		udebug("\r\n");
 		proc = g_current->cptr;
 		for (; proc != NULL; proc = proc->optr) {
 			haskid = 1;
 			if (proc->state == PROC_ZOMBIE) {
-				udebug("\r\n");
 				goto found;
 			}
 		}
-		udebug("\r\n");
 	}
-	udebug("\r\n");
 	if (haskid) {
-		udebug("\r\n");
 		g_current->state = PROC_SLEEPING;
 		g_current->wait_state = WT_CHILD;
 		schedule();
 		if (g_current->flags & PF_EXITING) {
-			udebug("\r\n");
 			do_exit(-E_KILLED);
 		}
 		goto repeat;
 	}
-	udebug("\r\n");
 	return -E_BAD_PROC;
 
 found:
-	udebug("\r\n");
 	if (proc == g_idleproc || proc == g_initproc) {
 		panic("wait idleproc or initproc.\n");
 	}
