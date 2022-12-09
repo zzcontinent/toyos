@@ -19,7 +19,7 @@ struct proc_struct *g_idleproc = NULL;
 struct proc_struct *g_current = NULL;
 
 list_entry_t g_proc_list;
-static list_entry_t hash_list[HASH_LIST_SIZE];
+static list_entry_t g_hash_list[HASH_LIST_SIZE];
 int g_nr_process = 0;
 
 void proc_run(struct proc_struct *proc)
@@ -135,7 +135,7 @@ static void copy_thread(struct proc_struct *proc, uintptr_t esp, struct trapfram
 
 static void hash_proc(struct proc_struct *proc)
 {
-	list_add(hash_list + hash32(proc->pid), &(proc->hash_link));
+	list_add(g_hash_list + hash32(proc->pid), &(proc->hash_link));
 }
 
 static void unhash_proc(struct proc_struct *proc)
@@ -367,7 +367,7 @@ char *set_proc_name(struct proc_struct *proc, const char *name)
 struct proc_struct * find_proc(int pid)
 {
 	if (0 < pid && pid < MAX_PID) {
-		list_entry_t *list = hash_list + hash32(pid), *le = list;
+		list_entry_t *list = g_hash_list + hash32(pid), *le = list;
 		while ((le = list_next(le)) != list) {
 			struct proc_struct *proc = le2proc(le, hash_link);
 			if (proc->pid == pid) {
@@ -383,7 +383,7 @@ void proc_init(void)
 	int i;
 	list_init(&g_proc_list);
 	for (i = 0; i < HASH_LIST_SIZE; i ++) {
-		list_init(hash_list + i);
+		list_init(g_hash_list + i);
 	}
 
 	if ((g_idleproc = alloc_proc()) == NULL) {
