@@ -528,7 +528,6 @@ static void check_pgdir(void)
 	assert(pte2page(*ptep) == p1);
 	assert((*ptep & PTE_U) == 0);
 
-	//TODO... crush here
 	assert(page_ref(p1) == 2);
 	page_remove(boot_pgdir, 0x0);
 	assert(page_ref(p1) == 1);

@@ -12,6 +12,7 @@
 #include <kern/mm/kmalloc.h>
 #include <kern/process/proc.h>
 #include <kern/debug/assert.h>
+#include <kern/schedule/sched.h>
 
 void sem_init(semaphore_t *sem, int value)
 {
@@ -49,8 +50,7 @@ static uint32_t __down(semaphore_t *sem, uint32_t wait_state)
 	wait_current_set(&(sem->wait_queue), wait, wait_state);
 	local_intr_restore(intr_flag);
 
-	//TODO
-	//schedule();
+	schedule();
 
 	local_intr_save(intr_flag);
 	wait_current_del(&(sem->wait_queue), wait);
