@@ -10,6 +10,7 @@
 #include <kern/sync/sync.h>
 #include <kern/sync/wait.h>
 #include <kern/process/proc.h>
+#include <kern/schedule/sched.h>
 
 void wait_init(wait_t *wait, struct proc_struct *proc)
 {
@@ -90,8 +91,7 @@ void wakeup_wait(wait_queue_t *queue, wait_t *wait, u32 wakeup_flags, bool del)
 		wait_queue_del(queue, wait);
 	}
 	wait->wakeup_flags = wakeup_flags;
-	//TODO
-	//wakeup_proc(wait->proc);
+	wakeup_proc(wait->proc);
 }
 
 void wakeup_first(wait_queue_t *queue, u32 wakeup_flags, bool del)
