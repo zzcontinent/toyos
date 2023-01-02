@@ -258,10 +258,10 @@ void trap(struct trapframe* tf)
 		g_current->tf = otf;
 		if (!in_kernel) {
 			if (g_current->flags & PF_EXITING) {
-				//do_exit(-E_KILLED);
+				do_exit(-E_KILLED);
 			}
 			if (g_current->need_resched) {
-				//schedule();
+				schedule();
 			}
 		}
 	}
