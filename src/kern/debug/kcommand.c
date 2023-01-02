@@ -29,15 +29,15 @@ struct command {
 };
 
 static struct command commands[COMMAND_MAX] = {
-	{"help", "Display this list of commands", 1, cmd_help},
-	{"kerninfo", "Display information about the kernel", 1, cmd_kerninfo},
-	{"backtrace", "Print backtrace of stack frame", 1, cmd_backtrace},
+	{"help", "print this list of commands", 1, cmd_help},
+	{"kinfo", "print kernel information", 1, cmd_kerninfo},
+	{"bt", "print backtrace of stack frame", 1, cmd_backtrace},
 	{"exit", "exit console", 1, cmd_exit},
 	{"jump", "jump addr", 2, cmd_jump},
 	{"call", "call addr", 2, cmd_call},
 	{"mem", "print memory", 1, cmd_mem},
 	{"page", "print page table", 1, cmd_print_pg},
-	{"free_page", "print free pages", 1, cmd_print_free_pages},
+	{"freepage", "print free pages", 1, cmd_print_free_pages},
 	{0, 0, 0, 0},
 };
 
