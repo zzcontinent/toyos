@@ -64,9 +64,9 @@ struct proc_struct {
 	u32 wait_state;
 	struct run_queue *rq;
 	int time_slice;
-	skew_heap_entry_t lab6_run_pool;
-	u32 lab6_stride;
-	u32 lab6_priority;
+	skew_heap_entry_t run_pool;
+	u32 stride;
+	u32 priority;
 	struct files_struct *filesp;
 };
 
@@ -83,7 +83,7 @@ extern int do_yield(void);
 extern int do_execve(const char *name, int argc, const char **argv);
 extern int do_wait(int pid, int *code_store);
 extern int do_kill(int pid);
-extern void lab6_set_priority(uint32_t priority);
+extern void set_priority(uint32_t priority);
 extern int do_sleep(unsigned int time);
 extern void forkrets(struct trapframe *tf);
 

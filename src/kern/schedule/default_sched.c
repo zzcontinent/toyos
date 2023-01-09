@@ -12,9 +12,9 @@
  * corresponding procs*/
 static int proc_stride_comp_f(void *a, void *b)
 {
-	struct proc_struct *p = le2proc(a, lab6_run_pool);
-	struct proc_struct *q = le2proc(b, lab6_run_pool);
-	int32_t c = p->lab6_stride - q->lab6_stride;
+	struct proc_struct *p = le2proc(a, run_pool);
+	struct proc_struct *q = le2proc(b, run_pool);
+	int32_t c = p->stride - q->stride;
 	if (c > 0) return 1;
 	else if (c == 0) return 0;
 	else return -1;
@@ -24,21 +24,21 @@ static int proc_stride_comp_f(void *a, void *b)
  * stride_init initializes the run-queue rq with correct assignment for
  * member variables, including:
  *   - run_list: should be a empty list after initialization.
- *   - lab6_run_pool: NULL
+ *   - run_pool: NULL
  *   - proc_num: 0
  *   - max_time_slice: no need here, the variable would be assigned by the caller.
  */
 static void stride_init(struct run_queue *rq)
 {
 	list_init(&(rq->run_list));
-	rq->lab6_run_pool = NULL;
+	rq->run_pool = NULL;
 	rq->proc_num = 0;
 }
 
 /*
  * stride_enqueue inserts the process ``proc'' into the run-queue
  * ``rq''. The procedure should verify/initialize the relevant members
- * of ``proc'', and then put the ``lab6_run_pool'' node into the
+ * of ``proc'', and then put the ``run_pool'' node into the
  * queue(since we use priority queue here). The procedure should also
  * update the meta date in ``rq'' structure.
  * proc->time_slice denotes the time slices allocation for the
@@ -47,8 +47,8 @@ static void stride_init(struct run_queue *rq)
 static void stride_enqueue(struct run_queue *rq, struct proc_struct *proc)
 {
 #if USE_SKEW_HEAP
-	rq->lab6_run_pool =
-		skew_heap_insert(rq->lab6_run_pool, &(proc->lab6_run_pool), proc_stride_comp_f);
+	rq->run_pool =
+		skew_heap_insert(rq->run_pool, &(proc->run_pool), proc_stride_comp_f);
 #else
 	assert(list_empty(&(proc->run_link)));
 	list_add_before(&(rq->run_list), &(proc->run_link));
@@ -68,7 +68,7 @@ static void stride_enqueue(struct run_queue *rq, struct proc_struct *proc)
 static void stride_dequeue(struct run_queue *rq, struct proc_struct *proc)
 {
 #if USE_SKEW_HEAP
-	rq->lab6_run_pool = skew_heap_remove(rq->lab6_run_pool, &(proc->lab6_run_pool), proc_stride_comp_f);
+	rq->run_pool = skew_heap_remove(rq->run_pool, &(proc->run_pool), proc_stride_comp_f);
 #else
 	assert(!list_empty(&(proc->run_link)) && proc->rq == rq);
 	list_del_init(&(proc->run_link));
@@ -86,11 +86,11 @@ static void stride_dequeue(struct run_queue *rq, struct proc_struct *proc)
  * hint: see proj13.1/libs/skew_heap.h for routines of the priority
  * queue structures.
  */
-static struct proc_struct * stride_pick_next(struct run_queue *rq)
+static struct proc_struct* stride_pick_next(struct run_queue *rq)
 {
 #if USE_SKEW_HEAP
-	if (rq->lab6_run_pool == NULL) return NULL;
-	struct proc_struct *p = le2proc(rq->lab6_run_pool, lab6_run_pool);
+	if (rq->run_pool == NULL) return NULL;
+	struct proc_struct *p = le2proc(rq->run_pool, run_pool);
 #else
 	list_entry_t *le = list_next(&(rq->run_list));
 
@@ -102,14 +102,14 @@ static struct proc_struct * stride_pick_next(struct run_queue *rq)
 	while (le != &rq->run_list)
 	{
 		struct proc_struct *q = le2proc(le, run_link);
-		if ((int32_t)(p->lab6_stride - q->lab6_stride) > 0)
+		if ((int32_t)(p->stride - q->stride) > 0)
 			p = q;
 		le = list_next(le);
 	}
 #endif
-	if (p->lab6_priority == 0)
-		p->lab6_stride += BIG_STRIDE;
-	else p->lab6_stride += BIG_STRIDE / p->lab6_priority;
+	if (p->priority == 0)
+		p->stride += BIG_STRIDE;
+	else p->stride += BIG_STRIDE / p->priority;
 	return p;
 }
 
