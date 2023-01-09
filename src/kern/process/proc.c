@@ -98,9 +98,9 @@ static struct proc_struct * alloc_proc(void)
 		proc->rq = NULL;
 		list_init(&(proc->run_link));
 		proc->time_slice = 0;
-		proc->lab6_run_pool.left = proc->lab6_run_pool.right = proc->lab6_run_pool.parent = NULL;
-		proc->lab6_stride = 0;
-		proc->lab6_priority = 0;
+		proc->run_pool.left = proc->run_pool.right = proc->run_pool.parent = NULL;
+		proc->stride = 0;
+		proc->priority = 0;
 		proc->filesp = NULL;
 	}
 	return proc;

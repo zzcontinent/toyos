@@ -54,7 +54,7 @@ struct run_queue {
 	list_entry_t run_list;
 	unsigned int proc_num;
 	int max_time_slice;
-	skew_heap_entry_t *lab6_run_pool;
+	skew_heap_entry_t *run_pool;
 };
 
 extern void sched_init(void);
