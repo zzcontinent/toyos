@@ -1,4 +1,5 @@
 #include <libs/stdio.h>
+#include <libs/defs.h>
 #include <libs/string.h>
 #include <kern/mm/mmu.h>
 #include <kern/mm/default_pmm.h>
@@ -11,11 +12,12 @@ bool is_kernel_panic(void);
 #define COMMAND_MAX    200
 #define MAXARGS         16
 #define WHITESPACE      " \t\n\r"
+#define CMD_HISTORY_MAX    20
+#define CMD_HISTORY_BUF_LEN    256
 
 enum CMD_RETURN_CODE {
 	CMD_EXIT = -1,
 	CMD_SUCCEED = 0,
-	CMD_FAILED,
 	CMD_NOT_SUPPORT,
 	CMD_BAD_ARGS,
 	CMD_NULL,
@@ -28,6 +30,9 @@ struct command {
 	int(*func)(int argc, char **argv);
 };
 
+static char cmd_history_buf[CMD_HISTORY_MAX][CMD_HISTORY_BUF_LEN] = {0};
+static int cmd_cur_index = 0;
+
 static struct command commands[COMMAND_MAX] = {
 	{"help", "print this list of commands", 1, cmd_help},
 	{"kinfo", "print kernel information", 1, cmd_kerninfo},
@@ -37,7 +42,10 @@ static struct command commands[COMMAND_MAX] = {
 	{"call", "call addr", 2, cmd_call},
 	{"mem", "print memory", 1, cmd_mem},
 	{"page", "print page table", 1, cmd_print_pg},
-	{"freepage", "print free pages", 1, cmd_print_free_pages},
+	{"printfree", "printfree (pages)", 1, cmd_print_free_pages},
+	{"alloc", "alloc (one page)", 1, cmd_alloc_page},
+	{"free", "free page", 2, cmd_free_page},
+	{"hi", "hi [index](print history or run history of index)", -1, cmd_history},
 	{0, 0, 0, 0},
 };
 
@@ -89,10 +97,11 @@ static int runcmd(char *buf)
 	if (argc == 0) {
 		return CMD_NULL;
 	}
+
 	int i;
 	for (i = 0; i < get_commands_len(); i ++) {
 		if (strcmp(commands[i].name, argv[0]) == 0) {
-			if (argc != commands[i].argc)
+			if (argc != commands[i].argc && commands[i].argc != -1)
 			{
 				return CMD_BAD_ARGS;
 			}
@@ -102,16 +111,18 @@ static int runcmd(char *buf)
 	return CMD_NOT_SUPPORT;
 }
 
-
 void kcmd_loop()
 {
 	cprintf("type 'help' for a list of commands\n");
 	char *buf;
 	static int index = 0;
-	char promt_buf[256] = {0};
+	char promt_buf[64] = {0};
 	while (1) {
-		snprintf(promt_buf, 256, "[sh:%d]$ ", ++index);
+		snprintf(promt_buf, 64, "[sh:%d]$ ", ++index);
 		if ((buf = readline(promt_buf, 1)) != NULL) {
+			//append history
+			append_cmd_history(buf);
+
 			enum CMD_RETURN_CODE ret_code = runcmd(buf);
 			if (ret_code == CMD_EXIT)
 			{
@@ -193,4 +204,70 @@ int cmd_print_free_pages(int argc, char **argv)
 	return CMD_SUCCEED;
 }
 
+int cmd_alloc_page(int argc, char **argv)
+{
+	struct page *page = alloc_page();
+	uclean("page=0x%x\r\n", page);
+	return CMD_SUCCEED;
+}
+
+int cmd_free_page(int argc, char **argv)
+{
+	u32 addr = str2n(argv[1]);
+	free_page((struct page*)addr);
+	return CMD_SUCCEED;
+}
+
+int get_cmd_index_relative(int offset)
+{
+	return ((cmd_cur_index+offset)%CMD_HISTORY_MAX + CMD_HISTORY_MAX)%CMD_HISTORY_MAX;
+}
+
+void append_cmd_history(char* cmd)
+{
+	int i = 0;
+	for (i=0; i<CMD_HISTORY_MAX; i++)
+	{
+		if (0 == strcmp(cmd, cmd_history_buf[i]))
+			return;
+	}
+
+	if (cmd_cur_index >= CMD_HISTORY_MAX)
+		cmd_cur_index = 0;
+	strcpy(cmd_history_buf[cmd_cur_index], cmd);
+	++cmd_cur_index;
+}
+
+void print_cmd_history()
+{
+	int i = 0;
+	while(i < CMD_HISTORY_MAX)
+	{
+		if (cmd_history_buf[i][0] != 0)
+			uclean("%d : %s\r\n", i, cmd_history_buf[i]);
+		++i;
+	}
+}
+
+char *get_cmd_history(int index)
+{
+	if (index < CMD_HISTORY_MAX)
+		return cmd_history_buf[index];
+	else
+		return NULL;
+}
+
+int cmd_history(int argc, char **argv)
+{
+	if (argc == 1)
+	{
+		print_cmd_history();
+		return CMD_SUCCEED;
+	} else if (argc == 2) {
+		u32 index = str2n(argv[1]);
+		return  runcmd(get_cmd_history(index));
+	} else {
+		return CMD_NOT_SUPPORT;
+	}
+}
 

@@ -13,6 +13,10 @@ extern int cmd_mem(int argc, char **argv);
 extern int cmd_print_pg(int argc, char **argv);
 extern int cmd_print_free_pages(int argc, char **argv);
 extern int cmd_call(int argc, char **argv);
+extern int cmd_alloc_page(int argc, char **argv);
+extern int cmd_free_page(int argc, char **argv);
+extern int cmd_history(int argc, char **argv);
+extern void append_cmd_history(char* cmd);
 
 #define DEBUG_CONSOLE { \
 	uinfo(""); \
