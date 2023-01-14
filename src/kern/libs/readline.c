@@ -1,8 +1,8 @@
 #include <libs/libs_all.h>
 
 
-#define BUFSIZE 1024
-static char buf[BUFSIZE];
+#define READLINE_BUFSIZE 256
+static char buf[READLINE_BUFSIZE];
 
 char* readline(const char *prompt, int need_print) {
 	if (prompt != NULL && need_print) {
@@ -13,7 +13,7 @@ char* readline(const char *prompt, int need_print) {
 		c = getchar();
 		if (c < 0) {
 			return NULL;
-		} else if (c >= ' ' && i < BUFSIZE - 1) {
+		} else if (c >= ' ' && i < READLINE_BUFSIZE - 1) {
 			if (need_print) cputchar(c);
 			buf[i++] = c;
 		} else if (c == '\b' && i > 0) {
