@@ -18,38 +18,6 @@ size_t strnlen(const char* s, size_t len)
 	return cnt;
 }
 
-u64 str2n(const char* s)
-{
-	u64 ret = 0;
-	int base = 10;
-	if (s != 0 && *s == '0' && *(s+1) == 'x')
-	{
-		base=16;
-		s += 2;
-	}
-
-	while(*s != '\0')
-	{
-		ret *= base;
-		if (base == 10)
-		{
-			ret += (*s - '0');
-		} else if (base == 16) {
-			if ('0' <= *s && *s <= '9') {
-				ret += (*s - '0');
-			} else if ('a' <= *s && *s <= 'f') {
-				ret += (*s - 'a' + 10);
-			} else if ('A' <= *s && *s <= 'F') {
-				ret += (*s - 'A' + 10);
-			} else {
-				return ret;
-			}
-		}
-		s++;
-	}
-	return ret;
-}
-
 char* strcat(char* dst, const char* src)
 {
 	return strcpy(dst + strlen(dst), src);
@@ -166,6 +134,49 @@ long strtol(const char* s, char** endptr, int base)
 	}
 	if (endptr) {
 		*endptr = (char*)s;
+	}
+	return (neg ? -val : val);
+}
+
+i64 str2n(const char* s)
+{
+	int neg = 0;
+	i64 val = 0;
+	int base=10;
+
+	// gobble initial whitespace
+	while (*s == ' ' || *s == '\t') {
+		++s;
+	}
+
+	// plus/minus sign
+	if (*s == '+') {
+		++s;
+	} else if (*s == '-') {
+		++s, neg = 1;
+	}
+
+	// hex or octal base prefix
+	if (s[0] == '0' && s[1] == 'x') {
+		s += 2, base = 16;
+	} 
+
+	// digits
+	for (;;) {
+		i64 dig;
+		if (*s >= '0' && *s <= '9') {
+			dig = *s - '0';
+		} else if (*s >= 'a' && *s <= 'z') {
+			dig = *s - 'a' + 10;
+		} else if (*s >= 'A' && *s <= 'Z') {
+			dig = *s - 'A' + 10;
+		} else {
+			break;
+		}
+		if (dig >= base) {
+			break;
+		}
+		++s, val = (val * base) + dig;
 	}
 	return (neg ? -val : val);
 }
