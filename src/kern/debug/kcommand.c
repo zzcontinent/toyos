@@ -69,6 +69,9 @@ void append_command(struct command cmdone)
 static int parse(char *buf, char **argv)
 {
 	int argc = 0;
+	if (buf == NULL)
+		return -1;
+
 	while (1) {
 		// find global whitespace
 		while (*buf != '\0' && strchr(WHITESPACE, *buf) != NULL) {
@@ -94,7 +97,7 @@ static int runcmd(char *buf)
 {
 	char *argv[MAXARGS];
 	int argc = parse(buf, argv);
-	if (argc == 0) {
+	if (argc <= 0) {
 		return CMD_NULL;
 	}
 
@@ -251,7 +254,7 @@ void print_cmd_history()
 
 char *get_cmd_history(int index)
 {
-	if (index < CMD_HISTORY_MAX)
+	if (index >= 0  && index < CMD_HISTORY_MAX)
 		return cmd_history_buf[index];
 	else
 		return NULL;
@@ -264,7 +267,7 @@ int cmd_history(int argc, char **argv)
 		print_cmd_history();
 		return CMD_SUCCEED;
 	} else if (argc == 2) {
-		u32 index = str2n(argv[1]);
+		int index = str2n(argv[1]);
 		return  runcmd(get_cmd_history(index));
 	} else {
 		return CMD_NOT_SUPPORT;
