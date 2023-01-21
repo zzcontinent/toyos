@@ -7,11 +7,13 @@ free_area_t g_free_area;
 
 #define g_free_list (g_free_area.free_list)
 #define g_nr_free (g_free_area.nr_free)
+#define g_nr_memmap_total (g_free_area.nr_memmap_total)
 
 static void default_init(void)
 {
 	list_init(&g_free_list);
 	g_nr_free = 0;
+	g_nr_memmap_total = 0;
 }
 
 static void default_init_memmap(struct page *base, size_t n) {
@@ -19,12 +21,15 @@ static void default_init_memmap(struct page *base, size_t n) {
 	struct page *p = base;
 	for (; p != base + n; p ++) {
 		assert(PAGE_RESERVED(p));
-		p->flags = p->property = 0;
+		CLEAR_PAGE_RESERVED(p);
+		CLEAR_PAGE_PROPERTY(p);
 		set_page_ref(p, 0);
 	}
 	base->property = n;
 	SET_PAGE_PROPERTY(base);
 	g_nr_free += n;
+	g_nr_memmap_total += n;
+
 	list_add_before(&g_free_list, &(base->page_link));
 }
 
@@ -64,7 +69,6 @@ static void default_free_pages(struct page *base, size_t n)
 	struct page *p = base;
 	for (; p != base + n; p ++) {
 		assert(!PAGE_RESERVED(p) && !PAGE_PROPERTY(p));
-		p->flags = 0;
 		set_page_ref(p, 0);
 	}
 	base->property = n;
@@ -221,7 +225,7 @@ static void default_check(void)
 void print_free_pages()
 {
 	list_entry_t *le = &g_free_list;
-	struct page *p = le2page(le, page_link);
+	struct page *p;
 	do {
 		p = le2page(le, page_link);
 		uclean(
@@ -229,20 +233,33 @@ void print_free_pages()
 				"page          :0x%x\n"
 				"ref           :0x%x\n"
 				"flags         :0x%x\n"
-				"property      :0x%x\n"
-				"zone_num      :0x%x\n"
+				"property      :0x%x(%dKB)\n"
 				"page_link     :0x%x\n"
-				"pra_page_link :0x%x\n"
 				"pra_vaddr     :0x%x\n",
 				p               ,
 				p->ref          ,
 				p->flags        ,
-				p->property     ,
-				p->zone_num     ,
+				p->property     , (4*p->property),
 				p->page_link    ,
-				p->pra_page_link,
 				p->pra_vaddr    );
 	} while ((le = list_next(le)) != &g_free_list);
+
+	u32 total = g_nr_memmap_total;
+	u32 free = g_nr_free;
+	u32 used = total - free;
+	u32 free_per_h = (free*100/total);
+	u32 free_per_l = (free*1000/total)%10;
+	u32 used_per_h = (used*100)/total;
+	u32 used_per_l = (used*1000/total)%10;
+	uclean(
+			"+++++++++++++++++++\n"
+			"total         :%d(%dKB)\n"
+			"used          :%d(%dKB) = %d.%d%%\n"
+			"free          :%d(%dKB) = %d.%d%%\n"
+			"+++++++++++++++++++\n",
+			total, 4*total,
+			used, 4*used, used_per_h, used_per_l,
+			free, 4*free, free_per_h, free_per_l);
 }
 
 const struct pmm_manager default_pmm_manager = {

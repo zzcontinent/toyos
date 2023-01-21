@@ -155,6 +155,7 @@ struct page {
 typedef struct{
 	list_entry_t free_list;
 	unsigned int nr_free;
+	unsigned int nr_memmap_total;
 } free_area_t;
 
 

@@ -42,9 +42,8 @@ static struct command commands[COMMAND_MAX] = {
 	{"call", "call addr", 2, cmd_call},
 	{"mem", "print memory", 1, cmd_mem},
 	{"page", "print page table", 1, cmd_print_pg},
-	{"printfree", "printfree (pages)", 1, cmd_print_free_pages},
-	{"alloc", "alloc (one page)", 1, cmd_alloc_page},
-	{"free", "free page", 2, cmd_free_page},
+	{"alloc", "alloc one page", 1, cmd_alloc_page},
+	{"free", "free [page]", -1, cmd_free_page},
 	{"hi", "hi [index](print history or run history of index)", -1, cmd_history},
 	{0, 0, 0, 0},
 };
@@ -116,7 +115,6 @@ static int runcmd(char *buf)
 
 void kcmd_loop()
 {
-	cprintf("type 'help' for a list of commands\n");
 	char *buf;
 	static int index = 0;
 	char promt_buf[64] = {0};
@@ -201,12 +199,6 @@ int cmd_print_pg(int argc, char **argv)
 	return CMD_SUCCEED;
 }
 
-int cmd_print_free_pages(int argc, char **argv)
-{
-	print_free_pages();
-	return CMD_SUCCEED;
-}
-
 int cmd_alloc_page(int argc, char **argv)
 {
 	struct page *page = alloc_page();
@@ -216,8 +208,13 @@ int cmd_alloc_page(int argc, char **argv)
 
 int cmd_free_page(int argc, char **argv)
 {
-	u32 addr = str2n(argv[1]);
-	free_page((struct page*)addr);
+	if (argc == 2)
+	{
+		u32 addr = str2n(argv[1]);
+		free_page((struct page*)addr);
+	} else if (argc == 1) {
+		print_free_pages();
+	}
 	return CMD_SUCCEED;
 }
 

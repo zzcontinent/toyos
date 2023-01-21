@@ -51,7 +51,7 @@ int kern_init(void)
 	sched_init();
 	proc_init();
 
-	//ide_init();
+	ide_init();
 	//swap_init();
 	//fs_init();
 
