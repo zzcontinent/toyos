@@ -1,5 +1,6 @@
-#ifndef __LIBS_ELF_H__
-#define __LIBS_ELF_H__
+#ifndef  __ELF_H__
+#define  __ELF_H__
+
 #include <libs/defs.h>
 
 #define ELF_MAGIC 0x464C457FU
@@ -15,18 +16,18 @@
 struct elfhdr {
     u32 e_magic; // must equal ELF_MAGIC
     u8 e_elf[12];
-    u16 e_type;	  // 1=relocatable, 2=executable, 3=shared object, 4=core image
-    u16 e_machine;	  // 3=x86, 4=68K, etc.
-    u32 e_version;	  // file version = 1
-    u32 e_entry;	  // entry point if executable
-    u32 e_phoff;	  // program header offset
-    u32 e_shoff;	  // section header offset
-    u32 e_flags;	  // architecture-specific flags = 0
-    u16 e_ehsize;	  // elf header size
+    u16 e_type;      // 1=relocatable, 2=executable, 3=shared object, 4=core image
+    u16 e_machine;      // 3=x86, 4=68K, etc.
+    u32 e_version;      // file version = 1
+    u32 e_entry;      // entry point if executable
+    u32 e_phoff;      // program header offset
+    u32 e_shoff;      // section header offset
+    u32 e_flags;      // architecture-specific flags = 0
+    u16 e_ehsize;      // elf header size
     u16 e_phentsize; // program header entry size
-    u16 e_phnum;	  // program header number
+    u16 e_phnum;      // program header number
     u16 e_shentsize; // section header entry size
-    u16 e_shnum;	  // section header number
+    u16 e_shnum;      // section header number
     u16 e_shstrndx;  // section header name string index
 };
 
@@ -41,4 +42,4 @@ struct proghdr {
     u32 p_align;  // required alignment, invariably hardware page size
 };
 
-#endif
+#endif  /* __ELF_H__ */

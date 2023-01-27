@@ -23,8 +23,6 @@
     to_struct((le), struct proc_struct, member)
 extern struct proc_struct *g_idleproc, *g_initproc, *g_current;
 
-struct inode;
-
 enum proc_state {
 	PROC_UNINIT = 0,
 	PROC_SLEEPING,

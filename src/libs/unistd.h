@@ -1,5 +1,5 @@
-#ifndef __LIBS_UNISTD_H__
-#define __LIBS_UNISTD_H__
+#ifndef  __UNISTD_H__
+#define  __UNISTD_H__
 
 #define T_SYSCALL           0x80
 
@@ -64,5 +64,4 @@
 #define EXEC_MAX_ARG_NUM    32
 #define EXEC_MAX_ARG_LEN    4095
 
-#endif /* !__LIBS_UNISTD_H__ */
-
+#endif  /* __UNISTD_H__ */

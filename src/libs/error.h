@@ -1,5 +1,5 @@
-#ifndef __LIBS_ERROR_H__
-#define __LIBS_ERROR_H__
+#ifndef  __ERROR_H__
+#define  __ERROR_H__
 
 /* kernel error codes -- keep in sync with list in lib/printfmt.c */
 #define E_UNSPECIFIED       1   // Unspecified or unknown problem
@@ -29,5 +29,4 @@
 /* the maximum allowed */
 #define MAXERROR            24
 
-#endif /* !__LIBS_ERROR_H__ */
-
+#endif  /* __ERROR_H__ */
