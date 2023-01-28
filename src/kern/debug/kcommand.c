@@ -6,6 +6,7 @@
 #include <kern/trap/trap.h>
 #include <kern/debug/kcommand.h>
 #include <kern/debug/kdebug.h>
+#include <libs/ringbuf.h>
 
 bool is_kernel_panic(void);
 
@@ -31,6 +32,7 @@ struct command {
 };
 
 static char cmd_history_buf[CMD_HISTORY_MAX][CMD_HISTORY_BUF_LEN] = {0};
+static char cmd_history_buf_for_run[CMD_HISTORY_BUF_LEN] = {0};
 static int cmd_cur_index = 0;
 
 static struct command commands[COMMAND_MAX] = {
@@ -40,6 +42,9 @@ static struct command commands[COMMAND_MAX] = {
 	{"exit", "exit console", 1, cmd_exit},
 	{"jump", "jump addr", 2, cmd_jump},
 	{"call", "call addr", 2, cmd_call},
+	{"fp4", "fp(format print 4byte) addr len break", 4, cmd_format_print4},
+	{"fp2", "fp(format print 2byte) addr len break", 4, cmd_format_print2},
+	{"fp", "fp(format print 1byte) addr len break", 4, cmd_format_print1},
 	{"mem", "print memory", 1, cmd_mem},
 	{"page", "print page table", 1, cmd_print_pg},
 	{"alloc", "alloc one page", 1, cmd_alloc_page},
@@ -179,6 +184,67 @@ int cmd_jump(int argc, char **argv)
 	return CMD_SUCCEED;
 }
 
+//{"fp", "fp(format print 1byte) addr len break", 4, cmd_format_print1},
+int cmd_format_print1(int argc, char **argv)
+{
+	u8* addr = (u8*)(u32)str2n(argv[1]);
+	int len = str2n(argv[2]);
+	int line_break = str2n(argv[3]);
+	int i = 0;
+	for (i=0; i<len; i++)
+	{
+		if (i%line_break == 0) {
+			uclean("0x%x: ", i);
+		}
+
+		uclean("%2x ", addr[i]);
+		if (i%line_break == line_break-1) {
+			uclean("\n");
+		}
+	}
+	return CMD_SUCCEED;
+}
+
+int cmd_format_print2(int argc, char **argv)
+{
+	u16* addr = (u16*)(u32)str2n(argv[1]);
+	int len = str2n(argv[2]);
+	int line_break = str2n(argv[3]);
+	int i = 0;
+	for (i=0; i<len; i+=2)
+	{
+		if ((i/2)%line_break == 0) {
+			uclean("0x%x: ", i);
+		}
+
+		uclean("%4x ", addr[i/2]);
+		if ((i/2)%line_break == line_break-1) {
+			uclean("\n");
+		}
+	}
+	return CMD_SUCCEED;
+}
+
+int cmd_format_print4(int argc, char **argv)
+{
+	u32* addr = (u32*)(u32)str2n(argv[1]);
+	int len = str2n(argv[2]);
+	int line_break = str2n(argv[3]);
+	int i = 0;
+	for (i=0; i<len; i+=4)
+	{
+		if ((i/4)%line_break == 0) {
+			uclean("0x%x: ", i);
+		}
+
+		uclean("%8x ", addr[i/4]);
+		if ((i/4)%line_break == line_break-1) {
+			uclean("\n");
+		}
+	}
+	return CMD_SUCCEED;
+}
+
 int cmd_call(int argc, char **argv)
 {
 	cprintf("call to %s\n", argv[1]);
@@ -232,10 +298,10 @@ void append_cmd_history(char* cmd)
 			return;
 	}
 
-	if (cmd_cur_index >= CMD_HISTORY_MAX)
-		cmd_cur_index = 0;
 	strcpy(cmd_history_buf[cmd_cur_index], cmd);
 	++cmd_cur_index;
+	if (cmd_cur_index >= CMD_HISTORY_MAX)
+		cmd_cur_index = 0;
 }
 
 void print_cmd_history()
@@ -248,6 +314,7 @@ void print_cmd_history()
 		++i;
 	}
 }
+
 
 char *get_cmd_history(int index)
 {
@@ -265,7 +332,8 @@ int cmd_history(int argc, char **argv)
 		return CMD_SUCCEED;
 	} else if (argc == 2) {
 		int index = str2n(argv[1]);
-		return  runcmd(get_cmd_history(index));
+		strcpy(cmd_history_buf_for_run, get_cmd_history(index));
+		return  runcmd(cmd_history_buf_for_run);
 	} else {
 		return CMD_NOT_SUPPORT;
 	}
