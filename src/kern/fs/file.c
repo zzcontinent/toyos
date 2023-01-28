@@ -1,15 +1,17 @@
+#if 0
 #include <libs/defs.h>
 #include <libs/string.h>
-//#include <kern/fs/vfs/vfs.h>
-//#include <kern/fs/file.h>
-//#include <kern/fs/iobuf.h>
-//#include <kern/fs/vfs/inode.h>
 #include <libs/unistd.h>
 #include <libs/stat.h>
-#include <kern/fs/dirent.h>
 #include <libs/error.h>
 #include <kern/debug/assert.h>
 #include <kern/process/proc.h>
+
+#include <kern/fs/vfs/vfs.h>
+#include <kern/fs/vfs/inode.h>
+#include <kern/fs/file.h>
+#include <kern/fs/iobuf.h>
+#include <kern/fs/dirent.h>
 
 #define testfd(fd)                          ((fd) >= 0 && (fd) < FILES_STRUCT_NENTRY)
 
@@ -354,3 +356,4 @@ file_dup(int fd1, int fd2) {
 }
 
 
+#endif

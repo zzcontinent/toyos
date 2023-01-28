@@ -1,3 +1,4 @@
+#if 0
 #ifndef  __FILE_H__
 #define  __FILE_H__
 
@@ -53,3 +54,4 @@ static inline int fopen_count_dec(struct file *file)
 }
 
 #endif  /* __FILE_H__ */
+#endif

@@ -17,6 +17,9 @@ extern int cmd_alloc_page(int argc, char **argv);
 extern int cmd_free_page(int argc, char **argv);
 extern int cmd_history(int argc, char **argv);
 extern void append_cmd_history(char* cmd);
+extern int cmd_format_print1(int argc, char **argv);
+extern int cmd_format_print4(int argc, char **argv);
+extern int cmd_format_print2(int argc, char **argv);
 
 #define DEBUG_CONSOLE { \
 	uinfo(""); \
