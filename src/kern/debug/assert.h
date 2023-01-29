@@ -1,6 +1,5 @@
 #ifndef  __ASSERT_H__
 #define  __ASSERT_H__
-#include <kern/driver/console.h>
 #include <libs/defs.h>
 
 void __warn(const char* file, int line, const char* fmt, ...);
