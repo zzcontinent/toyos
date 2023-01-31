@@ -2,18 +2,15 @@
 #define  __SFS_H__
 
 #include <libs/defs.h>
-#include <kern/mm/mmu.h>
-#include <libs/list.h>
-#include <kern/sync/sem.h>
 #include <libs/unistd.h>
-#include <kern/fs/vfs/inode.h>
-#include <kern/fs/fs.h>
+#include <libs/list.h>
+#include <kern/mm/mmu.h>
+#include <kern/sync/sem.h>
 
 /*
  * Simple FS (SFS) definitions visible to ucore. This covers the on-disk format
  * and is used by tools that work on SFS volumes, such as mksfs.
  */
-
 #define SFS_MAGIC                                   0x2f8dbe2a              /* magic number for sfs */
 #define SFS_BLKSIZE                                 PGSIZE                  /* size of block */
 #define SFS_NDIRECT                                 12                      /* # of direct blocks in inode */
@@ -35,6 +32,41 @@
 #define SFS_TYPE_FILE                               1
 #define SFS_TYPE_DIR                                2
 #define SFS_TYPE_LINK                               3
+
+
+
+#define sfs_dentry_size                             \
+	sizeof(((struct sfs_disk_entry *)0)->name)
+
+
+#define le2sin(le, member)                          \
+	to_struct((le), struct sfs_inode, member)
+
+
+/* hash for sfs */
+#define SFS_HLIST_SHIFT                             10
+#define SFS_HLIST_SIZE                              (1 << SFS_HLIST_SHIFT)
+#define sin_hashfn(x)                               (hash32(x, SFS_HLIST_SHIFT))
+
+/* size of freemap (in bits) */
+#define sfs_freemap_bits(super)                     ROUNDUP((super)->blocks, SFS_BLKBITS)
+
+/* size of freemap (in blocks) */
+#define sfs_freemap_blocks(super)                   ROUNDUP_DIV((super)->blocks, SFS_BLKBITS)
+
+
+/* inode for sfs */
+struct sfs_inode {
+	struct sfs_disk_inode *din;                     /* on-disk inode */
+	uint32_t ino;                                   /* inode number */
+	bool dirty;                                     /* true if inode modified */
+	int reclaim_count;                              /* kill inode if it hits zero */
+	semaphore_t sem;                                /* semaphore for din */
+	list_entry_t inode_link;                        /* entry for linked-list in sfs_fs */
+	list_entry_t hash_link;                         /* entry for hash linked-list in sfs_fs */
+};
+
+#include <kern/fs/vfs/inode.h>
 
 /*
  * On-disk superblock
@@ -64,23 +96,6 @@ struct sfs_disk_entry {
 	char name[SFS_MAX_FNAME_LEN + 1];               /* file name */
 };
 
-#define sfs_dentry_size                             \
-	sizeof(((struct sfs_disk_entry *)0)->name)
-
-/* inode for sfs */
-struct sfs_inode {
-	struct sfs_disk_inode *din;                     /* on-disk inode */
-	uint32_t ino;                                   /* inode number */
-	bool dirty;                                     /* true if inode modified */
-	int reclaim_count;                              /* kill inode if it hits zero */
-	semaphore_t sem;                                /* semaphore for din */
-	list_entry_t inode_link;                        /* entry for linked-list in sfs_fs */
-	list_entry_t hash_link;                         /* entry for hash linked-list in sfs_fs */
-};
-
-#define le2sin(le, member)                          \
-	to_struct((le), struct sfs_inode, member)
-
 /* filesystem for sfs */
 struct sfs_fs {
 	struct sfs_super super;                         /* on-disk superblock */
@@ -95,33 +110,24 @@ struct sfs_fs {
 	list_entry_t *hash_list;                        /* inode hash linked-list */
 };
 
-/* hash for sfs */
-#define SFS_HLIST_SHIFT                             10
-#define SFS_HLIST_SIZE                              (1 << SFS_HLIST_SHIFT)
-#define sin_hashfn(x)                               (hash32(x, SFS_HLIST_SHIFT))
 
-/* size of freemap (in bits) */
-#define sfs_freemap_bits(super)                     ROUNDUP((super)->blocks, SFS_BLKBITS)
+extern void sfs_init(void);
+extern int sfs_mount(const char *devname);
 
-/* size of freemap (in blocks) */
-#define sfs_freemap_blocks(super)                   ROUNDUP_DIV((super)->blocks, SFS_BLKBITS)
+extern void lock_sfs_fs(struct sfs_fs *sfs);
+extern void lock_sfs_io(struct sfs_fs *sfs);
+extern void unlock_sfs_fs(struct sfs_fs *sfs);
+extern void unlock_sfs_io(struct sfs_fs *sfs);
 
-void sfs_init(void);
-int sfs_mount(const char *devname);
+extern int sfs_rblock(struct sfs_fs *sfs, void *buf, uint32_t blkno, uint32_t nblks);
+extern int sfs_wblock(struct sfs_fs *sfs, void *buf, uint32_t blkno, uint32_t nblks);
+extern int sfs_rbuf(struct sfs_fs *sfs, void *buf, size_t len, uint32_t blkno, off_t offset);
+extern int sfs_wbuf(struct sfs_fs *sfs, void *buf, size_t len, uint32_t blkno, off_t offset);
+extern int sfs_sync_super(struct sfs_fs *sfs);
+extern int sfs_sync_freemap(struct sfs_fs *sfs);
+extern int sfs_clear_block(struct sfs_fs *sfs, uint32_t blkno, uint32_t nblks);
 
-void lock_sfs_fs(struct sfs_fs *sfs);
-void lock_sfs_io(struct sfs_fs *sfs);
-void unlock_sfs_fs(struct sfs_fs *sfs);
-void unlock_sfs_io(struct sfs_fs *sfs);
-
-int sfs_rblock(struct sfs_fs *sfs, void *buf, uint32_t blkno, uint32_t nblks);
-int sfs_wblock(struct sfs_fs *sfs, void *buf, uint32_t blkno, uint32_t nblks);
-int sfs_rbuf(struct sfs_fs *sfs, void *buf, size_t len, uint32_t blkno, off_t offset);
-int sfs_wbuf(struct sfs_fs *sfs, void *buf, size_t len, uint32_t blkno, off_t offset);
-int sfs_sync_super(struct sfs_fs *sfs);
-int sfs_sync_freemap(struct sfs_fs *sfs);
-int sfs_clear_block(struct sfs_fs *sfs, uint32_t blkno, uint32_t nblks);
-
-int sfs_load_inode(struct sfs_fs *sfs, struct inode **node_store, uint32_t ino);
+struct inode;
+extern int sfs_load_inode(struct sfs_fs *sfs, struct inode **node_store, uint32_t ino);
 
 #endif  /* __SFS_H__ */

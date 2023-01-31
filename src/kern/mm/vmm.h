@@ -92,5 +92,8 @@ extern struct vma_struct* find_vma(struct mm_struct *mm, uintptr_t addr);
 extern int dup_mmap(struct mm_struct *to, struct mm_struct *from);
 extern void exit_mmap(struct mm_struct *mm);
 extern bool user_mem_check(struct mm_struct *mm, uintptr_t addr, size_t len, bool write);
+extern bool copy_string(struct mm_struct *mm, char *dst, const char *src, size_t maxn);
+extern bool copy_to_user(struct mm_struct *mm, void *dst, const void *src, size_t len);
+extern bool copy_from_user(struct mm_struct *mm, void *dst, const void *src, size_t len, bool writable);
 
 #endif  /* __VMM_H__ */

@@ -1,10 +1,13 @@
+#ifndef  __STAT_H__
+#define  __STAT_H__
+
 #include <libs/defs.h>
 
 struct stat {
-    uint32_t st_mode;                   // protection mode and file type
-    size_t st_nlinks;                   // number of hard links
-    size_t st_blocks;                   // number of blocks file is using
-    size_t st_size;                     // file size (bytes)
+	uint32_t st_mode;                   // protection mode and file type
+	size_t st_nlinks;                   // number of hard links
+	size_t st_blocks;                   // number of blocks file is using
+	size_t st_size;                     // file size (bytes)
 };
 
 #define S_IFMT          070000          // mask for type of file
@@ -20,4 +23,4 @@ struct stat {
 #define S_ISCHR(mode)                   (((mode) & S_IFMT) == S_IFCHR)      // char device
 #define S_ISBLK(mode)                   (((mode) & S_IFMT) == S_IFBLK)      // block device
 
-
+#endif  /* __STAT_H__ */

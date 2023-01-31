@@ -1,12 +1,13 @@
 #ifndef  __INODE_H__
 #define  __INODE_H__
 
+struct inode;
+struct inode_ops;
 #include <libs/defs.h>
 #include <libs/stat.h>
 #include <libs/iobuf.h>
 #include <libs/atomic.h>
 #include <kern/debug/assert.h>
-
 #include <kern/fs/devs/dev.h>
 #include <kern/fs/sfs/sfs.h>
 
@@ -26,6 +27,7 @@
  * vfs_open() and vfs_close(). Code above the VFS layer should not
  * need to worry about it.
  */
+
 struct inode {
 	union {
 		struct device __device_info;
@@ -37,8 +39,27 @@ struct inode {
 	} in_type;
 	int ref_count;
 	int open_count;
-	struct fs *in_fs;
+	struct vfs *in_fs;
 	const struct inode_ops *in_ops;
+};
+
+struct inode_ops {
+	unsigned long vop_magic;
+	int (*vop_open)(struct inode *node, uint32_t open_flags);
+	int (*vop_close)(struct inode *node);
+	int (*vop_read)(struct inode *node, struct iobuf *iob);
+	int (*vop_write)(struct inode *node, struct iobuf *iob);
+	int (*vop_fstat)(struct inode *node, struct stat *stat);
+	int (*vop_fsync)(struct inode *node);
+	int (*vop_namefile)(struct inode *node, struct iobuf *iob);
+	int (*vop_getdirentry)(struct inode *node, struct iobuf *iob);
+	int (*vop_reclaim)(struct inode *node);
+	int (*vop_gettype)(struct inode *node, uint32_t *type_store);
+	int (*vop_tryseek)(struct inode *node, off_t pos);
+	int (*vop_truncate)(struct inode *node, off_t len);
+	int (*vop_create)(struct inode *node, const char *name, bool excl, struct inode **node_store);
+	int (*vop_lookup)(struct inode *node, char *path, struct inode **node_store);
+	int (*vop_ioctl)(struct inode *node, int op, void *data);
 };
 
 #define __in_type(type)                                             inode_type_##type##_info
@@ -57,19 +78,17 @@ struct inode {
 #define info2node(info, type)                                       \
 	to_struct((info), struct inode, in_info.__##type##_info)
 
-struct inode *__alloc_inode(int type);
-
 #define alloc_inode(type)                                           __alloc_inode(__in_type(type))
 
 #define MAX_INODE_COUNT                     0x10000
 
-int inode_ref_inc(struct inode *node);
-int inode_ref_dec(struct inode *node);
-int inode_open_inc(struct inode *node);
-int inode_open_dec(struct inode *node);
-
-void inode_init(struct inode *node, const struct inode_ops *ops, struct fs *fs);
-void inode_kill(struct inode *node);
+extern struct inode *__alloc_inode(int type);
+extern int inode_ref_inc(struct inode *node);
+extern int inode_ref_dec(struct inode *node);
+extern int inode_open_inc(struct inode *node);
+extern int inode_open_dec(struct inode *node);
+extern void inode_init(struct inode *node, const struct inode_ops *ops, struct vfs *fs);
+extern void inode_kill(struct inode *node);
 
 #define VOP_MAGIC                           0x8c4ba476
 
@@ -166,29 +185,10 @@ void inode_kill(struct inode *node);
 *                      refers to. May destroy PATHNAME. Should increment
 *                      refcount on inode handed back.
 */
-struct inode_ops {
-	unsigned long vop_magic;
-	int (*vop_open)(struct inode *node, uint32_t open_flags);
-	int (*vop_close)(struct inode *node);
-	int (*vop_read)(struct inode *node, struct iobuf *iob);
-	int (*vop_write)(struct inode *node, struct iobuf *iob);
-	int (*vop_fstat)(struct inode *node, struct stat *stat);
-	int (*vop_fsync)(struct inode *node);
-	int (*vop_namefile)(struct inode *node, struct iobuf *iob);
-	int (*vop_getdirentry)(struct inode *node, struct iobuf *iob);
-	int (*vop_reclaim)(struct inode *node);
-	int (*vop_gettype)(struct inode *node, uint32_t *type_store);
-	int (*vop_tryseek)(struct inode *node, off_t pos);
-	int (*vop_truncate)(struct inode *node, off_t len);
-	int (*vop_create)(struct inode *node, const char *name, bool excl, struct inode **node_store);
-	int (*vop_lookup)(struct inode *node, char *path, struct inode **node_store);
-	int (*vop_ioctl)(struct inode *node, int op, void *data);
-};
-
 /*
  * Consistency check
  */
-void inode_check(struct inode *node, const char *opstr);
+extern void inode_check(struct inode *node, const char *opstr);
 
 #define __vop_op(node, sym)                                                                         \
 	({                                                                                              \
@@ -233,15 +233,5 @@ void inode_check(struct inode *node, const char *opstr);
 #define vop_open_inc(node)                                          inode_open_inc(node)
 #define vop_open_dec(node)                                          inode_open_dec(node)
 
-
-static inline int inode_ref_count(struct inode *node)
-{
-	return node->ref_count;
-}
-
-static inline int inode_open_count(struct inode *node)
-{
-	return node->open_count;
-}
 
 #endif  /* __INODE_H__ */

@@ -8,6 +8,7 @@
 #include <kern/debug/assert.h>
 #include <kern/mm/kmalloc.h>
 
+
 /* *
  * __alloc_inode - alloc a inode structure and initialize in_type
  * */
@@ -24,12 +25,22 @@ struct inode * __alloc_inode(int type)
  * inode_init - initialize a inode structure
  * invoked by vop_init
  * */
-void inode_init(struct inode *node, const struct inode_ops *ops, struct fs *fs)
+void inode_init(struct inode *node, const struct inode_ops *ops, struct vfs *fs)
 {
 	node->ref_count = 0;
 	node->open_count = 0;
 	node->in_ops = ops, node->in_fs = fs;
 	vop_ref_inc(node);
+}
+
+static inline int inode_ref_count(struct inode *node)
+{
+	return node->ref_count;
+}
+
+static inline int inode_open_count(struct inode *node)
+{
+	return node->open_count;
 }
 
 /* *
@@ -113,5 +124,6 @@ void inode_check(struct inode *node, const char *opstr)
 	assert(ref_count >= open_count && open_count >= 0);
 	assert(ref_count < MAX_INODE_COUNT && open_count < MAX_INODE_COUNT);
 }
+
 
 

@@ -3,9 +3,11 @@
 
 #include <libs/defs.h>
 #include <libs/list.h>
+#include <libs/skew_heap.h>
 #include <kern/trap/trap.h>
 #include <kern/mm/memlayout.h>
-#include <libs/skew_heap.h>
+#include <kern/sync/sem.h>
+#include <kern/fs/file.h>
 
 #define PROC_NAME_LEN 50
 #define MAX_PROCESS 4096
@@ -17,11 +19,6 @@
 #define WT_TIMER              (0x00000002 | WT_INTERRUPTED)  // wait timer
 #define WT_KBD                (0x00000004 | WT_INTERRUPTED)  // wait the input of keyboard
 
-
-
-#define le2proc(le, member)         \
-    to_struct((le), struct proc_struct, member)
-extern struct proc_struct *g_idleproc, *g_initproc, *g_current;
 
 enum proc_state {
 	PROC_UNINIT = 0,
@@ -67,6 +64,11 @@ struct proc_struct {
 	u32 priority;
 	struct files_struct *filesp;
 };
+
+#define le2proc(le, member)         \
+	to_struct((le), struct proc_struct, member)
+
+extern struct proc_struct *g_idleproc, *g_initproc, *g_current;
 
 extern void proc_init(void);
 extern void proc_run(struct proc_struct *proc);

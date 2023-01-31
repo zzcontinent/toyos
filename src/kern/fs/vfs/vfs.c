@@ -2,14 +2,15 @@
 #include <libs/stdio.h>
 #include <libs/string.h>
 #include <libs/error.h>
-
-#include <kern/fs/vfs/vfs.h>
-#include <kern/fs/vfs/inode.h>
 #include <kern/sync/sem.h>
 #include <kern/mm/kmalloc.h>
 
+#include <kern/fs/vfs/vfs.h>
+#include <kern/fs/vfs/inode.h>
+
 static semaphore_t bootfs_sem;
 static struct inode *bootfs_node = NULL;
+
 
 // __alloc_fs - allocate memory for fs, and set fs type
 struct vfs * __alloc_fs(int type)
@@ -290,11 +291,11 @@ static int find_mount(const char *devname, vfs_dev_t **vdev_store)
 
 /*
  * vfs_mount - Mount a filesystem. Once we've found the device, call MOUNTFUNC to
- *             set up the filesystem and hand back a struct fs.
+ *             set up the filesystem and hand back a struct vfs.
  *
  * The DATA argument is passed through unchanged to MOUNTFUNC.
  */
-int vfs_mount(const char *devname, int (*mountfunc)(struct device *dev, struct fs **fs_store))
+int vfs_mount(const char *devname, int (*mountfunc)(struct device *dev, struct vfs **fs_store))
 {
 	int ret;
 	lock_vdev_list();
@@ -486,14 +487,14 @@ int vfs_mkdir(char *path)
 /***************************************dir****************************************************/
 static struct inode * get_cwd_nolock(void)
 {
-	return current->filesp->pwd;
+	return g_current->filesp->pwd;
 }
 /*
  * set_cwd_nolock - set current working directory.
  */
 static void set_cwd_nolock(struct inode *pwd)
 {
-	current->filesp->pwd = pwd;
+	g_current->filesp->pwd = pwd;
 }
 
 /*
@@ -501,14 +502,14 @@ static void set_cwd_nolock(struct inode *pwd)
  */
 static void lock_cfs(void)
 {
-	lock_files(current->filesp);
+	lock_files(g_current->filesp);
 }
 /*
  * unlock_cfs - unlock the fs related process on current process
  */
 static void unlock_cfs(void)
 {
-	unlock_files(current->filesp);
+	unlock_files(g_current->filesp);
 }
 
 /*
