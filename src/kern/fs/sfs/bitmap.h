@@ -1,6 +1,11 @@
 #ifndef  __BITMAP_H__
 #define  __BITMAP_H__
 
+#include <libs/defs.h>
+
+#define WORD_TYPE           uint32_t
+#define WORD_BITS           (CHAR_BIT * sizeof(WORD_TYPE))
+
 struct bitmap {
 	uint32_t nbits;
 	uint32_t nwords;

@@ -33,16 +33,6 @@ void inode_init(struct inode *node, const struct inode_ops *ops, struct vfs *fs)
 	vop_ref_inc(node);
 }
 
-static inline int inode_ref_count(struct inode *node)
-{
-	return node->ref_count;
-}
-
-static inline int inode_open_count(struct inode *node)
-{
-	return node->open_count;
-}
-
 /* *
  * inode_kill - kill a inode structure
  * invoked by vop_kill

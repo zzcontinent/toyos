@@ -1,12 +1,10 @@
 #include <libs/defs.h>
 #include <libs/string.h>
-#include <kern/fs/sfs/bitmap.h>
-#include <kern/mm/kmalloc.h>
 #include <libs/error.h>
 #include <kern/debug/assert.h>
+#include <kern/fs/sfs/bitmap.h>
+#include <kern/mm/kmalloc.h>
 
-#define WORD_TYPE           uint32_t
-#define WORD_BITS           (sizeof(WORD_TYPE) * CHAR_BIT)
 
 // bitmap_create - allocate a new bitmap object.
 struct bitmap * bitmap_create(uint32_t nbits) {

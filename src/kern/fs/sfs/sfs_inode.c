@@ -1,17 +1,17 @@
-#include <defs.h>
-#include <string.h>
-#include <stdlib.h>
-#include <list.h>
-#include <stat.h>
-#include <kmalloc.h>
-#include <vfs.h>
-#include <dev.h>
-#include <sfs.h>
-#include <inode.h>
-#include <iobuf.h>
-#include <bitmap.h>
-#include <error.h>
-#include <assert.h>
+#include <libs/defs.h>
+#include <libs/string.h>
+#include <libs/stdlib.h>
+#include <libs/list.h>
+#include <libs/stat.h>
+#include <libs/error.h>
+#include <libs/iobuf.h>
+#include <kern/mm/kmalloc.h>
+#include <kern/fs/vfs/vfs.h>
+#include <kern/fs/devs/dev.h>
+#include <kern/fs/sfs/sfs.h>
+#include <kern/fs/vfs/inode.h>
+#include <kern/fs/sfs/bitmap.h>
+#include <kern/debug/assert.h>
 
 static const struct inode_ops sfs_node_dirops;  // dir operations
 static const struct inode_ops sfs_node_fileops; // file operations

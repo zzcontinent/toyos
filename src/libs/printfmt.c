@@ -69,11 +69,9 @@ static void printnum(void (*putch)(int, void*, int), int fd, void *putdat,
 static unsigned long long getuint(va_list *ap, int lflag) {
 	if (lflag >= 2) {
 		return va_arg(*ap, unsigned long long);
-	}
-	else if (lflag) {
+	} else if (lflag) {
 		return va_arg(*ap, unsigned long);
-	}
-	else {
+	} else {
 		return va_arg(*ap, unsigned int);
 	}
 }
@@ -86,11 +84,9 @@ static unsigned long long getuint(va_list *ap, int lflag) {
 static long long getint(va_list *ap, int lflag) {
 	if (lflag >= 2) {
 		return va_arg(*ap, long long);
-	}
-	else if (lflag) {
+	} else if (lflag) {
 		return va_arg(*ap, long);
-	}
-	else {
+	} else {
 		return va_arg(*ap, int);
 	}
 }
@@ -201,9 +197,8 @@ process_precision:
 				}
 				if (err > MAXERROR || (p = error_string[err]) == NULL) {
 					printfmt(putch, fd, putdat, "error %d", err);
-				}
-				else {
-					printfmt(putch, fd, putdat, "%s", p);
+				} else {
+					printfmt(putch, fd, putdat, "[%d]-%s", err, p);
 				}
 				break;
 
@@ -220,8 +215,7 @@ process_precision:
 				for (; (ch = *p ++) != '\0' && (precision < 0 || -- precision >= 0); width --) {
 					if (altflag && (ch < ' ' || ch > '~')) {
 						putch('?', putdat, fd);
-					}
-					else {
+					} else {
 						putch(ch, putdat, fd);
 					}
 				}

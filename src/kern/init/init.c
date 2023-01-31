@@ -17,6 +17,7 @@
 #include <kern/process/proc.h>
 #include <kern/trap/trap.h>
 #include <kern/schedule/sched.h>
+#include <kern/fs/fs.h>
 
 //http://patorjk.com/software/taag
 static char *welcome ="\n"
@@ -53,7 +54,7 @@ int kern_init(void)
 
 	ide_init();
 	//swap_init();
-	//fs_init();
+	fs_init();
 
 	clock_init();
 	intr_enable();

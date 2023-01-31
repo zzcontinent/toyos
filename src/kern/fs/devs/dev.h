@@ -3,7 +3,6 @@
 
 #include <libs/defs.h>
 #include <libs/iobuf.h>
-#include <kern/fs/vfs/inode.h>
 
 struct device {
 	size_t d_blocks;
@@ -14,6 +13,7 @@ struct device {
 	int (*d_ioctl)(struct device *dev, int op, void *data);
 };
 
+#include <kern/fs/vfs/inode.h>
 
 #define init_device(x)                                  \
 	do {                                                \
