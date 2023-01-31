@@ -1,8 +1,6 @@
 #ifndef  __INODE_H__
 #define  __INODE_H__
 
-struct inode;
-struct inode_ops;
 #include <libs/defs.h>
 #include <libs/stat.h>
 #include <libs/iobuf.h>
@@ -93,99 +91,6 @@ extern void inode_kill(struct inode *node);
 #define VOP_MAGIC                           0x8c4ba476
 
 /*
- * Abstract operations on a inode.
- *
- * These are used in the form VOP_FOO(inode, args), which are macros
- * that expands to inode->inode_ops->vop_foo(inode, args). The operations
- * "foo" are:
- *
- *    vop_open        - Called on open() of a file. Can be used to
- *                      reject illegal or undesired open modes. Note that
- *                      various operations can be performed without the
- *                      file actually being opened.
- *                      The inode need not look at O_CREAT, O_EXCL, or
- *                      O_TRUNC, as these are handled in the VFS layer.
- *
- *                      VOP_EACHOPEN should not be called directly from
- *                      above the VFS layer - use vfs_open() to open inodes.
- *                      This maintains the open count so VOP_LASTCLOSE can
- *                      be called at the right time.
- *
- *    vop_close       - To be called on *last* close() of a file.
- *
- *                      VOP_LASTCLOSE should not be called directly from
- *                      above the VFS layer - use vfs_close() to close
- *                      inodes opened with vfs_open().
- *
- *    vop_reclaim     - Called when inode is no longer in use. Note that
- *                      this may be substantially after vop_lastclose is
- *                      called.
- *
- *****************************************
- *
- *    vop_read        - Read data from file to uio, at offset specified
- *                      in the uio, updating uio_resid to reflect the
- *                      amount read, and updating uio_offset to match.
- *                      Not allowed on directories or symlinks.
- *
- *    vop_getdirentry - Read a single filename from a directory into a
- *                      uio, choosing what name based on the offset
- *                      field in the uio, and updating that field.
- *                      Unlike with I/O on regular files, the value of
- *                      the offset field is not interpreted outside
- *                      the filesystem and thus need not be a byte
- *                      count. However, the uio_resid field should be
- *                      handled in the normal fashion.
- *                      On non-directory objects, return ENOTDIR.
- *
- *    vop_write       - Write data from uio to file at offset specified
- *                      in the uio, updating uio_resid to reflect the
- *                      amount written, and updating uio_offset to match.
- *                      Not allowed on directories or symlinks.
- *
- *    vop_ioctl       - Perform ioctl operation OP on file using data
- *                      DATA. The interpretation of the data is specific
- *                      to each ioctl.
- *
- *    vop_fstat        -Return info about a file. The pointer is a
- *                      pointer to struct stat; see stat.h.
- *
- *    vop_gettype     - Return type of file. The values for file types
- *                      are in sfs.h.
- *
- *    vop_tryseek     - Check if seeking to the specified position within
- *                      the file is legal. (For instance, all seeks
- *                      are illegal on serial port devices, and seeks
- *                      past EOF on files whose sizes are fixed may be
- *                      as well.)
- *
- *    vop_fsync       - Force any dirty buffers associated with this file
- *                      to stable storage.
- *
- *    vop_truncate    - Forcibly set size of file to the length passed
-*                      in, discarding any excess blocks.
-*
-*    vop_namefile    - Compute pathname relative to filesystem root
-*                      of the file and copy to the specified io buffer.
-*                      Need not work on objects that are not
-*                      directories.
-*
-*****************************************
-*
-*    vop_creat       - Create a regular file named NAME in the passed
-*                      directory DIR. If boolean EXCL is true, fail if
-*                      the file already exists; otherwise, use the
-*                      existing file if there is one. Hand back the
-*                      inode for the file as per vop_lookup.
-*
-*****************************************
-*
-*    vop_lookup      - Parse PATHNAME relative to the passed directory
-*                      DIR, and hand back the inode for the file it
-*                      refers to. May destroy PATHNAME. Should increment
-*                      refcount on inode handed back.
-*/
-/*
  * Consistency check
  */
 extern void inode_check(struct inode *node, const char *opstr);
@@ -233,5 +138,14 @@ extern void inode_check(struct inode *node, const char *opstr);
 #define vop_open_inc(node)                                          inode_open_inc(node)
 #define vop_open_dec(node)                                          inode_open_dec(node)
 
+static inline int inode_ref_count(struct inode *node)
+{
+	return node->ref_count;
+}
+
+static inline int inode_open_count(struct inode *node)
+{
+	return node->open_count;
+}
 
 #endif  /* __INODE_H__ */

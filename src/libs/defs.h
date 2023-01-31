@@ -52,7 +52,7 @@ typedef size_t ppn_t;
 
 #define ROUNDUP_DIV(a, n)                   \
 	({                                      \
-	size_t __n = (size_t n);            \
+	size_t __n = (size_t)(n);            \
 	(typeof(a))(((a) + __n - 1) / __n); \
 	})
 

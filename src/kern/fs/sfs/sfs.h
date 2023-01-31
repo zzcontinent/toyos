@@ -4,6 +4,7 @@
 #include <libs/defs.h>
 #include <libs/unistd.h>
 #include <libs/list.h>
+#include <libs/hash.h>
 #include <kern/mm/mmu.h>
 #include <kern/sync/sem.h>
 
@@ -44,9 +45,7 @@
 
 
 /* hash for sfs */
-#define SFS_HLIST_SHIFT                             10
-#define SFS_HLIST_SIZE                              (1 << SFS_HLIST_SHIFT)
-#define sin_hashfn(x)                               (hash32(x, SFS_HLIST_SHIFT))
+#define sin_hashfn(x)                               (hash32(x))
 
 /* size of freemap (in bits) */
 #define sfs_freemap_bits(super)                     ROUNDUP((super)->blocks, SFS_BLKBITS)

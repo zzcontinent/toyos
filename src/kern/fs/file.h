@@ -1,11 +1,9 @@
 #ifndef  __FILE_H__
 #define  __FILE_H__
 
-#include <kern/sync/sem.h>
-#include <kern/process/proc.h>
 #include <libs/stat.h>
 #include <libs/dirent.h>
-
+#include <kern/sync/sem.h>
 struct file {
 	enum {
 		FD_NONE, FD_INIT, FD_OPENED, FD_CLOSED,
@@ -25,6 +23,7 @@ struct files_struct {
 	semaphore_t files_sem;  // lock protect sem
 };
 
+#include <kern/process/proc.h>
 
 #define FILES_STRUCT_BUFSIZE                       (PGSIZE - sizeof(struct files_struct))
 #define FILES_STRUCT_NENTRY                        (FILES_STRUCT_BUFSIZE / sizeof(struct file))

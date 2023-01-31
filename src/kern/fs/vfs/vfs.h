@@ -1,7 +1,6 @@
 #ifndef  __VFS_H__
 #define  __VFS_H__
 
-struct vfs;
 #include <libs/defs.h>
 #include <libs/iobuf.h>
 #include <kern/fs/sfs/sfs.h>

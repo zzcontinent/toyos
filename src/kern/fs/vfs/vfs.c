@@ -4,6 +4,7 @@
 #include <libs/error.h>
 #include <kern/sync/sem.h>
 #include <kern/mm/kmalloc.h>
+#include <kern/process/proc.h>
 
 #include <kern/fs/vfs/vfs.h>
 #include <kern/fs/vfs/inode.h>

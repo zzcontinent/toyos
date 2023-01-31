@@ -6,7 +6,7 @@ typedef struct {
 	list_entry_t wait_head;
 } wait_queue_t;
 
-#include <kern/process/proc.h>
+struct proc_struct;
 typedef struct {
 	struct proc_struct *proc;
 	u32 wakeup_flags;
