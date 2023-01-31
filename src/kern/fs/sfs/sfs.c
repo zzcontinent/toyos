@@ -16,7 +16,7 @@ void sfs_init(void)
 /*
  * sfs_sync - sync sfs's superblock and freemap in memroy into disk
  */
-static int sfs_sync(struct fs *fs)
+static int sfs_sync(struct vfs *fs)
 {
 	struct sfs_fs *sfs = fsop_info(fs, sfs);
 	lock_sfs_fs(sfs);
@@ -47,7 +47,7 @@ static int sfs_sync(struct fs *fs)
 /*
  * sfs_get_root - get the root directory inode  from disk (SFS_BLKN_ROOT,1)
  */
-static struct inode * sfs_get_root(struct fs *fs)
+static struct inode * sfs_get_root(struct vfs *fs)
 {
 	struct inode *node;
 	int ret;
@@ -60,7 +60,7 @@ static struct inode * sfs_get_root(struct fs *fs)
 /*
  * sfs_unmount - unmount sfs, and free the memorys contain sfs->freemap/sfs_buffer/hash_liskt and sfs itself.
  */
-static int sfs_unmount(struct fs *fs)
+static int sfs_unmount(struct vfs *fs)
 {
 	struct sfs_fs *sfs = fsop_info(fs, sfs);
 	if (!list_empty(&(sfs->inode_list))) {
@@ -79,7 +79,7 @@ static int sfs_unmount(struct fs *fs)
  *
  * NOTICE: nouse now.
  */
-static void sfs_cleanup(struct fs *fs)
+static void sfs_cleanup(struct vfs *fs)
 {
 	struct sfs_fs *sfs = fsop_info(fs, sfs);
 	uint32_t blocks = sfs->super.blocks, unused_blocks = sfs->super.unused_blocks;
@@ -145,7 +145,7 @@ static int sfs_init_freemap(struct device *dev, struct bitmap *freemap, uint32_t
  * @dev:        the block device contains sfs file system
  * @fs_store:   the fs struct in memroy
  */
-static int sfs_do_mount(struct device *dev, struct fs **fs_store)
+static int sfs_do_mount(struct device *dev, struct vfs **fs_store)
 {
 	static_assert(SFS_BLKSIZE >= sizeof(struct sfs_super));
 	static_assert(SFS_BLKSIZE >= sizeof(struct sfs_disk_inode));
@@ -156,7 +156,7 @@ static int sfs_do_mount(struct device *dev, struct fs **fs_store)
 	}
 
 	/* allocate fs structure */
-	struct fs *fs;
+	struct vfs *fs;
 	if ((fs = alloc_fs(sfs)) == NULL) {
 		return -E_NO_MEM;
 	}
