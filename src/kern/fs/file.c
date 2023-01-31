@@ -3,20 +3,54 @@
 #include <libs/unistd.h>
 #include <libs/stat.h>
 #include <libs/error.h>
+#include <libs/iobuf.h>
 #include <kern/debug/assert.h>
 #include <kern/process/proc.h>
-#include <kern/fs/vfs/vfs.h>
+#include <kern/mm/kmalloc.h>
+#include <kern/fs/fs.h>
 #include <kern/fs/vfs/inode.h>
+#include <kern/fs/vfs/vfs.h>
 #include <kern/fs/file.h>
-#include <kern/fs/iobuf.h>
-#include <kern/fs/dirent.h>
 
-#define testfd(fd)                          ((fd) >= 0 && (fd) < FILES_STRUCT_NENTRY)
+
+static inline int fopen_count(struct file *file)
+{
+	return file->open_count;
+}
+
+static inline int fopen_count_inc(struct file *file)
+{
+	file->open_count += 1;
+	return file->open_count;
+}
+
+static inline int fopen_count_dec(struct file *file)
+{
+	file->open_count -= 1;
+	return file->open_count;
+}
+
+static inline int files_count(struct files_struct *filesp) 
+{
+	return filesp->files_count;
+}
+
+static inline int files_count_inc(struct files_struct *filesp) 
+{
+	filesp->files_count += 1;
+	return filesp->files_count;
+}
+
+static inline int files_count_dec(struct files_struct *filesp) 
+{
+	filesp->files_count -= 1;
+	return filesp->files_count;
+}
 
 // get_fd_array - get current process's open files table
 static struct file * get_fd_array(void)
 {
-	struct files_struct *filesp = current->filesp;
+	struct files_struct *filesp = g_current->filesp;
 	assert(filesp != NULL && files_count(filesp) > 0);
 	return filesp->fd_array;
 }

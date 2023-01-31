@@ -1,9 +1,9 @@
 #ifndef  __VFS_H__
 #define  __VFS_H__
 
+struct vfs;
 #include <libs/defs.h>
 #include <libs/iobuf.h>
-#include <kern/fs/fs.h>
 #include <kern/fs/sfs/sfs.h>
 
 /*
@@ -44,6 +44,7 @@ typedef struct {
 	bool mountable;
 	list_entry_t vdev_link;
 } vfs_dev_t;
+
 
 #define le2vdev(le, member)                         \
 	to_struct((le), vfs_dev_t, member)

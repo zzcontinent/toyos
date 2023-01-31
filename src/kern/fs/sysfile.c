@@ -1,11 +1,19 @@
+#include <libs/error.h>
+#include <libs/string.h>
 #include <kern/fs/sysfile.h>
+#include <kern/fs/file.h>
+#include <kern/fs/vfs/vfs.h>
+#include <kern/process/proc.h>
+#include <kern/mm/kmalloc.h>
+#include <kern/mm/vmm.h>
+#include <kern/debug/assert.h>
 
 #define IOBUF_SIZE                          4096
 
 /* copy_path - copy path name */
 static int copy_path(char **to, const char *from)
 {
-	struct mm_struct *mm = current->mm;
+	struct mm_struct *mm = g_current->mm;
 	char *buffer;
 	if ((buffer = kmalloc(FS_MAX_FPATH_LEN + 1)) == NULL) {
 		return -E_NO_MEM;
@@ -46,7 +54,7 @@ int sysfile_close(int fd)
 /* sysfile_read - read file */
 int sysfile_read(int fd, void *base, size_t len)
 {
-	struct mm_struct *mm = current->mm;
+	struct mm_struct *mm = g_current->mm;
 	if (len == 0) {
 		return 0;
 	}
@@ -94,7 +102,7 @@ out:
 /* sysfile_write - write file */
 int sysfile_write(int fd, void *base, size_t len)
 {
-	struct mm_struct *mm = current->mm;
+	struct mm_struct *mm = g_current->mm;
 	if (len == 0) {
 		return 0;
 	}
@@ -148,7 +156,7 @@ int sysfile_seek(int fd, off_t pos, int whence)
 /* sysfile_fstat - stat file */
 int sysfile_fstat(int fd, struct stat *__stat)
 {
-	struct mm_struct *mm = current->mm;
+	struct mm_struct *mm = g_current->mm;
 	int ret;
 	struct stat __local_stat, *stat = &__local_stat;
 	if ((ret = file_fstat(fd, stat)) != 0) {
@@ -234,7 +242,7 @@ int sysfile_unlink(const char *__path)
 /* sysfile_get cwd - get current working directory */
 int sysfile_getcwd(char *buf, size_t len)
 {
-	struct mm_struct *mm = current->mm;
+	struct mm_struct *mm = g_current->mm;
 	if (len == 0) {
 		return -E_INVAL;
 	}
@@ -254,7 +262,7 @@ int sysfile_getcwd(char *buf, size_t len)
 /* sysfile_getdirentry - get the file entry in DIR */
 int sysfile_getdirentry(int fd, struct dirent *__direntp)
 {
-	struct mm_struct *mm = current->mm;
+	struct mm_struct *mm = g_current->mm;
 	struct dirent *direntp;
 	if ((direntp = kmalloc(sizeof(struct dirent))) == NULL) {
 		return -E_NO_MEM;
