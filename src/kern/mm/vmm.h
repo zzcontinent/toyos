@@ -95,5 +95,6 @@ extern bool user_mem_check(struct mm_struct *mm, uintptr_t addr, size_t len, boo
 extern bool copy_string(struct mm_struct *mm, char *dst, const char *src, size_t maxn);
 extern bool copy_to_user(struct mm_struct *mm, void *dst, const void *src, size_t len);
 extern bool copy_from_user(struct mm_struct *mm, void *dst, const void *src, size_t len, bool writable);
+extern int mm_map(struct mm_struct *mm, uintptr_t addr, size_t len, uint32_t vm_flags, struct vma_struct **vma_store);
 
 #endif  /* __VMM_H__ */

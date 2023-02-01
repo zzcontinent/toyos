@@ -3,6 +3,8 @@
 #include <libs/unistd.h>
 #include <libs/hash.h>
 #include <libs/log.h>
+#include <libs/stdio.h>
+#include <libs/elf.h>
 #include <kern/sync/sync.h>
 #include <kern/mm/memlayout.h>
 #include <kern/mm/pmm.h>
@@ -11,6 +13,7 @@
 #include <kern/process/proc.h>
 #include <kern/schedule/sched.h>
 #include <kern/debug/kcommand.h>
+#include <kern/fs/sysfile.h>
 
 extern void switch_to(struct context *from, struct context *to);
 extern void kernel_thread_entry(void);
@@ -339,8 +342,8 @@ fork_out:
 
 bad_fork_cleanup_fs:  //for LAB8
 		      //put_fs(proc);
-//bad_fork_cleanup_kstack:
-//	free_kstack(proc);
+		      //bad_fork_cleanup_kstack:
+		      //	free_kstack(proc);
 bad_fork_cleanup_proc:
 	kfree(proc);
 	goto fork_out;
@@ -557,4 +560,341 @@ int do_kill(int pid)
 	}
 	return -E_INVAL;
 }
+
+// do_sleep - set current process state to sleep and add timer with "time"
+//          - then call scheduler. if process run again, delete timer first.
+int do_sleep(unsigned int time)
+{
+	if (time == 0) {
+		return 0;
+	}
+	bool intr_flag;
+	local_intr_save(intr_flag);
+	timer_t __timer, *timer = timer_init(&__timer, g_current, time);
+	g_current->state = PROC_SLEEPING;
+	g_current->wait_state = WT_TIMER;
+	add_timer(timer);
+	local_intr_restore(intr_flag);
+
+	schedule();
+
+	del_timer(timer);
+	return 0;
+}
+
+static void put_kargv(int argc, char **kargv)
+{
+	while (argc > 0) {
+		kfree(kargv[-- argc]);
+	}
+}
+
+static int copy_kargv(struct mm_struct *mm, int argc, char **kargv, const char **argv)
+{
+	int i, ret = -E_INVAL;
+	if (!user_mem_check(mm, (uintptr_t)argv, sizeof(const char *) * argc, 0)) {
+		return ret;
+	}
+	for (i = 0; i < argc; i ++) {
+		char *buffer;
+		if ((buffer = kmalloc(EXEC_MAX_ARG_LEN + 1)) == NULL) {
+			goto failed_nomem;
+		}
+		if (!copy_string(mm, buffer, argv[i], EXEC_MAX_ARG_LEN + 1)) {
+			kfree(buffer);
+			goto failed_cleanup;
+		}
+		kargv[i] = buffer;
+	}
+	return 0;
+
+failed_nomem:
+	ret = -E_NO_MEM;
+failed_cleanup:
+	put_kargv(i, kargv);
+	return ret;
+}
+
+// put_pgdir - free the memory space of PDT
+static void put_pgdir(struct mm_struct *mm)
+{
+	free_page(kva2page(mm->pgdir));
+}
+
+//load_icode_read is used by load_icode in LAB8
+static int load_icode_read(int fd, void *buf, size_t len, off_t offset)
+{
+	int ret;
+	if ((ret = sysfile_seek(fd, offset, LSEEK_SET)) != 0) {
+		return ret;
+	}
+	if ((ret = sysfile_read(fd, buf, len)) != len) {
+		return (ret < 0) ? ret : -1;
+	}
+	return 0;
+}
+
+static int load_icode(int fd, int argc, char **kargv)
+{
+	/* LAB8:EXERCISE2 YOUR CODE  HINT:how to load the file with handler fd  in to process's memory? how to setup argc/argv?
+	 * MACROs or Functions:
+	 *  mm_create        - create a mm
+	 *  setup_pgdir      - setup pgdir in mm
+	 *  load_icode_read  - read raw data content of program file
+	 *  mm_map           - build new vma
+	 *  pgdir_alloc_page - allocate new memory for  TEXT/DATA/BSS/stack parts
+	 *  lcr3             - update Page Directory Addr Register -- CR3
+	 */
+	/* (1) create a new mm for current process
+	 * (2) create a new PDT, and mm->pgdir= kernel virtual addr of PDT
+	 * (3) copy TEXT/DATA/BSS parts in binary to memory space of process
+	 *    (3.1) read raw data content in file and resolve elfhdr
+	 *    (3.2) read raw data content in file and resolve proghdr based on info in elfhdr
+	 *    (3.3) call mm_map to build vma related to TEXT/DATA
+	 *    (3.4) callpgdir_alloc_page to allocate page for TEXT/DATA, read contents in file
+	 *          and copy them into the new allocated pages
+	 *    (3.5) callpgdir_alloc_page to allocate pages for BSS, memset zero in these pages
+	 * (4) call mm_map to setup user stack, and put parameters into user stack
+	 * (5) setup current process's mm, cr3, reset pgidr (using lcr3 MARCO)
+	 * (6) setup uargc and uargv in user stacks
+	 * (7) setup trapframe for user environment
+	 * (8) if up steps failed, you should cleanup the env.
+	 */
+	assert(argc >= 0 && argc <= EXEC_MAX_ARG_NUM);
+
+	if (g_current->mm != NULL) {
+		panic("load_icode: g_current->mm must be empty.\n");
+	}
+
+	int ret = -E_NO_MEM;
+	struct mm_struct *mm;
+	if ((mm = mm_create()) == NULL) {
+		goto bad_mm;
+	}
+	if (setup_pgdir(mm) != 0) {
+		goto bad_pgdir_cleanup_mm;
+	}
+
+	struct page *page;
+
+	struct elfhdr __elf, *elf = &__elf;
+	if ((ret = load_icode_read(fd, elf, sizeof(struct elfhdr), 0)) != 0) {
+		goto bad_elf_cleanup_pgdir;
+	}
+
+	if (elf->e_magic != ELF_MAGIC) {
+		ret = -E_INVAL_ELF;
+		goto bad_elf_cleanup_pgdir;
+	}
+
+	struct proghdr __ph, *ph = &__ph;
+	uint32_t vm_flags, perm, phnum;
+	for (phnum = 0; phnum < elf->e_phnum; phnum ++) {
+		off_t phoff = elf->e_phoff + sizeof(struct proghdr) * phnum;
+		if ((ret = load_icode_read(fd, ph, sizeof(struct proghdr), phoff)) != 0) {
+			goto bad_cleanup_mmap;
+		}
+		if (ph->p_type != ELF_PT_LOAD) {
+			continue ;
+		}
+		if (ph->p_filesz > ph->p_memsz) {
+			ret = -E_INVAL_ELF;
+			goto bad_cleanup_mmap;
+		}
+		if (ph->p_filesz == 0) {
+			continue ;
+		}
+		vm_flags = 0, perm = PTE_U;
+		if (ph->p_flags & ELF_PF_X) vm_flags |= VM_EXEC;
+		if (ph->p_flags & ELF_PF_W) vm_flags |= VM_WRITE;
+		if (ph->p_flags & ELF_PF_R) vm_flags |= VM_READ;
+		if (vm_flags & VM_WRITE) perm |= PTE_W;
+		if ((ret = mm_map(mm, ph->p_va, ph->p_memsz, vm_flags, NULL)) != 0) {
+			goto bad_cleanup_mmap;
+		}
+		off_t offset = ph->p_offset;
+		size_t off, size;
+		uintptr_t start = ph->p_va, end, la = ROUNDDOWN(start, PGSIZE);
+
+		ret = -E_NO_MEM;
+
+		end = ph->p_va + ph->p_filesz;
+		while (start < end) {
+			if ((page = pgdir_alloc_page(mm->pgdir, la, perm)) == NULL) {
+				ret = -E_NO_MEM;
+				goto bad_cleanup_mmap;
+			}
+			off = start - la, size = PGSIZE - off, la += PGSIZE;
+			if (end < la) {
+				size -= la - end;
+			}
+			if ((ret = load_icode_read(fd, page2kva(page) + off, size, offset)) != 0) {
+				goto bad_cleanup_mmap;
+			}
+			start += size, offset += size;
+		}
+		end = ph->p_va + ph->p_memsz;
+
+		if (start < la) {
+			/* ph->p_memsz == ph->p_filesz */
+			if (start == end) {
+				continue ;
+			}
+			off = start + PGSIZE - la, size = PGSIZE - off;
+			if (end < la) {
+				size -= la - end;
+			}
+			memset(page2kva(page) + off, 0, size);
+			start += size;
+			assert((end < la && start == end) || (end >= la && start == la));
+		}
+		while (start < end) {
+			if ((page = pgdir_alloc_page(mm->pgdir, la, perm)) == NULL) {
+				ret = -E_NO_MEM;
+				goto bad_cleanup_mmap;
+			}
+			off = start - la, size = PGSIZE - off, la += PGSIZE;
+			if (end < la) {
+				size -= la - end;
+			}
+			memset(page2kva(page) + off, 0, size);
+			start += size;
+		}
+	}
+	sysfile_close(fd);
+
+	vm_flags = VM_READ | VM_WRITE | VM_STACK;
+	if ((ret = mm_map(mm, USTACKTOP - USTACKSIZE, USTACKSIZE, vm_flags, NULL)) != 0) {
+		goto bad_cleanup_mmap;
+	}
+	assert(pgdir_alloc_page(mm->pgdir, USTACKTOP-PGSIZE , PTE_USER) != NULL);
+	assert(pgdir_alloc_page(mm->pgdir, USTACKTOP-2*PGSIZE , PTE_USER) != NULL);
+	assert(pgdir_alloc_page(mm->pgdir, USTACKTOP-3*PGSIZE , PTE_USER) != NULL);
+	assert(pgdir_alloc_page(mm->pgdir, USTACKTOP-4*PGSIZE , PTE_USER) != NULL);
+
+	mm_count_inc(mm);
+	g_current->mm = mm;
+	g_current->cr3 = PADDR(mm->pgdir);
+	lcr3(PADDR(mm->pgdir));
+
+	//setup argc, argv
+	uint32_t argv_size=0, i;
+	for (i = 0; i < argc; i ++) {
+		argv_size += strnlen(kargv[i],EXEC_MAX_ARG_LEN + 1)+1;
+	}
+
+	uintptr_t stacktop = USTACKTOP - (argv_size/sizeof(long)+1)*sizeof(long);
+	char** uargv=(char **)(stacktop  - argc * sizeof(char *));
+
+	argv_size = 0;
+	for (i = 0; i < argc; i ++) {
+		uargv[i] = strcpy((char *)(stacktop + argv_size ), kargv[i]);
+		argv_size +=  strnlen(kargv[i],EXEC_MAX_ARG_LEN + 1)+1;
+	}
+
+	stacktop = (uintptr_t)uargv - sizeof(int);
+	*(int *)stacktop = argc;
+
+	struct trapframe *tf = g_current->tf;
+	memset(tf, 0, sizeof(struct trapframe));
+	tf->tf_cs = USER_CS;
+	tf->tf_ds = tf->tf_es = tf->tf_ss = USER_DS;
+	tf->tf_esp = stacktop;
+	tf->tf_eip = elf->e_entry;
+	tf->tf_eflags = FL_IF;
+	ret = 0;
+out:
+	return ret;
+bad_cleanup_mmap:
+	exit_mmap(mm);
+bad_elf_cleanup_pgdir:
+	put_pgdir(mm);
+bad_pgdir_cleanup_mm:
+	mm_destroy(mm);
+bad_mm:
+	goto out;
+}
+
+// do_execve - call exit_mmap(mm)&put_pgdir(mm) to reclaim memory space of current process
+//           - call load_icode to setup new memory space accroding binary prog.
+int do_execve(const char *name, int argc, const char **argv)
+{
+	static_assert(EXEC_MAX_ARG_LEN >= FS_MAX_FPATH_LEN);
+	struct mm_struct *mm = g_current->mm;
+	if (!(argc >= 1 && argc <= EXEC_MAX_ARG_NUM)) {
+		return -E_INVAL;
+	}
+
+	char local_name[PROC_NAME_LEN + 1];
+	memset(local_name, 0, sizeof(local_name));
+
+	char *kargv[EXEC_MAX_ARG_NUM];
+	const char *path;
+
+	int ret = -E_INVAL;
+
+	lock_mm(mm);
+	if (name == NULL) {
+		snprintf(local_name, sizeof(local_name), "<null> %d", g_current->pid);
+	} else {
+		if (!copy_string(mm, local_name, name, sizeof(local_name))) {
+			unlock_mm(mm);
+			return ret;
+		}
+	}
+
+	if ((ret = copy_kargv(mm, argc, kargv, argv)) != 0) {
+		unlock_mm(mm);
+		return ret;
+	}
+	path = argv[0];
+	unlock_mm(mm);
+	files_closeall(g_current->filesp);
+
+	/* sysfile_open will check the first argument path, thus we have to use a user-space pointer, and argv[0] may be incorrect */
+	int fd;
+	if ((ret = fd = sysfile_open(path, O_RDONLY)) < 0) {
+		goto execve_exit;
+	}
+
+	if (mm != NULL) {
+		lcr3(boot_cr3);
+		if (mm_count_dec(mm) == 0) {
+			exit_mmap(mm);
+			put_pgdir(mm);
+			mm_destroy(mm);
+		}
+		g_current->mm = NULL;
+	}
+	ret= -E_NO_MEM;;
+	if ((ret = load_icode(fd, argc, kargv)) != 0) {
+		goto execve_exit;
+	}
+	put_kargv(argc, kargv);
+	set_proc_name(g_current, local_name);
+	return 0;
+
+execve_exit:
+	put_kargv(argc, kargv);
+	do_exit(ret);
+	panic("already exit: %e.\n", ret);
+}
+
+// do_yield - ask the scheduler to reschedule
+int do_yield(void)
+{
+	g_current->need_resched = 1;
+	return 0;
+}
+
+void set_priority(uint32_t priority)
+{
+	if (priority == 0) {
+		g_current->priority = 1;
+	} else {
+		g_current->priority = priority;
+	}
+}
+
+
 

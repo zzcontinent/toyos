@@ -198,7 +198,7 @@ process_precision:
 				if (err > MAXERROR || (p = error_string[err]) == NULL) {
 					printfmt(putch, fd, putdat, "error %d", err);
 				} else {
-					printfmt(putch, fd, putdat, "[%d]-%s", err, p);
+					printfmt(putch, fd, putdat, "[%d][%s]", err, p);
 				}
 				break;
 
