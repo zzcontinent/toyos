@@ -14,6 +14,8 @@
 #include <kern/schedule/sched.h>
 #include <kern/debug/kcommand.h>
 #include <kern/fs/sysfile.h>
+#include <kern/fs/fs.h>
+#include <kern/fs/vfs/vfs.h>
 
 extern void switch_to(struct context *from, struct context *to);
 extern void kernel_thread_entry(void);
@@ -50,7 +52,7 @@ static int user_main(void *arg)
 
 static int init_main(void *arg)
 {
-	int ret;
+	//int ret;
 	//if ((ret = vfs_set_bootfs("disk0:")) != 0) {
 	//	panic("set boot fs failed: %e.\n", ret);
 	//}

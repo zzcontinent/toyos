@@ -9,9 +9,9 @@
 
 char* strdup(const char *src)
 {
-	char *dst;
 	size_t len = strlen(src);
-	if ((dst = kmalloc(len + 1)) != NULL) {
+	char *dst = kmalloc(len + 1);
+	if (dst != NULL) {
 		memcpy(dst, src, len);
 		dst[len] = '\0';
 	}
