@@ -129,7 +129,8 @@ static void disk0_device_init(struct device *dev)
 	}
 }
 
-void dev_init_disk0(void) {
+void dev_init_disk0(void)
+{
 	struct inode *node;
 	if ((node = dev_create_inode()) == NULL) {
 		panic("disk0: dev_create_node.\n");

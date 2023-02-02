@@ -20,6 +20,7 @@ extern void append_cmd_history(char* cmd);
 extern int cmd_format_print1(int argc, char **argv);
 extern int cmd_format_print4(int argc, char **argv);
 extern int cmd_format_print2(int argc, char **argv);
+extern int cmd_print_dev_list(int argc, char **argv);
 
 #define DEBUG_CONSOLE { \
 	uinfo(""); \

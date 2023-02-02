@@ -47,14 +47,14 @@ int kern_init(void)
 	pmm_init();
 	pic_init();
 	idt_init();                 // init interrupt descriptor table
-
+	
 	vmm_init();
 	sched_init();
 	proc_init();
 
 	ide_init();
 	//swap_init();
-	fs_init();
+	//fs_init();
 
 	clock_init();
 	intr_enable();

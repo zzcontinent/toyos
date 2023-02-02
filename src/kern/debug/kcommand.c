@@ -49,6 +49,7 @@ static struct command commands[COMMAND_MAX] = {
 	{"page", "print page table", 1, cmd_print_pg},
 	{"alloc", "alloc one page", 1, cmd_alloc_page},
 	{"free", "free [page]", -1, cmd_free_page},
+	{"devs", "print vfs_dev_list", 1, cmd_print_dev_list},
 	{"hi", "hi [index](print history or run history of index)", -1, cmd_history},
 	{0, 0, 0, 0},
 };
@@ -337,5 +338,12 @@ int cmd_history(int argc, char **argv)
 	} else {
 		return CMD_NOT_SUPPORT;
 	}
+}
+
+int cmd_print_dev_list(int argc, char **argv)
+{
+	extern void print_dev_list();
+	print_dev_list();
+	return CMD_SUCCEED;
 }
 

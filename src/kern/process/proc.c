@@ -50,7 +50,7 @@ static int user_main(void *arg)
 
 static int init_main(void *arg)
 {
-	//int ret;
+	int ret;
 	//if ((ret = vfs_set_bootfs("disk0:")) != 0) {
 	//	panic("set boot fs failed: %e.\n", ret);
 	//}
@@ -68,7 +68,7 @@ static int init_main(void *arg)
 		schedule();
 	}
 
-	//fs_cleanup();
+	fs_cleanup();
 
 	cprintf("all user-mode processes have quit.\n");
 	assert(g_initproc->cptr == NULL && g_initproc->yptr == NULL && g_initproc->optr == NULL);

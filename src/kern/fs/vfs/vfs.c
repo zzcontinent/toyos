@@ -5,6 +5,7 @@
 #include <kern/sync/sem.h>
 #include <kern/mm/kmalloc.h>
 #include <kern/process/proc.h>
+#include <kern/debug/kcommand.h>
 
 #include <kern/fs/vfs/vfs.h>
 #include <kern/fs/vfs/inode.h>
@@ -190,6 +191,20 @@ const char * vfs_get_devname(struct vfs *fs)
 	return NULL;
 }
 
+void print_dev_list()
+{
+	list_entry_t *list = &vdev_list, *le = list;
+	while ((le = list_next(le)) != list) {
+		vfs_dev_t *vdev = le2vdev(le, vdev_link);
+		uclean("---------------\n");
+		uclean("devname:%s\n", vdev->devname);
+		uclean("mountable:%d\n", vdev->mountable);
+		uclean("inode:0x%x\n", vdev->devnode);
+		uclean("vfs:0x%x\n", vdev->fs);
+	}
+
+}
+
 /*
  * check_devname_confilct - Is there alreadily device which has the same name?
  */
@@ -233,6 +248,7 @@ static int vfs_do_add(const char *devname, struct inode *devnode, struct vfs *fs
 	}
 
 	ret = -E_EXISTS;
+	DEBUG_CONSOLE;
 	lock_vdev_list();
 	if (!check_devname_conflict(s_devname)) {
 		unlock_vdev_list();
@@ -657,7 +673,7 @@ static int get_device(char *path, char **subpath, struct inode **node_store)
 /*
  * vfs_lookup - get the inode according to the path filename
  */
-int vfs_lookup(char *path, struct inode **node_store) 
+int vfs_lookup(char *path, struct inode **node_store)
 {
 	int ret;
 	struct inode *node;
