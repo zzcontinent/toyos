@@ -197,7 +197,7 @@ void print_dev_list()
 	while ((le = list_next(le)) != list) {
 		vfs_dev_t *vdev = le2vdev(le, vdev_link);
 		uclean("---------------\n");
-		uclean("devname:%s\n", vdev->devname);
+		uclean("devname:[0x%x][%s]\n", &(vdev->devname), vdev->devname);
 		uclean("mountable:%d\n", vdev->mountable);
 		uclean("inode:0x%x\n", vdev->devnode);
 		uclean("vfs:0x%x\n", vdev->fs);
@@ -248,7 +248,7 @@ static int vfs_do_add(const char *devname, struct inode *devnode, struct vfs *fs
 	}
 
 	ret = -E_EXISTS;
-	DEBUG_CONSOLE;
+	//DEBUG_CONSOLE;
 	lock_vdev_list();
 	if (!check_devname_conflict(s_devname)) {
 		unlock_vdev_list();

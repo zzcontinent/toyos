@@ -308,11 +308,11 @@ static inline void* __memcpy(void* dst, const void* src, size_t n)
 	asm volatile(
 			"rep; movsl;"
 			"movl %4, %%ecx;"
-			"movl %3, %%ecx;"
+			"movl $3, %%ecx;"
 			"jz 1f;"
 			"rep; movsb;"
 			"1:"
-			: "=&c"(d0), "=&S"(d1), "=&D"(d2)
+			: "=&c"(d0), "=&D"(d1), "=&S"(d2)
 			: "0"(n / 4), "g"(n), "1"(dst), "2"(src)
 			: "memory");
 	return dst;
