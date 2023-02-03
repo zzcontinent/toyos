@@ -54,4 +54,38 @@ extern void files_destroy(struct files_struct *filesp);
 extern void files_closeall(struct files_struct *filesp);
 extern int dup_files(struct files_struct *to, struct files_struct *from);
 
+static inline int fopen_count(struct file *file)
+{
+	return file->open_count;
+}
+
+static inline int fopen_count_inc(struct file *file)
+{
+	file->open_count += 1;
+	return file->open_count;
+}
+
+static inline int fopen_count_dec(struct file *file)
+{
+	file->open_count -= 1;
+	return file->open_count;
+}
+
+static inline int files_count(struct files_struct *filesp) 
+{
+	return filesp->files_count;
+}
+
+static inline int files_count_inc(struct files_struct *filesp) 
+{
+	filesp->files_count += 1;
+	return filesp->files_count;
+}
+
+static inline int files_count_dec(struct files_struct *filesp) 
+{
+	filesp->files_count -= 1;
+	return filesp->files_count;
+}
+
 #endif  /* __FILE_H__ */
