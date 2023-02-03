@@ -13,6 +13,7 @@
 #include <kern/process/proc.h>
 #include <kern/schedule/sched.h>
 #include <kern/debug/kcommand.h>
+#include <kern/fs/file.h>
 #include <kern/fs/sysfile.h>
 #include <kern/fs/fs.h>
 #include <kern/fs/vfs/vfs.h>
@@ -52,10 +53,10 @@ static int user_main(void *arg)
 
 static int init_main(void *arg)
 {
-	//int ret;
-	//if ((ret = vfs_set_bootfs("disk0:")) != 0) {
-	//	panic("set boot fs failed: %e.\n", ret);
-	//}
+	int ret;
+	if ((ret = vfs_set_bootfs("disk0:")) != 0) {
+		panic("set boot fs failed: %e.\n", ret);
+	}
 
 	size_t nr_free_pages_store = nr_free_pages();
 
@@ -400,7 +401,7 @@ void proc_init(void)
 	g_idleproc->kstack = (uintptr_t)bootstack;
 	g_idleproc->need_resched = 1;
 
-#if 0
+#if 1
 	if ((g_idleproc->filesp = files_create()) == NULL) {
 		panic("create filesp (g_idleproc) failed.\n");
 	}
