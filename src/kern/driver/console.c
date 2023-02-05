@@ -333,7 +333,7 @@ static int kbd_proc_data(void)
 	return c;
 }
 
-static void kbd_intr(void)
+void kbd_intr(void)
 {
 	cons_intr(kbd_proc_data);
 }
