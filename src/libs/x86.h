@@ -308,7 +308,7 @@ static inline void* __memcpy(void* dst, const void* src, size_t n)
 	asm volatile(
 			"rep; movsl;"
 			"movl %4, %%ecx;"
-			"movl $3, %%ecx;"
+			"andl $3, %%ecx;"
 			"jz 1f;"
 			"rep; movsb;"
 			"1:"
