@@ -3,6 +3,7 @@
 
 #include <libs/defs.h>
 #include <libs/list.h>
+#include <libs/log.h>
 #include <libs/skew_heap.h>
 #include <kern/trap/trap.h>
 #include <kern/mm/memlayout.h>
@@ -86,5 +87,6 @@ extern int do_kill(int pid);
 extern void set_priority(uint32_t priority);
 extern int do_sleep(unsigned int time);
 extern void forkrets(struct trapframe *tf);
+extern int kernel_execve(const char *name, const char **argv);
 
 #endif  /* __PROC_H__ */
