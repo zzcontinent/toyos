@@ -37,6 +37,7 @@ static void unlock_sin(struct sfs_inode *sin)
  */
 static const struct inode_ops * sfs_get_ops(uint16_t type)
 {
+	udebug("type:%d\n", type);
 	switch (type) {
 		case SFS_TYPE_DIR:
 			return &sfs_node_dirops;
@@ -151,8 +152,8 @@ static struct inode * lookup_sfs_nolock(struct sfs_fs *sfs, uint32_t ino)
  * sfs_load_inode - If the inode isn't existed, load inode related ino disk block data into a new created inode.
  *                  If the inode is in memory alreadily, then do nothing
  */
-int
-sfs_load_inode(struct sfs_fs *sfs, struct inode **node_store, uint32_t ino) {
+int sfs_load_inode(struct sfs_fs *sfs, struct inode **node_store, uint32_t ino)
+{
 	lock_sfs_fs(sfs);
 	struct inode *node;
 	if ((node = lookup_sfs_nolock(sfs, ino)) != NULL) {
@@ -696,8 +697,8 @@ static int sfs_fstat(struct inode *node, struct stat *stat)
 /*
  * sfs_fsync - Force any dirty inode info associated with this file to stable storage.
  */
-static int
-sfs_fsync(struct inode *node) {
+static int sfs_fsync(struct inode *node)
+{
 	struct sfs_fs *sfs = fsop_info(vop_fs(node), sfs);
 	struct sfs_inode *sin = vop_info(node, sfs_inode);
 	int ret = 0;
@@ -720,8 +721,8 @@ sfs_fsync(struct inode *node) {
  *sfs_namefile -Compute pathname relative to filesystem root of the file and copy to the specified io buffer.
  *
  */
-static int
-sfs_namefile(struct inode *node, struct iobuf *iob) {
+static int sfs_namefile(struct inode *node, struct iobuf *iob)
+{
 	struct sfs_disk_entry *entry;
 	if (iob->io_resid <= 2 || (entry = kmalloc(sizeof(struct sfs_disk_entry))) == NULL) {
 		return -E_NO_MEM;
@@ -785,8 +786,8 @@ failed:
 /*
  * sfs_getdirentry_sub_noblock - get the content of file entry in DIR
  */
-static int
-sfs_getdirentry_sub_nolock(struct sfs_fs *sfs, struct sfs_inode *sin, int slot, struct sfs_disk_entry *entry) {
+static int sfs_getdirentry_sub_nolock(struct sfs_fs *sfs, struct sfs_inode *sin, int slot, struct sfs_disk_entry *entry)
+{
 	int ret, i, nslots = sin->din->blocks;
 	for (i = 0; i < nslots; i ++) {
 		if ((ret = sfs_dirent_read_nolock(sfs, sin, i, entry)) != 0) {
@@ -806,8 +807,8 @@ sfs_getdirentry_sub_nolock(struct sfs_fs *sfs, struct sfs_inode *sin, int slot, 
  * sfs_getdirentry - according to the iob->io_offset, calculate the dir entry's slot in disk block,
  get dir entry content from the disk
  */
-static int
-sfs_getdirentry(struct inode *node, struct iobuf *iob) {
+static int sfs_getdirentry(struct inode *node, struct iobuf *iob)
+{
 	struct sfs_disk_entry *entry;
 	if ((entry = kmalloc(sizeof(struct sfs_disk_entry))) == NULL) {
 		return -E_NO_MEM;
@@ -841,8 +842,8 @@ out:
 /*
  * sfs_reclaim - Free all resources inode occupied . Called when inode is no longer in use.
  */
-static int
-sfs_reclaim(struct inode *node) {
+static int sfs_reclaim(struct inode *node)
+{
 	struct sfs_fs *sfs = fsop_info(vop_fs(node), sfs);
 	struct sfs_inode *sin = vop_info(node, sfs_inode);
 
@@ -884,8 +885,8 @@ failed_unlock:
 /*
  * sfs_gettype - Return type of file. The values for file types are in sfs.h.
  */
-static int
-sfs_gettype(struct inode *node, uint32_t *type_store) {
+static int sfs_gettype(struct inode *node, uint32_t *type_store)
+{
 	struct sfs_disk_inode *din = vop_info(node, sfs_inode)->din;
 	switch (din->type) {
 		case SFS_TYPE_DIR:
@@ -904,8 +905,8 @@ sfs_gettype(struct inode *node, uint32_t *type_store) {
 /*
  * sfs_tryseek - Check if seeking to the specified position within the file is legal.
  */
-static int
-sfs_tryseek(struct inode *node, off_t pos) {
+static int sfs_tryseek(struct inode *node, off_t pos)
+{
 	if (pos < 0 || pos >= SFS_MAX_FILE_SIZE) {
 		return -E_INVAL;
 	}
@@ -919,8 +920,8 @@ sfs_tryseek(struct inode *node, off_t pos) {
 /*
  * sfs_truncfile : reszie the file with new length
  */
-static int
-sfs_truncfile(struct inode *node, off_t len) {
+static int sfs_truncfile(struct inode *node, off_t len)
+{
 	if (len < 0 || len > SFS_MAX_FILE_SIZE) {
 		return -E_INVAL;
 	}
@@ -971,8 +972,8 @@ out_unlock:
  *              DIR, and hand back the inode for the file it
  *              refers to.
  */
-static int
-sfs_lookup(struct inode *node, char *path, struct inode **node_store) {
+static int sfs_lookup(struct inode *node, char *path, struct inode **node_store)
+{
 	struct sfs_fs *sfs = fsop_info(vop_fs(node), sfs);
 	assert(*path != '\0' && *path != '/');
 	vop_ref_inc(node);

@@ -45,8 +45,7 @@ static int fd_array_alloc(int fd, struct file **file_store)
 			}
 		}
 		return -E_MAX_OPEN;
-	}
-	else {
+	} else {
 		if (testfd(fd)) {
 			file += fd;
 			if (file->status == FD_NONE) {
@@ -266,10 +265,11 @@ int file_seek(int fd, off_t pos, int whence)
 {
 	struct stat __stat, *stat = &__stat;
 	int ret;
-	struct file *file;
+	struct file *file=NULL;
 	if ((ret = fd2file(fd, &file)) != 0) {
 		return ret;
 	}
+	udebug("fd:%d, pos=%d, whence:%d, file:0x%x\n", fd, pos, whence, file);
 	fd_array_acquire(file);
 
 	switch (whence) {

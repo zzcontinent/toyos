@@ -5,6 +5,7 @@
 #include <libs/stat.h>
 #include <libs/iobuf.h>
 #include <libs/atomic.h>
+#include <libs/log.h>
 #include <kern/debug/assert.h>
 #include <kern/fs/devs/dev.h>
 #include <kern/fs/sfs/sfs.h>
@@ -98,7 +99,9 @@ extern void inode_check(struct inode *node, const char *opstr);
 #define __vop_op(node, sym)                                                                         \
 	({                                                                                              \
 	 struct inode *__node = (node);                                                              \
-	 assert(__node != NULL && __node->in_ops != NULL && __node->in_ops->vop_##sym != NULL);      \
+	 assert(__node != NULL);\
+	 assert(__node->in_ops != NULL);\
+	 assert(__node->in_ops->vop_##sym != NULL);                \
 	 inode_check(__node, #sym);                                                                  \
 	 __node->in_ops->vop_##sym;                                                                  \
 	 })

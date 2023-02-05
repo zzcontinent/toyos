@@ -345,7 +345,7 @@ int cmd_history(int argc, char **argv)
 int cmd_kernel_execv(int argc, char **argv)
 {
 	const char ** tmp_argv = (const char **)argv;
-	kernel_execve(argv[1], tmp_argv);
+	kernel_execve(tmp_argv[1], tmp_argv+1);
 	return CMD_SUCCEED;
 }
 

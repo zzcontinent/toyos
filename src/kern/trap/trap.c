@@ -191,7 +191,7 @@ void trap_dispatch(struct trapframe* tf)
 					}
 					cprintf("killed by kernel.\n");
 					panic("handle user mode pgfault failed. ret=%d\n", ret);
-					//do_exit(-E_KILLED);
+					do_exit(-E_KILLED);
 				}
 			}
 			break;
