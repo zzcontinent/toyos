@@ -1,6 +1,7 @@
 #include <libs/defs.h>
 #include <libs/string.h>
 #include <libs/unistd.h>
+#include <libs/log.h>
 #include <libs/stat.h>
 #include <libs/error.h>
 #include <libs/iobuf.h>
@@ -111,7 +112,7 @@ void fd_array_close(struct file *file)
 //fs_array_dup - duplicate file 'from'  to file 'to'
 void fd_array_dup(struct file *to, struct file *from) 
 {
-	//cprintf("[fd_array_dup]from fd=%d, to fd=%d\n",from->fd, to->fd);
+	udebug("[fd_array_dup]from fd=%d, to fd=%d\n",from->fd, to->fd);
 	assert(to->status == FD_INIT && from->status == FD_OPENED);
 	to->pos = from->pos;
 	to->readable = from->readable;
@@ -286,7 +287,7 @@ int file_seek(int fd, off_t pos, int whence)
 		if ((ret = vop_tryseek(file->node, pos)) == 0) {
 			file->pos = pos;
 		}
-		//    cprintf("file_seek, pos=%d, whence=%d, ret=%d\n", pos, whence, ret);
+		udebug("file_seek, pos=%d, whence=%d, ret=%d\n", pos, whence, ret);
 	}
 	fd_array_release(file);
 	return ret;
@@ -355,6 +356,7 @@ int file_dup(int fd1, int fd2)
 
 void lock_files(struct files_struct *filesp)
 {
+	//udebug("filesp:0x%x, filesp->files_sem:0x%x\n", filesp, &filesp->files_sem);
 	down(&(filesp->files_sem));
 }
 
@@ -366,7 +368,7 @@ void unlock_files(struct files_struct *filesp)
 //Called when a new proc init
 struct files_struct * files_create(void)
 {
-	//cprintf("[files_create]\n");
+	udebug("[files_create]\n");
 	static_assert((int)FILES_STRUCT_NENTRY > 128);
 	struct files_struct *filesp;
 	if ((filesp = kmalloc(sizeof(struct files_struct) + FILES_STRUCT_BUFSIZE)) != NULL) {
@@ -382,7 +384,7 @@ struct files_struct * files_create(void)
 //Called when a proc exit
 void files_destroy(struct files_struct *filesp)
 {
-	//    cprintf("[files_destroy]\n");
+	udebug("[files_destroy]\n");
 	assert(filesp != NULL && files_count(filesp) == 0);
 	if (filesp->pwd != NULL) {
 		vop_ref_dec(filesp->pwd);
@@ -400,7 +402,7 @@ void files_destroy(struct files_struct *filesp)
 
 void files_closeall(struct files_struct *filesp)
 {
-	//    cprintf("[files_closeall]\n");
+	udebug("[files_closeall]\n");
 	assert(filesp != NULL && files_count(filesp) > 0);
 	int i;
 	struct file *file = filesp->fd_array;
@@ -414,7 +416,7 @@ void files_closeall(struct files_struct *filesp)
 
 int dup_files(struct files_struct *to, struct files_struct *from)
 {
-	//    cprintf("[dup_files]\n");
+	udebug("[dup_files]\n");
 	assert(to != NULL && from != NULL);
 	assert(files_count(to) == 0 && files_count(from) > 0);
 	if ((to->pwd = from->pwd) != NULL) {

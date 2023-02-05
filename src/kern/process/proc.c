@@ -276,6 +276,48 @@ bad_mm:
 	return ret;
 }
 
+//copy_fs&put_fs function used by do_fork
+static int copy_proc_files(uint32_t clone_flags, struct proc_struct *proc)
+{
+	struct files_struct *filesp, *old_filesp = g_current->filesp;
+	assert(old_filesp != NULL);
+
+	if (clone_flags & CLONE_FS) {
+		filesp = old_filesp;
+		goto good_files_struct;
+	}
+
+	int ret = -E_NO_MEM;
+	if ((filesp = files_create()) == NULL) {
+		goto bad_files_struct;
+	}
+
+	if ((ret = dup_files(filesp, old_filesp)) != 0) {
+		goto bad_dup_cleanup_fs;
+	}
+
+good_files_struct:
+	files_count_inc(filesp);
+	proc->filesp = filesp;
+	return 0;
+
+bad_dup_cleanup_fs:
+	files_destroy(filesp);
+bad_files_struct:
+	return ret;
+}
+
+
+static void free_proc_files(struct proc_struct *proc)
+{
+	struct files_struct *filesp = proc->filesp;
+	if (filesp != NULL) {
+		if (files_count_dec(filesp) == 0) {
+			files_destroy(filesp);
+		}
+	}
+}
+
 int do_fork(uint32_t clone_flags, uintptr_t stack, struct trapframe *tf)
 {
 	int ret = -E_NO_FREE_PROC;
@@ -319,9 +361,9 @@ int do_fork(uint32_t clone_flags, uintptr_t stack, struct trapframe *tf)
 	if (setup_kstack(proc) != 0) {
 		goto bad_fork_cleanup_proc;
 	}
-	//if (copy_fs(clone_flags, proc) != 0) { //for LAB8
-	//	goto bad_fork_cleanup_kstack;
-	//}
+	if (copy_proc_files(clone_flags, proc) != 0) { //for LAB8
+		goto bad_fork_cleanup_kstack;
+	}
 	if (copy_mm(clone_flags, proc) != 0) {
 		goto bad_fork_cleanup_fs;
 	}
@@ -343,10 +385,10 @@ int do_fork(uint32_t clone_flags, uintptr_t stack, struct trapframe *tf)
 fork_out:
 	return ret;
 
-bad_fork_cleanup_fs:  //for LAB8
-		      //put_fs(proc);
-		      //bad_fork_cleanup_kstack:
-		      //	free_kstack(proc);
+bad_fork_cleanup_fs:
+	free_proc_files(proc);
+bad_fork_cleanup_kstack:
+	free_kstack(proc);
 bad_fork_cleanup_proc:
 	kfree(proc);
 	goto fork_out;
@@ -401,12 +443,10 @@ void proc_init(void)
 	g_idleproc->kstack = (uintptr_t)bootstack;
 	g_idleproc->need_resched = 1;
 
-#if 1
 	if ((g_idleproc->filesp = files_create()) == NULL) {
 		panic("create filesp (g_idleproc) failed.\n");
 	}
 	files_count_inc(g_idleproc->filesp);
-#endif
 
 	set_proc_name(g_idleproc, "idle");
 	g_nr_process ++;
@@ -444,7 +484,7 @@ int do_exit(int error_code)
 		}
 		g_current->mm = NULL;
 	}
-	//put_fs(g_current); //for LAB8
+	free_proc_files(g_current); //for LAB8
 	g_current->state = PROC_ZOMBIE;
 	g_current->exit_code = error_code;
 
