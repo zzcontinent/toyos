@@ -44,8 +44,18 @@ void proc_run(struct proc_struct *proc)
 	}
 }
 
+#define __KERNEL_EXECVE(name, path, ...) ({                         \
+const char *argv[] = {path, ##__VA_ARGS__, NULL};       \
+                     cprintf("kernel_execve: pid = %d, name = \"%s\".\n",    \
+                             g_current->pid, name);                            \
+                     kernel_execve(name, argv);                              \
+})
+
+#define KERNEL_EXECVE(x, ...)                   __KERNEL_EXECVE(#x, #x, ##__VA_ARGS__)
+
 static int user_main(void *arg)
 {
+	KERNEL_EXECVE(sh);
 	while(1)
 		DEBUG_CONSOLE;
 	panic("user_main execve failed.\n");
@@ -625,7 +635,7 @@ int do_sleep(unsigned int time)
 	return 0;
 }
 
-static void put_kargv(int argc, char **kargv)
+static void free_kargv(int argc, char **kargv)
 {
 	while (argc > 0) {
 		kfree(kargv[-- argc]);
@@ -654,14 +664,8 @@ static int copy_kargv(struct mm_struct *mm, int argc, char **kargv, const char *
 failed_nomem:
 	ret = -E_NO_MEM;
 failed_cleanup:
-	put_kargv(i, kargv);
+	free_kargv(i, kargv);
 	return ret;
-}
-
-// put_pgdir - free the memory space of PDT
-static void put_pgdir(struct mm_struct *mm)
-{
-	free_page(kva2page(mm->pgdir));
 }
 
 //load_icode_read is used by load_icode in LAB8
@@ -851,14 +855,14 @@ out:
 bad_cleanup_mmap:
 	exit_mmap(mm);
 bad_elf_cleanup_pgdir:
-	put_pgdir(mm);
+	free_pgdir(mm);
 bad_pgdir_cleanup_mm:
 	mm_destroy(mm);
 bad_mm:
 	goto out;
 }
 
-// do_execve - call exit_mmap(mm)&put_pgdir(mm) to reclaim memory space of current process
+// do_execve - call exit_mmap(mm)&free_pgdir(mm) to reclaim memory space of current process
 //           - call load_icode to setup new memory space accroding binary prog.
 int do_execve(const char *name, int argc, const char **argv)
 {
@@ -905,7 +909,7 @@ int do_execve(const char *name, int argc, const char **argv)
 		lcr3(boot_cr3);
 		if (mm_count_dec(mm) == 0) {
 			exit_mmap(mm);
-			put_pgdir(mm);
+			free_pgdir(mm);
 			mm_destroy(mm);
 		}
 		g_current->mm = NULL;
@@ -914,12 +918,12 @@ int do_execve(const char *name, int argc, const char **argv)
 	if ((ret = load_icode(fd, argc, kargv)) != 0) {
 		goto execve_exit;
 	}
-	put_kargv(argc, kargv);
+	free_kargv(argc, kargv);
 	set_proc_name(g_current, local_name);
 	return 0;
 
 execve_exit:
-	put_kargv(argc, kargv);
+	free_kargv(argc, kargv);
 	do_exit(ret);
 	panic("already exit: %e.\n", ret);
 }
