@@ -35,9 +35,10 @@
 #define LPTPORT         0x378
 
 
-void cons_init();
-void cons_putc(int c);
-int cons_getc(void);
-void serial_intr(void);
+extern void cons_init();
+extern void cons_putc(int c);
+extern int cons_getc(void);
+extern void serial_intr(void);
+extern void kbd_intr();
 
 #endif

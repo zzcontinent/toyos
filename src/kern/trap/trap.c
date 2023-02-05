@@ -209,12 +209,10 @@ void trap_dispatch(struct trapframe* tf)
 			//cprintf("serial [%03d] %c\n", c, c);
 			break;
 		case IRQ_OFFSET + IRQ_KBD:
-			c = cons_getc();
-			cprintf("kbd [%03d] %c\n", c, c);
-			//{
-			//extern void dev_stdin_write(char c);
-			//dev_stdin_write(c);
-			//}
+			udebug("tf_trapno:%d\n", tf->tf_trapno);
+			kbd_intr();
+			extern void dev_stdin_write(char c);
+			dev_stdin_write(c);
 			break;
 		case T_SWITCH_TOU:
 		case T_SWITCH_TOK:

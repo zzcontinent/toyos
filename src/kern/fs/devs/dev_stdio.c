@@ -15,7 +15,7 @@
 #define STDIN_BUFSIZE               4096
 
 static char stdin_buffer[STDIN_BUFSIZE];
-static off_t p_rpos, p_wpos;
+static off_t p_rpos = 0, p_wpos = 0;
 static wait_queue_t __wait_queue, *wait_queue = &__wait_queue;
 
 void dev_stdin_write(char c)
@@ -38,16 +38,19 @@ void dev_stdin_write(char c)
 
 static int dev_stdin_read(char *buf, size_t len)
 {
+	udebug("buf:0x%x, len:%d\n", buf, len);
 	int ret = 0;
 	bool intr_flag;
 	local_intr_save(intr_flag);
 	{
+		udebug("\n");
 		for (; ret < len; ret ++, p_rpos ++) {
 try_again:
+			udebug("\n");
 			if (p_rpos < p_wpos) {
+				udebug("\n");
 				*buf ++ = stdin_buffer[p_rpos % STDIN_BUFSIZE];
-			}
-			else {
+			} else {
 				wait_t __wait, *wait = &__wait;
 				wait_current_set(wait_queue, wait, WT_KBD);
 				local_intr_restore(intr_flag);
