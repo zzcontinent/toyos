@@ -675,9 +675,11 @@ static int get_device(char *path, char **subpath, struct inode **node_store)
  */
 int vfs_lookup(char *path, struct inode **node_store)
 {
+	udebug("path:%s\n", path);
 	int ret;
 	struct inode *node;
 	if ((ret = get_device(path, &path, &node)) != 0) {
+		uerror("get_device ret=:%d\n", ret);
 		return ret;
 	}
 	if (*path != '\0') {

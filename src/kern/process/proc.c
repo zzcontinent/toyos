@@ -45,17 +45,16 @@ void proc_run(struct proc_struct *proc)
 }
 
 #define __KERNEL_EXECVE(name, path, ...) ({                         \
-const char *argv[] = {path, ##__VA_ARGS__, NULL};       \
-                     cprintf("kernel_execve: pid = %d, name = \"%s\".\n",    \
-                             g_current->pid, name);                            \
-                     kernel_execve(name, argv);                              \
-})
+		const char *argv[] = {path, ##__VA_ARGS__, NULL};       \
+		cprintf("kernel_execve: pid = %d, name = \"%s\".\n",    \
+				g_current->pid, name);                            \
+				kernel_execve(name, argv);                              \
+				})
 
 #define KERNEL_EXECVE(x, ...)                   __KERNEL_EXECVE(#x, #x, ##__VA_ARGS__)
 
 static int user_main(void *arg)
 {
-	KERNEL_EXECVE(sh);
 	while(1)
 		DEBUG_CONSOLE;
 	panic("user_main execve failed.\n");
@@ -900,10 +899,13 @@ int do_execve(const char *name, int argc, const char **argv)
 	files_closeall(g_current->filesp);
 
 	/* sysfile_open will check the first argument path, thus we have to use a user-space pointer, and argv[0] may be incorrect */
+	udebug("path=%s\n", path);
 	int fd;
 	if ((ret = fd = sysfile_open(path, O_RDONLY)) < 0) {
+		udebug("\n");
 		goto execve_exit;
 	}
+	udebug("\n");
 
 	if (mm != NULL) {
 		lcr3(boot_cr3);
@@ -923,6 +925,7 @@ int do_execve(const char *name, int argc, const char **argv)
 	return 0;
 
 execve_exit:
+	udebug("\n");
 	free_kargv(argc, kargv);
 	do_exit(ret);
 	panic("already exit: %e.\n", ret);
