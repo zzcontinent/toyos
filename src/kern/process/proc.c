@@ -862,6 +862,7 @@ bad_mm:
 //           - call load_icode to setup new memory space accroding binary prog.
 int do_execve(const char *name, int argc, const char **argv)
 {
+	udebug("name=%s, argc=%d, argv=0x%x\n", name, argc, argv);
 	static_assert(EXEC_MAX_ARG_LEN >= FS_MAX_FPATH_LEN);
 	struct mm_struct *mm = g_current->mm;
 	if (!(argc >= 1 && argc <= EXEC_MAX_ARG_NUM)) {
@@ -939,5 +940,20 @@ void set_priority(uint32_t priority)
 	}
 }
 
+// kernel_execve - do SYS_exec syscall to exec a user program called by user_main kernel_thread
+int kernel_execve(const char *name, const char **argv)
+{
+	uclean("kernel_execve: pid = %d, name = \"%s\"\n", g_current->pid, name);
+	int argc = 0, ret;
+	while (argv[argc] != NULL) {
+		argc ++;
+	}
 
+	asm volatile (
+			"int %1;"
+			: "=a" (ret)
+			: "i" (T_SYSCALL), "0" (SYS_exec), "d" (name), "c" (argc), "b" (argv)
+			: "memory");
+	return ret;
+}
 

@@ -196,7 +196,7 @@ void trap_dispatch(struct trapframe* tf)
 			}
 			break;
 		case T_SYSCALL:
-			//syscall();
+			syscall();
 			break;
 		case IRQ_OFFSET + IRQ_TIMER:
 			g_ticks++;
@@ -228,7 +228,7 @@ void trap_dispatch(struct trapframe* tf)
 			print_trapframe(tf);
 			if (g_current != NULL) {
 				cprintf("unhandled trap.\n");
-				//do_exit(-E_KILLED);
+				do_exit(-E_KILLED);
 			}
 			// in kernel, it must be a mistake
 			panic("unexpected trap in kernel.\n");

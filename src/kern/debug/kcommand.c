@@ -6,6 +6,7 @@
 #include <kern/trap/trap.h>
 #include <kern/debug/kcommand.h>
 #include <kern/debug/kdebug.h>
+#include <kern/process/proc.h>
 #include <libs/ringbuf.h>
 
 bool is_kernel_panic(void);
@@ -51,6 +52,7 @@ static struct command commands[COMMAND_MAX] = {
 	{"free", "free [page]", -1, cmd_free_page},
 	{"devs", "print vfs_dev_list", 1, cmd_print_dev_list},
 	{"hi", "hi [index](print history or run history of index)", -1, cmd_history},
+	{"kexec", "kexec(kernel execve) name path args...", -1, cmd_kernel_execv},
 	{0, 0, 0, 0},
 };
 
@@ -338,6 +340,13 @@ int cmd_history(int argc, char **argv)
 	} else {
 		return CMD_NOT_SUPPORT;
 	}
+}
+
+int cmd_kernel_execv(int argc, char **argv)
+{
+	const char ** tmp_argv = (const char **)argv;
+	kernel_execve(argv[1], tmp_argv);
+	return CMD_SUCCEED;
 }
 
 int cmd_print_dev_list(int argc, char **argv)
