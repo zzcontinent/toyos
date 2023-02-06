@@ -6,6 +6,7 @@
 #include <kern/driver/pic.h>
 #include <kern/trap/trap.h>
 #include <kern/sync/sync.h>
+#include <kern/fs/devs/dev.h>
 
 static u16* crt_buf;
 static u16 crt_pos;
@@ -167,8 +168,7 @@ static void serial_putc(int c)
 
 static struct {
 	u8 buf[CONSBUFFSIZE];
-	u32 rpos;
-	u32 wpos;
+	struct ringbuf rbuf;
 } cons;
 
 /*
@@ -180,16 +180,14 @@ static void cons_intr(int (*proc)(void))
 	int c;
 	while ((c = (*proc)()) != -1) {
 		if (c != 0) {
-			cons.buf[cons.wpos++] = c;
-			if (cons.wpos == CONSBUFFSIZE) {
-				cons.wpos = 0;
-			}
+			rb_write(&cons.rbuf, (u8*)&c, 1);
+			dev_stdin_write(c);
 		}
 	}
 }
 
 /* get data from serial port */
-static int serial_proc_data(void)
+int serial_proc_data(void)
 {
 	if (!(inb(COM1 + COM_LSR) & COM_LSR_DATA)) {
 		return -1;
@@ -346,6 +344,7 @@ static void kbd_init(void)
 
 void cons_init(void)
 {
+	rb_init(&cons.rbuf, cons.buf, CONSBUFFSIZE);
 	cga_init();
 	serial_init();
 	kbd_init();
@@ -372,14 +371,19 @@ int cons_getc(void)
 	bool intr_flag;
 	local_intr_save(intr_flag);
 	{
-		//serial_intr();
-		//kbd_intr();
-		if (cons.rpos != cons.wpos) {
-			c = cons.buf[cons.rpos++];
-			if (cons.rpos == CONSBUFFSIZE) {
-				cons.rpos = 0;
-			}
-		}
+		rb_read(&cons.rbuf, (u8*)&c, 1);
+	}
+	local_intr_restore(intr_flag);
+	return c;
+}
+
+int cons_dupc(void)
+{
+	int c = 0;
+	bool intr_flag;
+	local_intr_save(intr_flag);
+	{
+		rb_dup(&cons.rbuf, (u8*)&c, 1);
 	}
 	local_intr_restore(intr_flag);
 	return c;

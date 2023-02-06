@@ -55,6 +55,7 @@ void proc_run(struct proc_struct *proc)
 
 static int user_main(void *arg)
 {
+	//KERNEL_EXECVE(sh);
 	while(1)
 		DEBUG_CONSOLE;
 	panic("user_main execve failed.\n");

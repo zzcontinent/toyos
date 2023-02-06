@@ -16,6 +16,7 @@ struct ringbuf {
 int rb_init(struct ringbuf *rb, u8* buf, int len);
 int rb_read(struct ringbuf *rb, u8 *rdata, int len);
 int rb_write(struct ringbuf *rb, u8* wbuf, int len);
+int rb_dup(struct ringbuf *rb, u8 *rdata, int len);
 int test_rb();
 
 #endif  /* __RINGBUF_H__ */

@@ -1,6 +1,7 @@
 #include <libs/defs.h>
 #include <libs/stdio.h>
 #include <libs/iobuf.h>
+#include <libs/ringbuf.h>
 #include <libs/unistd.h>
 #include <libs/error.h>
 #include <kern/sync/wait.h>
@@ -12,10 +13,10 @@
 #include <kern/fs/vfs/inode.h>
 #include <kern/debug//assert.h>
 
-#define STDIN_BUFSIZE               4096
+#define STDIN_BUFSIZE               256
 
 static char stdin_buffer[STDIN_BUFSIZE];
-static off_t p_rpos = 0, p_wpos = 0;
+static struct ringbuf stdin_rbuf;
 static wait_queue_t __wait_queue, *wait_queue = &__wait_queue;
 
 void dev_stdin_write(char c)
@@ -24,10 +25,7 @@ void dev_stdin_write(char c)
 	if (c != '\0') {
 		local_intr_save(intr_flag);
 		{
-			stdin_buffer[p_wpos % STDIN_BUFSIZE] = c;
-			if (p_wpos - p_rpos < STDIN_BUFSIZE) {
-				p_wpos ++;
-			}
+			rb_write(&stdin_rbuf, (u8*)&c, 1);
 			if (!wait_queue_empty(wait_queue)) {
 				wakeup_queue(wait_queue, WT_KBD, 1);
 			}
@@ -44,12 +42,10 @@ static int dev_stdin_read(char *buf, size_t len)
 	local_intr_save(intr_flag);
 	{
 		udebug("\n");
-		for (; ret < len; ret ++, p_rpos ++) {
+		for (; ret < len; ret ++) {
 try_again:
-			udebug("\n");
-			if (p_rpos < p_wpos) {
-				udebug("\n");
-				*buf ++ = stdin_buffer[p_rpos % STDIN_BUFSIZE];
+			if (rb_used(&stdin_rbuf) > 0) {
+				rb_read(&stdin_rbuf, (u8*)buf++, 1);
 			} else {
 				wait_t __wait, *wait = &__wait;
 				wait_current_set(wait_queue, wait, WT_KBD);
@@ -109,7 +105,7 @@ static void stdin_device_init(struct device *dev)
 	dev->d_io = stdin_io;
 	dev->d_ioctl = stdin_ioctl;
 
-	p_rpos = p_wpos = 0;
+	rb_init(&stdin_rbuf, (u8*)stdin_buffer, STDIN_BUFSIZE);
 	wait_queue_init(wait_queue);
 }
 
