@@ -33,6 +33,7 @@ struct device {
 
 extern void dev_init(void);
 extern struct inode *dev_create_inode(void);
+extern void dev_stdin_write(char c);
 
 
 #endif  /* __DEV_H__ */

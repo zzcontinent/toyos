@@ -144,7 +144,6 @@ static const struct inode_ops dev_node_ops = {
 /* dev_init - Initialization functions for builtin vfs-level devices. */
 void dev_init(void)
 {
-	// init_device(null);
 	init_device(stdin);
 	init_device(stdout);
 	init_device(disk0);

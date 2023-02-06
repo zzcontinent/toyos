@@ -74,6 +74,21 @@ int rb_read(struct ringbuf *rb, u8 *rdata, int len)
 	return ret_r;
 }
 
+int rb_dup(struct ringbuf *rb, u8 *rdata, int len)
+{
+	int ret_r = 0;
+
+	int i = 0;
+	int len_min = rb_used(rb) < len ? rb_used(rb) : len;
+
+	for (i=0; i<len_min; i++)
+	{
+		rdata[i] = rb->buf[rb->rpos+i];
+		++ret_r;
+	}
+	return ret_r;
+}
+
 #if 0
 static u8 rb_buf[256];
 static u8 buf_w[258] = {[0]=0x12, [255]=0x23, [256]=0x34};

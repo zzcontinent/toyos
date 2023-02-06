@@ -7,6 +7,8 @@
 #include <libs/error.h>
 #include <libs/list.h>
 #include <libs/skew_heap.h>
+#include <libs/ringbuf.h>
+#include <libs/iobuf.h>
 #include <libs/stat.h>
 #include <libs/stdarg.h>
 #include <libs/stdio.h>

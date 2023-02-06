@@ -12,6 +12,7 @@
 #include <kern/syscall/syscall.h>
 #include <kern/trap/trap.h>
 #include <kern/mm/vmm.h>
+#include <kern/fs/devs/dev.h>
 #include <kern/debug/kcommand.h>
 
 #define TICK_NUM 100
@@ -178,7 +179,6 @@ int pgfault_handler(struct trapframe* tf)
 
 void trap_dispatch(struct trapframe* tf)
 {
-	char c;
 	int ret = 0;
 	switch (tf->tf_trapno) {
 		case T_PGFLT: //page fault
@@ -199,20 +199,18 @@ void trap_dispatch(struct trapframe* tf)
 			syscall();
 			break;
 		case IRQ_OFFSET + IRQ_TIMER:
-			g_ticks++;
 			assert(g_current != NULL);
-			//run_timer_list();
+			g_ticks++;
+			run_timer_list();
 			break;
 		case IRQ_OFFSET + IRQ_COM1:
-			serial_intr();
-			//c = cons_getc();
-			//cprintf("serial [%03d] %c\n", c, c);
-			break;
+			//udebug("IRQ_COM1:%d\n", tf->tf_trapno);
+			//serial_intr();
+			//break;
 		case IRQ_OFFSET + IRQ_KBD:
-			udebug("tf_trapno:%d\n", tf->tf_trapno);
-			kbd_intr();
-			extern void dev_stdin_write(char c);
-			dev_stdin_write(c);
+			//udebug("IRQ_KBS:%d\n", tf->tf_trapno);
+			//kbd_intr();
+			serial_intr();
 			break;
 		case T_SWITCH_TOU:
 		case T_SWITCH_TOK:

@@ -190,7 +190,7 @@ void syscall(void) {
 	int num = tf->tf_regs.reg_eax;
 	if (num >= 0 && num < NUM_SYSCALLS) {
 		if (syscalls[num] != NULL) {
-			uclean("syscall:%d\n", num);
+			udebug("syscall:%d\n", num);
 			arg[0] = tf->tf_regs.reg_edx;
 			arg[1] = tf->tf_regs.reg_ecx;
 			arg[2] = tf->tf_regs.reg_ebx;
