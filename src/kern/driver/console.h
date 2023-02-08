@@ -34,11 +34,19 @@
 
 #define LPTPORT         0x378
 
+enum cons_feed_type {
+	from_loop = 0,
+	from_isr = 1,
+};
 
 extern void cons_init();
+extern void set_cons_feed(enum cons_feed_type type);
+extern enum cons_feed_type get_cons_feed();
 extern void cons_putc(int c);
 extern int cons_getc(void);
 extern void serial_intr(void);
 extern void kbd_intr();
+extern int serial_proc_data(void);
+extern int kbd_proc_data(void);
 
 #endif

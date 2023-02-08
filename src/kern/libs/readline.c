@@ -4,7 +4,8 @@
 #define READLINE_BUFSIZE 256
 static char buf[READLINE_BUFSIZE];
 
-char* readline(const char *prompt, int need_print) {
+char* readline(const char *prompt, int need_print)
+{
 	if (prompt != NULL && need_print) {
 		cprintf("%s", prompt);
 	}

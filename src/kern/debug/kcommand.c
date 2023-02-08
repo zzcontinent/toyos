@@ -6,6 +6,7 @@
 #include <kern/trap/trap.h>
 #include <kern/debug/kcommand.h>
 #include <kern/debug/kdebug.h>
+#include <kern/driver/console.h>
 #include <kern/process/proc.h>
 #include <libs/ringbuf.h>
 
@@ -128,7 +129,9 @@ void kcmd_loop()
 	char promt_buf[64] = {0};
 	while (1) {
 		snprintf(promt_buf, 64, "[sh:%d]$ ", ++index);
+		set_cons_feed(from_loop);
 		if ((buf = readline(promt_buf, 1)) != NULL) {
+			set_cons_feed(from_isr);
 			//append history
 			append_cmd_history(buf);
 
