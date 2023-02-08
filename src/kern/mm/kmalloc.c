@@ -74,7 +74,7 @@ static struct slob_block *slobfree = &arena;
 static struct bigblock *bigblocks;
 
 
-static void* __slob_get_free_pages(gfp_t gfp, int order)
+static void* __slob_get_free_pages(int order)
 {
 	struct page * page = alloc_pages(1 << order);
 	if(!page)
@@ -82,7 +82,7 @@ static void* __slob_get_free_pages(gfp_t gfp, int order)
 	return page2kva(page);
 }
 
-#define __slob_get_free_page(gfp) __slob_get_free_pages(gfp, 0)
+#define __slob_get_free_page() __slob_get_free_pages(0)
 
 static inline void __slob_free_pages(unsigned long kva, int order)
 {
@@ -91,7 +91,7 @@ static inline void __slob_free_pages(unsigned long kva, int order)
 
 static void slob_free(void *b, int size);
 
-static void *slob_alloc(size_t size, gfp_t gfp, int align)
+static void *slob_alloc(size_t size, int align)
 {
 	assert( (size + SLOB_UNIT) < PAGE_SIZE );
 
@@ -135,7 +135,7 @@ static void *slob_alloc(size_t size, gfp_t gfp, int align)
 			if (size == PAGE_SIZE) /* trying to shrink arena? */
 				return 0;
 
-			cur = (struct slob_block *)__slob_get_free_page(gfp);
+			cur = (struct slob_block *)__slob_get_free_page();
 			if (!cur)
 				return 0;
 
@@ -205,23 +205,23 @@ static int find_order(int size)
 	return order;
 }
 
-static void* __kmalloc(size_t size, gfp_t gfp)
+void* kmalloc(size_t size)
 {
 	struct slob_block *m;
 	struct bigblock *bb;
 	unsigned long flags;
 
 	if (size < PAGE_SIZE - SLOB_UNIT) {
-		m = slob_alloc(size + SLOB_UNIT, gfp, 0);
+		m = slob_alloc(size + SLOB_UNIT, 0);
 		return m ? (void *)(m + 1) : 0;
 	}
 
-	bb = slob_alloc(sizeof(struct bigblock), gfp, 0);
+	bb = slob_alloc(sizeof(struct bigblock), 0);
 	if (!bb)
 		return 0;
 
 	bb->order = find_order(size);
-	bb->pages = (void *)__slob_get_free_pages(gfp, bb->order);
+	bb->pages = (void *)__slob_get_free_pages(bb->order);
 
 	if (bb->pages) {
 		spin_lock_irqsave(&block_lock, flags);
@@ -233,11 +233,6 @@ static void* __kmalloc(size_t size, gfp_t gfp)
 
 	slob_free(bb, sizeof(struct bigblock));
 	return 0;
-}
-
-void* kmalloc(size_t size)
-{
-	return __kmalloc(size, 0);
 }
 
 

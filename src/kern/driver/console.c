@@ -12,6 +12,18 @@ static u16* crt_buf;
 static u16 crt_pos;
 static u16 addr_6845;
 
+static enum cons_feed_type cons_feed_from = from_loop;
+
+void set_cons_feed(enum cons_feed_type type)
+{
+	cons_feed_from = type;
+}
+
+enum cons_feed_type get_cons_feed()
+{
+	return cons_feed_from;
+}
+
 static void delay(void)
 {
 	inb(0x84);
@@ -175,7 +187,7 @@ static struct {
  * called by device interrupt routines to feed input
  * characters into circular console input buffer.
  * */
-static void cons_intr(int (*proc)(void))
+static void cons_feed_buf(int (*proc)(void))
 {
 	int c;
 	while ((c = (*proc)()) != -1) {
@@ -203,7 +215,9 @@ int serial_proc_data(void)
 void serial_intr(void)
 {
 	if (serial_exists) {
-		cons_intr(serial_proc_data);
+		if (from_isr == get_cons_feed()) {
+			cons_feed_buf(serial_proc_data);
+		}
 	}
 }
 
@@ -298,7 +312,7 @@ static u8* charcode[4] = {
 	ctlmap,
 };
 
-static int kbd_proc_data(void)
+int kbd_proc_data(void)
 {
 	int c;
 	u8 data;
@@ -333,12 +347,13 @@ static int kbd_proc_data(void)
 
 void kbd_intr(void)
 {
-	cons_intr(kbd_proc_data);
+	if (from_isr == get_cons_feed()) {
+		cons_feed_buf(kbd_proc_data);
+	}
 }
 
 static void kbd_init(void)
 {
-	kbd_intr();
 	pic_enable(IRQ_KBD);
 }
 
@@ -371,6 +386,10 @@ int cons_getc(void)
 	bool intr_flag;
 	local_intr_save(intr_flag);
 	{
+		if (from_loop == get_cons_feed()) {
+			cons_feed_buf(serial_proc_data);
+			cons_feed_buf(kbd_proc_data);
+		}
 		rb_read(&cons.rbuf, (u8*)&c, 1);
 	}
 	local_intr_restore(intr_flag);
