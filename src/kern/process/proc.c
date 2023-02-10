@@ -481,7 +481,7 @@ int do_exit(int error_code)
 		panic("idleproc exit.\n");
 	}
 	if (g_current == g_initproc) {
-		panic("g_initproc exit.\n");
+		//panic("g_initproc exit.\n");
 	}
 
 	struct mm_struct *mm = g_current->mm;

@@ -52,8 +52,6 @@ int kern_init(void)
 	vmm_init();
 	sched_init();
 
-	//DEBUG_CONSOLE;
-
 	proc_init();
 
 	ide_init();
