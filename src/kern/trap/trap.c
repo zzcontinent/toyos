@@ -190,7 +190,7 @@ void trap_dispatch(struct trapframe* tf)
 						panic("handle pgfault failed in kernel mode. ret=%d\n", ret);
 					}
 					cprintf("killed by kernel.\n");
-					panic("handle user mode pgfault failed. ret=%d\n", ret);
+					cprintf("handle user mode pgfault failed. ret=%d\n", ret);
 					do_exit(-E_KILLED);
 				}
 			}
@@ -211,10 +211,6 @@ void trap_dispatch(struct trapframe* tf)
 			//udebug("IRQ_KBS:%d\n", tf->tf_trapno);
 			//kbd_intr();
 			serial_intr();
-			break;
-		case T_SWITCH_TOU:
-		case T_SWITCH_TOK:
-			panic("T_SWITCH_** ??\n");
 			break;
 		case IRQ_OFFSET + IRQ_IDE1:
 		case IRQ_OFFSET + IRQ_IDE2:
