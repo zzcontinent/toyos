@@ -26,28 +26,28 @@ extern size_t g_npages;
 
 extern char bootstack[], bootstacktop[];
 
-void pmm_init(void);
-struct page* alloc_pages(size_t n);
-void free_pages(struct page* base, size_t n);
-size_t nr_free_pages(void);
+extern void pmm_init(void);
+extern struct page* alloc_pages(size_t n);
+extern void free_pages(struct page* base, size_t n);
+extern size_t nr_free_pages(void);
 
 #define alloc_page() alloc_pages(1)
 #define free_page(page) free_pages(page, 1)
 
-pte_t* get_pte(pde_t* pgdir, uintptr_t la, bool create);
-struct page* get_page(pde_t* pgdir, uintptr_t la, pte_t** ptep_store);
-void page_remove(pde_t* pgdir, uintptr_t la);
-int page_insert(pde_t* pgdir, struct page* page, uintptr_t la, u32 perm);
+extern pte_t* get_pte(pde_t* pgdir, uintptr_t la, bool create);
+extern struct page* get_page(pde_t* pgdir, uintptr_t la, pte_t** ptep_store);
+extern void page_remove(pde_t* pgdir, uintptr_t la);
+extern int page_insert(pde_t* pgdir, struct page* page, uintptr_t la, u32 perm);
 
-void load_esp0(uintptr_t esp0);
-void tlb_invalidate(pde_t* pgdir, uintptr_t la);
-struct page* pgdir_alloc_page(pde_t* pgdir, uintptr_t la, u32 perm);
-void unmap_range(pde_t* pgdir, uintptr_t start, uintptr_t end);
-void exit_range(pde_t* pgdir, uintptr_t start, uintptr_t end);
-int copy_range(pde_t* to, pde_t* from, uintptr_t start, uintptr_t end, bool share);
+extern void load_esp0(uintptr_t esp0);
+extern void tlb_invalidate(pde_t* pgdir, uintptr_t la);
+extern struct page* pgdir_alloc_page(pde_t* pgdir, uintptr_t la, u32 perm);
+extern void unmap_range(pde_t* pgdir, uintptr_t start, uintptr_t end);
+extern void exit_range(pde_t* pgdir, uintptr_t start, uintptr_t end);
+extern int copy_range(pde_t* to, pde_t* from, uintptr_t start, uintptr_t end, bool share);
 
-void print_pg(void);
-void print_mem();
+extern void print_pg(void);
+extern void print_mem();
 
 /*
  * takes a kernel virtual address(above KERNBASE)

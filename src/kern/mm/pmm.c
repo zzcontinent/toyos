@@ -449,7 +449,7 @@ int copy_range(pde_t* to, pde_t *from, uintptr_t start, uintptr_t end, bool shar
 
 	do{
 		// call get_pte to find process A's pte according to the addr start
-		pte_t *ptep = get_pte(from, start, 0);
+		pte_t *ptep = get_pte(from, start, 0), *nptep;
 		if (ptep == NULL)
 		{
 			start = ROUNDDOWN(start + PTSIZE, PTSIZE);
@@ -457,8 +457,28 @@ int copy_range(pde_t* to, pde_t *from, uintptr_t start, uintptr_t end, bool shar
 		}
 		// call get_pte to find process B's pte according to the addr start.
 		// if pte is NULL, just alloc a PT.
-		// todo...
-	} while(1);
+		if (*ptep & PTE_P) {
+			if ((nptep = get_pte(to, start, 1)) == NULL) {
+				return -E_NO_MEM;
+			}
+			uint32_t perm = (*ptep & PTE_USER);
+			//get page from ptep
+			struct page *page = pte2page(*ptep);
+			// alloc a page for process B
+			struct page *npage = alloc_page();
+			assert(page!=NULL);
+			assert(npage!=NULL);
+
+			void * kva_src = page2kva(page);
+			void * kva_dst = page2kva(npage);
+
+			memcpy(kva_dst, kva_src, PGSIZE);
+
+			int ret = page_insert(to, npage, start, perm);
+			assert(ret == 0);
+		}
+		start += PGSIZE;
+	} while (start != 0 && start < end);
 	return 0;
 }
 
