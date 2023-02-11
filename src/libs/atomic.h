@@ -2,12 +2,6 @@
 #define  __ATOMIC_H__
 
 #include <libs/defs.h>
-static inline void set_bit(int nr, volatile void *addr) __attribute__((always_inline));
-static inline void clear_bit(int nr, volatile void *addr) __attribute__((always_inline));
-static inline void change_bit(int nr, volatile void *addr) __attribute__((always_inline));
-static inline bool test_and_set_bit(int nr, volatile void *addr) __attribute__((always_inline));
-static inline bool test_and_clear_bit(int nr, volatile void *addr) __attribute__((always_inline));
-static inline bool test_bit(int nr, volatile void *addr) __attribute__((always_inline));
 
 static inline void set_bit(int nr, volatile void *addr)
 {
