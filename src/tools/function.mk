@@ -28,7 +28,7 @@ to_out_target = $(addprefix $(OUT_TARGETDIR)$(SLASH),$(1))
 # -------------------------------------------------------------------------
 # cc compile template, generate rule for dep, obj:
 # (target, file, cc[, flags])
-define template_cc
+define template_cc_file
 ALLOBJS_$(1) += $$(call to_out_obj,$(2))
 ALLOBJS += $$(call to_out_obj,$(2))
 $$(call to_out_dep,$(2)): $(2) | $$$$(dir $$$$@)
@@ -42,33 +42,33 @@ endef
 # -------------------------------------------------------------------------
 # compile file
 # (target, #files, cc[,flags])
-define template_cc_batch
-$$(foreach f,$(2),$$(eval $$(call template_cc,$(1),$$(f),$(3),$(4))))
+define template_cc_files
+$$(foreach f,$(2),$$(eval $$(call template_cc_file,$(1),$$(f),$(3),$(4))))
 endef
 
 # -------------------------------------------------------------------------
 # compile file
 # (target, #files, cc[, flags])
-rule_compile_files = $(eval $(call template_cc_batch,$(1),$(2),$(3),$(4)))
+rule_compile_files = $(eval $(call template_cc_files,$(1),$(2),$(3),$(4)))
 # (target, #files)
 rule_compile_files_cc = $(call rule_compile_files,$(1),$(2),$(CC),$(CFLAGS))
 # (target, #files)
 rule_compile_files_hostcc = $(call rule_compile_files,$(1),$(2),$(HOSTCC),$(HOSTCFLAGS))
 # -------------------------------------------------------------------------
 # add packet and objs to target
-# (target, #objs, cc, [, flags])
-define template_do_link_target
-$$(call to_out_target,$(1)): $$(call to_out_obj,$(2)) | $$$$(dir $$$$@)
+# (target, #obj, cc, [, flags])
+define template_link_objs
+$$(call to_out_target,$(1)): $(2) | $$$$(dir $$$$@)
 	@echo "[LD] [$$@] : $$^"
 	$(V)$(3) $(4) $$^ -o $$@
 endef
 
-# (target, #objs, cc, [, flags])
-rule_link_target = $(eval $(call template_do_link_target,$(1),$(2),$(3),$(4)))
+# (target, #obj, cc, [, flags])
+rule_link_objs = $(eval $(call template_link_objs,$(1),$(2),$(3),$(4)))
 # (target, #objs)
-rule_link_target_cc = $(call rule_link_target,$(1),$(2),$(CC),$(CFLAGS))
+rule_link_objs_cc = $(call rule_link_objs,$(1),$(2),$(CC),$(CFLAGS))
 # (target, #objs)
-rule_link_target_host = $(call rule_link_target,$(1),$(2),$(HOSTCC),$(HOSTCFLAGS))
+rule_link_objs_hostcc = $(call rule_link_objs,$(1),$(2),$(HOSTCC),$(HOSTCFLAGS))
 # -------------------------------------------------------------------------
 # finish all
 define tempalte_do_finish_all
