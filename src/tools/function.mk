@@ -30,9 +30,7 @@ to_out_target = $(addprefix $(OUT_TARGETDIR)$(SLASH),$(1))
 # (target, file, cc[, flags])
 define template_cc
 ALLOBJS_$(1) += $$(call to_out_obj,$(2))
-ALLDEPS_$(1) += $$(call to_out_dep,$(2))
 ALLOBJS += $$(call to_out_obj,$(2))
-ALLDEPS += $$(call to_out_dep,$(2))
 $$(call to_out_dep,$(2)): $(2) | $$$$(dir $$$$@)
 	@echo "[CC] [$$@] : $$^"
 	$(V)$(3) -I$$(dir $(2)) $(4) -MM $$< -MT "$$(patsubst %.d,%.o,$$@) $$@" > $$@
@@ -60,13 +58,9 @@ rule_compile_files_hostcc = $(call rule_compile_files,$(1),$(2),$(HOSTCC),$(HOST
 # add packet and objs to target
 # (target, #objs, cc, [, flags])
 define template_do_link_target
-ifneq ($(3),)
 $$(call to_out_target,$(1)): $$(call to_out_obj,$(2)) | $$$$(dir $$$$@)
 	@echo "[LD] [$$@] : $$^"
 	$(V)$(3) $(4) $$^ -o $$@
-else
-$$(call to_out_target,$(1)): $$(call to_out_obj,$(2)) | $$$$(dir $$$$@)
-endif
 endef
 
 # (target, #objs, cc, [, flags])
