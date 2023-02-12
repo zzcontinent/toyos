@@ -17,7 +17,7 @@ CFLAGS += $(shell $(CC) -fno-stack-protector -E -x c /dev/null >/dev/null 2>&1 &
 CTYPE := c S
 
 LD := $(GCCPREFIX)ld
-LDFLAGS := -m $(shell $(LD) -V | grep elf_i386 2>/dev/null | head -n 1)
+LDFLAGS := -m $(shell $(LD) -V | grep elf_i386 2>/dev/null | head -n 1| tr -d ' ')
 LDFLAGS += -nostdlib
 
 OBJCOPY := $(GCCPREFIX)objcopy
@@ -46,19 +46,17 @@ KCFLAGS += -I.
 
 # +++ boot +++
 bootfiles = $(call listf_cc,boot)
-SFSROOT := disk0
-SFSBINS =
+rootfs_path = $(call to_out_target,disk0)
+rootfs_bins =
 
 target_bootblock = $(call to_out_target,bootblock)
 target_kernel = $(call to_out_target,kernel)
 target_os_img = $(call to_out_target,os.img)
-target_sfsimg = $(call to_out_target,sfs.img)
+target_rootfsimg = $(call to_out_target,rootfs.img)
 target_swapimg = $(call to_out_target,swap.img)
 
-QEMUOPTS = -hda $(target_os_img) -drive file=$(target_swapimg),media=disk,cache=writeback -drive file=$(target_sfsimg),media=disk,cache=writeback -no-reboot
+QEMUOPTS = -hda $(target_os_img) -drive file=$(target_swapimg),media=disk,cache=writeback -drive file=$(target_rootfsimg),media=disk,cache=writeback -no-reboot
 ################ variables end ################
-
-
 
 ################ function start ################
 include tools/function.mk
@@ -68,7 +66,6 @@ swaptype = $(patsubst %.$(2),%.$(3),$(1))
 asmfile = $(call swaptype,$(call to_out_obj,$(1)),o,asm)
 symfile = $(call swaptype,$(call to_out_obj,$(1)),o,sym)
 filename = $(basename $(notdir $(1)))
-ubinfile = $(call outfile,$(addprefix $(USER_PREFIX),$(call filename,$(1))))
 ################ function end ################
 
 
@@ -106,13 +103,13 @@ $(target_bootblock): $(ALLOBJS_bootblock) | $(call to_out_target,sign)
 #***************************************tools****************************************************/
 # +++ sign tools +++
 $(call rule_compile_files_hostcc,sign,tools/sign.c)
-$(call rule_link_target_host,sign,tools/sign)
+$(call rule_link_objs_hostcc,sign,$(call to_out_obj,tools/sign))
 
 # +++ mkfs tools +++
 $(call rule_compile_files_hostcc,mksfs,tools/mksfs.c)
-$(call rule_link_target_host,mksfs,tools/mksfs)
+$(call rule_link_objs_hostcc,mksfs,$(call to_out_obj,tools/mksfs))
 
-# +++ create ucore.img +++
+# +++ create os.img +++
 $(target_os_img): $(target_kernel) $(target_bootblock)
 	$(V)dd if=/dev/zero of=$@ count=10000
 	$(V)dd if=$(target_bootblock) of=$@ conv=notrunc
@@ -122,38 +119,37 @@ $(target_os_img): $(target_kernel) $(target_bootblock)
 $(target_swapimg):
 	$(V)dd if=/dev/zero of=$@ bs=1M count=128
 
-# +++ create sfs.img +++
-$(foreach p,$(USER_BINS),$(eval $(call fscopy,$(p),$(SLASH))))
-
-$(SFSROOT):
-	$(V)mkdir $@
-
-$(target_sfsimg): $(SFSROOT) $(SFSBINS) | $(call to_out_target,mksfs)
+$(target_rootfsimg): $(rootfs_path) $(rootfs_bins) | $(call to_out_target,mksfs)
 	$(V)dd if=/dev/zero of=$@ bs=1M count=128
-	$(V)$(call to_out_target,mksfs) $@ $(SFSROOT)
+	$(V)$(call to_out_target,mksfs) $@ $(rootfs_path)
+
+$(rootfs_path):
+	$(V)mkdir -p $@
+
+
 
 # +++ qemu +++
 .PHONY: all qemu qemu-nox debug debug-nox monitor lines objdump
 
-qemu: $(target_os_img) $(target_swapimg) $(target_sfsimg)
+qemu: $(target_os_img) $(target_swapimg) $(target_rootfsimg)
 	$(V)$(QEMU) -serial stdio $(QEMUOPTS) -parallel null
 
-qemu-nox: $(target_os_img) $(target_swapimg) $(target_sfsimg)
+qemu-nox: $(target_os_img) $(target_swapimg) $(target_rootfsimg)
 	make qemukill
 	$(V)$(QEMU) -serial mon:stdio $(QEMUOPTS) -nographic
 
-debug: $(target_os_img) $(target_swapimg) $(target_sfsimg)
+debug: $(target_os_img) $(target_swapimg) $(target_rootfsimg)
 	$(V)$(QEMU) -S -s -parallel stdio $(QEMUOPTS) -serial null &
 	$(V)sleep 2
 	$(V)$(TERMINAL) -e "$(GDB) -q -x tools/gdbinit"
 
-debug-nox: $(target_os_img) $(target_swapimg) $(target_sfsimg)
+debug-nox: $(target_os_img) $(target_swapimg) $(target_rootfsimg)
 	make qemukill
 	$(V)$(QEMU) -S -s -serial mon:stdio $(QEMUOPTS) -nographic > /dev/null &
 	$(V)sleep 1
 	$(V)$(TERMINAL) -e "$(GDB) -q -x tools/gdbinit"
 
-debug-nox-bash: $(target_os_img) $(target_swapimg) $(target_sfsimg)
+debug-nox-bash: $(target_os_img) $(target_swapimg) $(target_rootfsimg)
 	make qemukill
 	$(V)$(QEMU) -S -s -serial mon:stdio $(QEMUOPTS) -nographic >/dev/null &
 	$(V)sleep 1
@@ -166,22 +162,21 @@ lines:
 	@find -type f | grep -E 'c$$|h$$|S$$'| xargs wc | sort -k1 -n
 
 clean:
-	@-rm -r $(OUT_DIR)
+	@-rm -r $(OUT_DIR)/
 
 log:
 	make clean && make 2>&1 | less -p 'warn|err'
 
 #***************************************user****************************************************/
-USER_PREFIX := __user_
+USER_PREFIX := __apps_
 USER_BINS :=
 
 USER_SRCDIR := user
-USER_LIB_DIR := user/libs
-UCFLAGS += $(addprefix -I,$(UINCLUDE))
+USER_LIBDIR := user/libs
+USER_CFLAGS += -I.
 
 define user_prog_ld
-__user_bin__ := $$(call ubinfile,$(1))
-USER_BINS += $$(__user_bin__)
+USER_BINS += $(1)
 $$(__user_bin__): tools/user.ld
 $$(__user_bin__): $$(UOBJS)
 $$(__user_bin__): $(1) | $$$$(dir $$$$@)
@@ -190,16 +185,20 @@ $$(__user_bin__): $(1) | $$$$(dir $$$$@)
 	$(V)$(OBJDUMP) -t $$@ | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$$$/d' > $$(call swaptype,$$<,o,sym)
 endef
 
-# +++ sfs copy +++
+# +++ rootfs copy +++
 define fscopy
 __fs_bin__ := $(2)$(SLASH)$(patsubst $(USER_PREFIX)%,%,$(basename $(notdir $(1))))
-SFSBINS += $$(__fs_bin__)
+rootfs_bins += $$(__fs_bin__)
 $$(__fs_bin__): $(1) | $$$$(dir $@)
 	@cp $$< $$@
 endef
 
+
+# +++ create rootfs.img +++
+$(foreach p,$(USER_BINS),$(eval $(call fscopy,$(p),$(SLASH))))
+
 # UOBJS := $(call read_packet,ulibs)
-$(call rule_compile_files,user,$(call listf_cc,$(USRCDIR)),$(CC),$(UCFLAGS))
+$(call rule_compile_files,user,$(call listf_cc,$(USRCDIR)),$(CC),$(USER_CFLAGS))
 #***************************************user****************************************************/
 
 
