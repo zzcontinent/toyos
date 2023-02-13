@@ -1,4 +1,4 @@
-# +++ cc +++
+#****************************************common***************************************************/
 GCCPREFIX :=
 QEMU := qemu-system-i386
 V := @
@@ -12,8 +12,9 @@ HOSTCFLAGS := -g -Wall -O2 -D_FILE_OFFSET_BITS=64
 
 GDB := ${GCCPREFIX}gdb
 CC := $(GCCPREFIX)gcc
-CFLAGS := -fno-builtin -fno-PIC -Wall -ggdb -m32 -gstabs -nostdinc $(DEFS)
+CFLAGS := -fno-builtin -fno-PIC -Wall -ggdb -m32 -gstabs -nostdinc
 CFLAGS += $(shell $(CC) -fno-stack-protector -E -x c /dev/null >/dev/null 2>&1 && echo -fno-stack-protector)
+CFLAGS += -I.
 CTYPE := c S
 
 LD := $(GCCPREFIX)ld
@@ -26,25 +27,19 @@ OBJDUMP := $(GCCPREFIX)objdump
 #TERMINAL := gnome-terminal
 TERMINAL := terminator
 
-# +++ compile out targets +++
 OUT_DIR := out/
 OUT_TARGETDIR := $(OUT_DIR)target
 OUT_OBJDIR := $(OUT_DIR)obj
 OUT_TOOLDIR := $(OUT_DIR)tools
 
-#***************************************kernel****************************************************/
-# +++ kernel include +++
-CFLAGS += -I.
 LIBDIR := libs
 KSRCDIR := $(shell find kern/* -type d)
 
-BOPTIMIZE := -Os
-KOPTIMIZE := -O0
-BCFLAGS = $(CFLAGS) $(BOPTIMIZE)
-KCFLAGS = $(CFLAGS) $(KOPTIMIZE)
-KCFLAGS += -I.
+BOOT_OPTIMIZE := -Os
+KERNEL_OPTIMIZE := -O0
+BOOT_CFLAGS = $(CFLAGS) $(BOOT_OPTIMIZE)
+KERNEL_CFLAGS = $(CFLAGS) $(KERNEL_OPTIMIZE)
 
-# +++ boot +++
 bootfiles = $(call listf_cc,boot)
 rootfs_path = $(call to_out_target,disk0)
 rootfs_bins =
@@ -55,10 +50,14 @@ target_os_img = $(call to_out_target,os.img)
 target_rootfsimg = $(call to_out_target,rootfs.img)
 target_swapimg = $(call to_out_target,swap.img)
 
-QEMUOPTS = -hda $(target_os_img) -drive file=$(target_swapimg),media=disk,cache=writeback -drive file=$(target_rootfsimg),media=disk,cache=writeback -no-reboot
-################ variables end ################
+USER_BINS :=
+USER_SRCDIR := user
+USER_LIBDIR := user/libs
+USER_CFLAGS := $(CFLAGS)
 
-################ function start ################
+QEMUOPTS = -hda $(target_os_img) -drive file=$(target_swapimg),media=disk,cache=writeback -drive file=$(target_rootfsimg),media=disk,cache=writeback -no-reboot
+
+#***************************************common function****************************************************/
 include tools/function.mk
 
 # generate out files functions
@@ -66,20 +65,79 @@ swaptype = $(patsubst %.$(2),%.$(3),$(1))
 asmfile = $(call swaptype,$(call to_out_obj,$(1)),o,asm)
 symfile = $(call swaptype,$(call to_out_obj,$(1)),o,sym)
 filename = $(basename $(notdir $(1)))
-################ function end ################
 
-
-################ build rules start ################
+#***************************************rule default****************************************************/
 all: $(target_bootblock) $(target_kernel)
 
-# +++ kernel +++
-# libs/*.c
-$(call rule_compile_files,kernel,$(foreach d,$(KSRCDIR),$(call listf_cc,$(d))),$(CC),$(KCFLAGS))
-$(call rule_compile_files,kernel,$(call listf_cc,$(LIBDIR)),$(CC),$(KCFLAGS))
+#***************************************rule bootblock****************************************************/
+$(call rule_compile_files,bootblock,$(bootfiles),$(CC),$(BOOT_CFLAGS) -nostdinc)
+
+$(target_bootblock): $(ALLOBJS_bootblock) | $(call to_out_target,sign)
+	@echo "[LD] [$@] : $^"
+	$(V)$(LD) $(LDFLAGS) -N -T tools/boot.ld $^ -o $(call to_out_target,boot)
+	$(V)$(OBJCOPY) -S -O binary $(call to_out_target,boot) $(target_bootblock)
+	$(V)$(call to_out_target,sign) $(target_bootblock) $(target_bootblock)
+
+
+#***************************************rule kernel****************************************************/
+$(call rule_compile_files,kernel,$(foreach d,$(KSRCDIR),$(call listf_cc,$(d))),$(CC),$(KERNEL_CFLAGS))
+$(call rule_compile_files,kernel,$(call listf_cc,$(LIBDIR)),$(CC),$(KERNEL_CFLAGS))
 
 $(target_kernel): $(call to_out_obj,kern/init/entry) $(ALLOBJS_kernel)
 	@echo "[LD] [$@] : $^"
 	$(V)$(LD) $(LDFLAGS) -T tools/kernel.ld -o $@ $^
+
+#***************************************rule images****************************************************/
+$(target_os_img): $(target_kernel) $(target_bootblock)
+	$(V)dd if=/dev/zero of=$@ count=10000
+	$(V)dd if=$(target_bootblock) of=$@ conv=notrunc
+	$(V)dd if=$(target_kernel) of=$@ seek=1 conv=notrunc
+
+$(target_rootfsimg): $(rootfs_path) $(rootfs_bins) | $(call to_out_target,mksfs)
+	$(V)dd if=/dev/zero of=$@ bs=1M count=128
+	$(V)$(call to_out_target,mksfs) $@ $(rootfs_path)
+
+$(target_swapimg):
+	$(V)dd if=/dev/zero of=$@ bs=1M count=128
+
+$(rootfs_path):
+	$(V)mkdir -p $@
+
+#***************************************rule user****************************************************/
+
+define user_prog_ld
+USER_BINS += $(1)
+$$(__user_bin__): tools/user.ld
+$$(__user_bin__): $$(UOBJS)
+$$(__user_bin__): $(1) | $$$$(dir $$$$@)
+	$(V)$(LD) $(LDFLAGS) -T tools/user.ld -o $$@ $$(UOBJS) $(1)
+	$(V)$(OBJDUMP) -S $$@ > $$(call swaptype,$$<,o,asm)
+	$(V)$(OBJDUMP) -t $$@ | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$$$/d' > $$(call swaptype,$$<,o,sym)
+endef
+
+# +++ rootfs copy +++
+define fscopy
+__fs_bin__ := $(2)$(SLASH)$(patsubst %,%,$(basename $(notdir $(1))))
+rootfs_bins += $$(__fs_bin__)
+$$(__fs_bin__): $(1) | $$$$(dir $@)
+	@cp $$< $$@
+endef
+
+
+# +++ create rootfs.img +++
+$(foreach p,$(user_bins),$(eval $(call fscopy,$(p),$(SLASH))))
+
+# UOBJS := $(call read_packet,ulibs)
+$(call rule_compile_files,user,$(call listf_cc,$(USER_SRCDIR)),$(CC),$(USER_CFLAGS))
+
+#***************************************rule tools****************************************************/
+# +++ sign tools +++
+$(call rule_compile_files_hostcc,sign,tools/sign.c)
+$(call rule_link_objs_hostcc,sign,$(call to_out_obj,tools/sign))
+
+# +++ mkfs tools +++
+$(call rule_compile_files_hostcc,mksfs,tools/mksfs.c)
+$(call rule_link_objs_hostcc,mksfs,$(call to_out_obj,tools/mksfs))
 
 objdump:
 	@-for f in `ls out/target`;\
@@ -90,46 +148,6 @@ objdump:
 		[ `cat out/target/$${f}.sym|wc -c` -eq 0 ] && rm out/target/$${f}.sym;\
 	done
 
-
-#***************************************bootblock****************************************************/
-$(call rule_compile_files,bootblock,$(bootfiles),$(CC),$(BCFLAGS) -nostdinc)
-
-$(target_bootblock): $(ALLOBJS_bootblock) | $(call to_out_target,sign)
-	@echo "[LD] [$@] : $^"
-	$(V)$(LD) $(LDFLAGS) -N -T tools/boot.ld $^ -o $(call to_out_target,boot)
-	$(V)$(OBJCOPY) -S -O binary $(call to_out_target,boot) $(target_bootblock)
-	$(V)$(call to_out_target,sign) $(target_bootblock) $(target_bootblock)
-
-#***************************************tools****************************************************/
-# +++ sign tools +++
-$(call rule_compile_files_hostcc,sign,tools/sign.c)
-$(call rule_link_objs_hostcc,sign,$(call to_out_obj,tools/sign))
-
-# +++ mkfs tools +++
-$(call rule_compile_files_hostcc,mksfs,tools/mksfs.c)
-$(call rule_link_objs_hostcc,mksfs,$(call to_out_obj,tools/mksfs))
-
-# +++ create os.img +++
-$(target_os_img): $(target_kernel) $(target_bootblock)
-	$(V)dd if=/dev/zero of=$@ count=10000
-	$(V)dd if=$(target_bootblock) of=$@ conv=notrunc
-	$(V)dd if=$(target_kernel) of=$@ seek=1 conv=notrunc
-
-# +++ create swap.img +++
-$(target_swapimg):
-	$(V)dd if=/dev/zero of=$@ bs=1M count=128
-
-$(target_rootfsimg): $(rootfs_path) $(rootfs_bins) | $(call to_out_target,mksfs)
-	$(V)dd if=/dev/zero of=$@ bs=1M count=128
-	$(V)$(call to_out_target,mksfs) $@ $(rootfs_path)
-
-$(rootfs_path):
-	$(V)mkdir -p $@
-
-
-
-# +++ qemu +++
-.PHONY: all qemu qemu-nox debug debug-nox monitor lines objdump
 
 qemu: $(target_os_img) $(target_swapimg) $(target_rootfsimg)
 	$(V)$(QEMU) -serial stdio $(QEMUOPTS) -parallel null
@@ -167,40 +185,8 @@ clean:
 log:
 	make clean && make 2>&1 | less -p 'warn|err'
 
-#***************************************user****************************************************/
-USER_PREFIX := __apps_
-USER_BINS :=
+.PHONY: all qemu qemu-nox debug debug-nox monitor lines objdump
 
-USER_SRCDIR := user
-USER_LIBDIR := user/libs
-USER_CFLAGS += -I.
-
-define user_prog_ld
-USER_BINS += $(1)
-$$(__user_bin__): tools/user.ld
-$$(__user_bin__): $$(UOBJS)
-$$(__user_bin__): $(1) | $$$$(dir $$$$@)
-	$(V)$(LD) $(LDFLAGS) -T tools/user.ld -o $$@ $$(UOBJS) $(1)
-	$(V)$(OBJDUMP) -S $$@ > $$(call swaptype,$$<,o,asm)
-	$(V)$(OBJDUMP) -t $$@ | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$$$/d' > $$(call swaptype,$$<,o,sym)
-endef
-
-# +++ rootfs copy +++
-define fscopy
-__fs_bin__ := $(2)$(SLASH)$(patsubst $(USER_PREFIX)%,%,$(basename $(notdir $(1))))
-rootfs_bins += $$(__fs_bin__)
-$$(__fs_bin__): $(1) | $$$$(dir $@)
-	@cp $$< $$@
-endef
-
-
-# +++ create rootfs.img +++
-$(foreach p,$(USER_BINS),$(eval $(call fscopy,$(p),$(SLASH))))
-
-# UOBJS := $(call read_packet,ulibs)
-$(call rule_compile_files,user,$(call listf_cc,$(USRCDIR)),$(CC),$(USER_CFLAGS))
-#***************************************user****************************************************/
-
-
-# +++ finish +++
+#***************************************finish****************************************************/
 $(call rule_finish_all)
+
