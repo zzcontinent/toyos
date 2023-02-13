@@ -1,4 +1,3 @@
-OBJPREFIX := __objs_
 SLASH := /
 .SECONDEXPANSION:
 
