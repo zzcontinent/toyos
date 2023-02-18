@@ -38,7 +38,11 @@ KSRCDIR := $(shell find kern/* -type d)
 BOOT_OPTIMIZE := -Os
 KERNEL_OPTIMIZE := -O0
 BOOT_CFLAGS = $(CFLAGS) $(BOOT_OPTIMIZE)
+BOOT_LDFLAGS := $(LDFLAGS)
+BOOT_LDFLAGS += -T tools/boot.ld
 KERNEL_CFLAGS = $(CFLAGS) $(KERNEL_OPTIMIZE)
+KERNEL_LDFLAGS := $(LDFLAGS)
+KERNEL_LDFLAGS += -T tools/kernel.ld 
 
 bootfiles = $(call listf_cc,boot)
 rootfs_path = $(call to_out_target,disk0)
@@ -54,9 +58,12 @@ USER_BINS :=
 USER_SRCDIR := user
 USER_LIBDIR := user/libs
 USER_CFLAGS := $(CFLAGS)
+USER_LDFLAGS := $(LDFLAGS) 
+USER_LDFLAGS += -T tools/user.ld
 
 QEMUOPTS = -hda $(target_os_img) -drive file=$(target_swapimg),media=disk,cache=writeback -drive file=$(target_rootfsimg),media=disk,cache=writeback -no-reboot
 
+RULE_FILES_INCLUDE := user/user.mk
 #***************************************common function****************************************************/
 include tools/function.mk
 
@@ -74,7 +81,7 @@ $(call rule_compile_files,bootblock,$(bootfiles),$(CC),$(BOOT_CFLAGS) -nostdinc)
 
 $(target_bootblock): $(ALLOBJS_bootblock) | $(call to_out_target,sign)
 	@echo "[LD] [$@] : $^"
-	$(V)$(LD) $(LDFLAGS) -N -T tools/boot.ld $^ -o $(call to_out_target,boot)
+	$(V)$(LD) $(BOOT_LDFLAGS) -N  $^ -o $(call to_out_target,boot)
 	$(V)$(OBJCOPY) -S -O binary $(call to_out_target,boot) $(target_bootblock)
 	$(V)$(call to_out_target,sign) $(target_bootblock) $(target_bootblock)
 
@@ -85,10 +92,10 @@ $(call rule_compile_files,kernel,$(call listf_cc,$(LIBDIR)),$(CC),$(KERNEL_CFLAG
 
 $(target_kernel): $(call to_out_obj,kern/init/entry) $(ALLOBJS_kernel)
 	@echo "[LD] [$@] : $^"
-	$(V)$(LD) $(LDFLAGS) -T tools/kernel.ld -o $@ $^
+	$(V)$(LD) $(KERNEL_LDFLAGS) -o $@ $^
 
 #***************************************rule images****************************************************/
-$(target_os_img): $(target_kernel) $(target_bootblock)
+$(target_os_img): $(target_bootblock) $(target_kernel)
 	$(V)dd if=/dev/zero of=$@ count=10000
 	$(V)dd if=$(target_bootblock) of=$@ conv=notrunc
 	$(V)dd if=$(target_kernel) of=$@ seek=1 conv=notrunc
@@ -104,31 +111,9 @@ $(rootfs_path):
 	$(V)mkdir -p $@
 
 #***************************************rule user****************************************************/
-
-define user_prog_ld
-USER_BINS += $(1)
-$$(__user_bin__): tools/user.ld
-$$(__user_bin__): $$(UOBJS)
-$$(__user_bin__): $(1) | $$$$(dir $$$$@)
-	$(V)$(LD) $(LDFLAGS) -T tools/user.ld -o $$@ $$(UOBJS) $(1)
-	$(V)$(OBJDUMP) -S $$@ > $$(call swaptype,$$<,o,asm)
-	$(V)$(OBJDUMP) -t $$@ | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$$$/d' > $$(call swaptype,$$<,o,sym)
-endef
-
-# +++ rootfs copy +++
-define fscopy
-__fs_bin__ := $(2)$(SLASH)$(patsubst %,%,$(basename $(notdir $(1))))
-rootfs_bins += $$(__fs_bin__)
-$$(__fs_bin__): $(1) | $$$$(dir $@)
-	@cp $$< $$@
-endef
-
-
-# +++ create rootfs.img +++
-$(foreach p,$(user_bins),$(eval $(call fscopy,$(p),$(SLASH))))
-
-# UOBJS := $(call read_packet,ulibs)
 $(call rule_compile_files,user,$(call listf_cc,$(USER_SRCDIR)),$(CC),$(USER_CFLAGS))
+$(call rule_compile_files,user_libs,$(call listf_cc,$(USER_LIBDIR)),$(CC),$(USER_CFLAGS))
+$(call rule_link_objs_to_targets,$(ALLOBJS_user),$(ALLOBJS_user_libs),$(LD),$(USER_LDFLAGS))
 
 #***************************************rule tools****************************************************/
 # +++ sign tools +++
@@ -139,6 +124,9 @@ $(call rule_link_objs_hostcc,sign,$(call to_out_obj,tools/sign))
 $(call rule_compile_files_hostcc,mksfs,tools/mksfs.c)
 $(call rule_link_objs_hostcc,mksfs,$(call to_out_obj,tools/mksfs))
 
+include $(RULE_FILES_INCLUDE)
+
+#***************************************rule command****************************************************/
 objdump:
 	@-for f in `ls out/target`;\
 	do\

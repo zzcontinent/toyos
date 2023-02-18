@@ -2,7 +2,7 @@
 #define  __DIR_H__
 
 #include <libs/defs.h>
-#include <lbs/dirent.h>
+#include <libs/dirent.h>
 
 typedef struct {
 	int fd;

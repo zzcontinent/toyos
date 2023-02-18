@@ -21,8 +21,9 @@ to_out_obj = $(addprefix $(OUT_OBJDIR)$(SLASH),$(addsuffix .o,$(basename $(1))))
 to_out_dep = $(patsubst %.o,%.d,$(call to_out_obj,$(1)))
 
 # -------------------------------------------------------------------------
-# add $(OUT_TARGETDIR)/ to $(1)
-to_out_target = $(addprefix $(OUT_TARGETDIR)$(SLASH),$(1))
+# $(OUT_TARGETDIR)/ to $(1)
+# (filename, prefix_dir) -> $(OUT_TARGETDIR)/prefix_dir/filename
+to_out_target = $(addprefix $(OUT_TARGETDIR)$(SLASH)$(2),$(1))
 
 # -------------------------------------------------------------------------
 # cc compile template, generate rule for dep, obj:
@@ -68,6 +69,9 @@ rule_link_objs = $(eval $(call template_link_objs,$(1),$(2),$(3),$(4)))
 rule_link_objs_cc = $(call rule_link_objs,$(1),$(2),$(CC),$(CFLAGS))
 # (target, #objs)
 rule_link_objs_hostcc = $(call rule_link_objs,$(1),$(2),$(HOSTCC),$(HOSTCFLAGS))
+# (#obj_targets, #obj_libs, cc, [, flags])
+rule_link_objs_to_targets = $(foreach  obj,$(1),$(call rule_link_objs,$(basename $(notdir $(obj))),$(obj) $(2),$(3),$(4)))
+
 # -------------------------------------------------------------------------
 # finish all
 define tempalte_do_finish_all
