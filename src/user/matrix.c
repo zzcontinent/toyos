@@ -1,8 +1,8 @@
 #include <libs/stat.h>
 #include <libs/dirent.h>
 #include <libs/unistd.h>
-#include <libs/stdio.h>
 #include <libs/stdlib.h>
+#include <libs/stdio.h>
 #include <user/libs/ulib.h>
 #include <libs/string.h>
 #include <user/libs/dir.h>

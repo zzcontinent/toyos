@@ -15,5 +15,7 @@
 #include <libs/stdlib.h>
 #include <libs/string.h>
 #include <libs/unistd.h>
+#include <libs/rand.h>
 #include <libs/x86.h>
+#include <libs/log.h>
 #endif  /* __LIBS_ALL_H__ */

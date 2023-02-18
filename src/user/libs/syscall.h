@@ -2,6 +2,7 @@
 #define  __SYSCALL_H__
 
 #include <libs/stat.h>
+#include <libs/dirent.h>
 
 extern int sys_exit(int error_code);
 extern int sys_fork(void);

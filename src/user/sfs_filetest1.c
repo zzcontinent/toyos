@@ -1,11 +1,12 @@
-#include <ulib.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stat.h>
-#include <file.h>
-#include <dir.h>
-#include <unistd.h>
+#include <libs/stat.h>
+#include <libs/dirent.h>
+#include <libs/unistd.h>
+#include <libs/stdio.h>
+#include <libs/stdlib.h>
+#include <user/libs/ulib.h>
+#include <libs/string.h>
+#include <user/libs/dir.h>
+#include <user/libs/file.h>
 
 #define printf(...)                 fprintf(1, __VA_ARGS__)
 
@@ -26,11 +27,13 @@ static struct stat *safe_fstat(int fd)
 }
 
 
+#if 0
 static void safe_read(int fd, void *data, size_t len)
 {
 	int ret = read(fd, data, len);
 	assert(ret == len);
 }
+#endif
 
 
 int main(void)
