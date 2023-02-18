@@ -27,6 +27,9 @@ OBJDUMP := $(GCCPREFIX)objdump
 #TERMINAL := gnome-terminal
 TERMINAL := terminator
 
+ALLOBJS =
+ALLTARGETS =
+
 OUT_DIR := out/
 OUT_TARGETDIR := $(OUT_DIR)target
 OUT_OBJDIR := $(OUT_DIR)obj
@@ -45,8 +48,6 @@ KERNEL_LDFLAGS := $(LDFLAGS)
 KERNEL_LDFLAGS += -T tools/kernel.ld 
 
 bootfiles = $(call listf_cc,boot)
-rootfs_path = $(call to_out_target,disk0)
-rootfs_bins =
 
 target_bootblock = $(call to_out_target,bootblock)
 target_kernel = $(call to_out_target,kernel)
@@ -54,12 +55,21 @@ target_os_img = $(call to_out_target,os.img)
 target_rootfsimg = $(call to_out_target,rootfs.img)
 target_swapimg = $(call to_out_target,swap.img)
 
+ALLOBJS = 
+ALLTARGETS += $(target_bootblock)
+ALLTARGETS += $(target_kernel)
+ALLTARGETS += $(target_os_img)
+ALLTARGETS += $(target_rootfsimg)
+ALLTARGETS += $(target_swapimg)
+
 USER_BINS :=
 USER_SRCDIR := user
 USER_LIBDIR := user/libs
 USER_CFLAGS := $(CFLAGS)
 USER_LDFLAGS := $(LDFLAGS) 
 USER_LDFLAGS += -T tools/user.ld
+
+rootfs_path = $(call to_out_target,disk0/)
 
 QEMUOPTS = -hda $(target_os_img) -drive file=$(target_swapimg),media=disk,cache=writeback -drive file=$(target_rootfsimg),media=disk,cache=writeback -no-reboot
 
@@ -74,55 +84,52 @@ symfile = $(call swaptype,$(call to_out_obj,$(1)),o,sym)
 filename = $(basename $(notdir $(1)))
 
 #***************************************rule default****************************************************/
-all: $(target_bootblock) $(target_kernel)
+all: $(target_bootblock) $(target_kernel) $(target_os_img) $(target_rootfsimg)
 
 #***************************************rule bootblock****************************************************/
 $(call rule_compile_files,bootblock,$(bootfiles),$(CC),$(BOOT_CFLAGS) -nostdinc)
 
-$(target_bootblock): $(ALLOBJS_bootblock) | $(call to_out_target,sign)
+$(target_bootblock): $(ALLOBJS_bootblock) | $(call to_out_target,sign) $(dir $(ALLTARGETS))
 	@echo "[LD] [$@] : $^"
 	$(V)$(LD) $(BOOT_LDFLAGS) -N  $^ -o $(call to_out_target,boot)
 	$(V)$(OBJCOPY) -S -O binary $(call to_out_target,boot) $(target_bootblock)
 	$(V)$(call to_out_target,sign) $(target_bootblock) $(target_bootblock)
 
-
 #***************************************rule kernel****************************************************/
 $(call rule_compile_files,kernel,$(foreach d,$(KSRCDIR),$(call listf_cc,$(d))),$(CC),$(KERNEL_CFLAGS))
 $(call rule_compile_files,kernel,$(call listf_cc,$(LIBDIR)),$(CC),$(KERNEL_CFLAGS))
 
-$(target_kernel): $(call to_out_obj,kern/init/entry) $(ALLOBJS_kernel)
+$(target_kernel): $(call to_out_obj,kern/init/entry) $(ALLOBJS_kernel) | $(dir $(ALLTARGETS))
 	@echo "[LD] [$@] : $^"
 	$(V)$(LD) $(KERNEL_LDFLAGS) -o $@ $^
 
+#***************************************rule user****************************************************/
+$(call rule_compile_files,user,$(call listf_cc,$(USER_SRCDIR)),$(CC),$(USER_CFLAGS))
+$(call rule_compile_files,user_libs,$(call listf_cc,$(USER_LIBDIR)),$(CC),$(USER_CFLAGS))
+$(call rule_link_objs_same_targets,apps,$(ALLOBJS_user),$(ALLOBJS_user_libs),$(LD),$(USER_LDFLAGS))
+
 #***************************************rule images****************************************************/
-$(target_os_img): $(target_bootblock) $(target_kernel)
+$(target_os_img): $(target_bootblock) $(target_kernel) | $(dir $(ALLTARGETS))
 	$(V)dd if=/dev/zero of=$@ count=10000
 	$(V)dd if=$(target_bootblock) of=$@ conv=notrunc
 	$(V)dd if=$(target_kernel) of=$@ seek=1 conv=notrunc
 
-$(target_rootfsimg): $(rootfs_path) $(rootfs_bins) | $(call to_out_target,mksfs)
+$(target_rootfsimg): $(ALLTARGETS_apps) | $(call to_out_target,mksfs) $(dir $(ALLTARGETS))
+	$(V)mkdir -p $(rootfs_path)
+	$(V)cp $(ALLTARGETS_apps) $(rootfs_path)
 	$(V)dd if=/dev/zero of=$@ bs=1M count=128
 	$(V)$(call to_out_target,mksfs) $@ $(rootfs_path)
 
 $(target_swapimg):
 	$(V)dd if=/dev/zero of=$@ bs=1M count=128
 
-$(rootfs_path):
-	$(V)mkdir -p $@
-
-#***************************************rule user****************************************************/
-$(call rule_compile_files,user,$(call listf_cc,$(USER_SRCDIR)),$(CC),$(USER_CFLAGS))
-$(call rule_compile_files,user_libs,$(call listf_cc,$(USER_LIBDIR)),$(CC),$(USER_CFLAGS))
-$(call rule_link_objs_to_targets,$(ALLOBJS_user),$(ALLOBJS_user_libs),$(LD),$(USER_LDFLAGS))
-
 #***************************************rule tools****************************************************/
 # +++ sign tools +++
 $(call rule_compile_files_hostcc,sign,tools/sign.c)
-$(call rule_link_objs_hostcc,sign,$(call to_out_obj,tools/sign))
-
+$(call rule_link_objs_hostcc,tools,sign,$(call to_out_obj,tools/sign))
 # +++ mkfs tools +++
 $(call rule_compile_files_hostcc,mksfs,tools/mksfs.c)
-$(call rule_link_objs_hostcc,mksfs,$(call to_out_obj,tools/mksfs))
+$(call rule_link_objs_hostcc,tools,mksfs,$(call to_out_obj,tools/mksfs))
 
 include $(RULE_FILES_INCLUDE)
 
