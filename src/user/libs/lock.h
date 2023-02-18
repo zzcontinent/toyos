@@ -4,8 +4,8 @@
 
 #include <libs/defs.h>
 #include <libs/string.h>
-#include <libs/ulib.h>
 #include <libs/atomic.h>
+#include <user/libs/ulib.h>
 
 #define INIT_LOCK           {0}
 

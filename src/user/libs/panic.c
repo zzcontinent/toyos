@@ -4,8 +4,10 @@
 #include <libs/dirent.h>
 #include <libs/error.h>
 #include <libs/unistd.h>
+#include <libs/stdio.h>
 #include <libs/stdarg.h>
 #include <user/libs/file.h>
+#include <user/libs/ulib.h>
 #include <user/libs/dir.h>
 #include <user/libs/syscall.h>
 

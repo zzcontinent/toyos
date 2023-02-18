@@ -25,7 +25,7 @@ extern int sys_fsync(int fd);
 extern int sys_getcwd(char *buffer, size_t len);
 extern int sys_getdirentry(int fd, struct dirent *dirent);
 extern int sys_dup(int fd1, int fd2);
-extern void sys_lab6_set_priority(uint32_t priority); //only for lab6
+extern void sys_set_priority(uint32_t priority); //only for lab6
 
 
 #endif  /* __SYSCALL_H__ */
