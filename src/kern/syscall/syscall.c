@@ -14,6 +14,7 @@
 static int sys_exit(uint32_t arg[])
 {
 	int error_code = (int)arg[0];
+	uinfo("\n");
 	return do_exit(error_code);
 }
 

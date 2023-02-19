@@ -68,32 +68,33 @@ int lsdir(const char *path)
 int ls(const char *path)
 {
 	struct stat __stat, *stat = &__stat;
-	int ret, type;
+	int ret;
 	if ((ret = getstat(path, stat)) != 0) {
 		return ret;
 	}
 
-	static const char *filetype[] = {
-		" [  file   ]",
-		" [directory]",
-		" [ symlink ]",
-		" [character]",
-		" [  block  ]",
-		" [  ?????  ]",
-	};
-	switch (getmode(stat->st_mode)) {
-		case '0': type = 0; break;
-		case 'd': type = 1; break;
-		case 'l': type = 2; break;
-		case 'c': type = 3; break;
-		case 'b': type = 4; break;
-		default:  type = 5; break;
-	}
+	//static const char *filetype[] = {
+	//	" [  file   ]",
+	//	" [directory]",
+	//	" [ symlink ]",
+	//	" [character]",
+	//	" [  block  ]",
+	//	" [  ?????  ]",
+	//};
+	//int type;
+	//switch (getmode(stat->st_mode)) {
+	//	case '0': type = 0; break;
+	//	case 'd': type = 1; break;
+	//	case 'l': type = 2; break;
+	//	case 'c': type = 3; break;
+	//	case 'b': type = 4; break;
+	//	default:  type = 5; break;
+	//}
 
-	printf(" @ is %s", filetype[type]);
-	printf(" %d(hlinks)", stat->st_nlinks);
-	printf(" %d(blocks)", stat->st_blocks);
-	printf(" %d(bytes) : @'%s'\n", stat->st_size, path);
+	//printf(" @ is %s", filetype[type]);
+	//printf(" %d(hlinks)", stat->st_nlinks);
+	//printf(" %d(blocks)", stat->st_blocks);
+	//printf(" %d(bytes) : @'%s'\n", stat->st_size, path);
 	if (S_ISDIR(stat->st_mode)) {
 		return lsdir(path);
 	}
