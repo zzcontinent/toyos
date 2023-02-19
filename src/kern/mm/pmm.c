@@ -116,7 +116,7 @@ static void gdt_init(void)
 static void init_pmm_manager(void)
 {
 	g_pmm_manager = &default_pmm_manager;
-	uinfo("memory management: %s\n", g_pmm_manager->name);
+	uclean("memory management: %s\n", g_pmm_manager->name);
 	g_pmm_manager->init();
 }
 
@@ -174,20 +174,9 @@ static void page_init(void)
 {
 	struct e820map* memmap = (struct e820map*)(0x8000 + KERNBASE);
 	u64 maxpa = 0;
-	cprintf("e820map:\n");
 	int i;
 	for (i = 0; i < memmap->nr_map; i++) {
 		u64 begin = memmap->map[i].addr, end = begin + memmap->map[i].size;
-		if(i == 0 && i != memmap->nr_map - 1)
-			cprintf("├──memory: size:%08llx, [%08llx, %08llx], type = %d - %s.\n",
-					memmap->map[i].size, begin, end - 1, memmap->map[i].type, E820MAP_TYPE(memmap->map[i].type));
-		else if (i == memmap->nr_map - 1)
-			cprintf("└──memory: size:%08llx, [%08llx, %08llx], type = %d - %s.\n",
-					memmap->map[i].size, begin, end - 1, memmap->map[i].type, E820MAP_TYPE(memmap->map[i].type));
-		else
-			cprintf("├──memory: size:%08llx, [%08llx, %08llx], type = %d - %s.\n",
-					memmap->map[i].size, begin, end - 1, memmap->map[i].type, E820MAP_TYPE(memmap->map[i].type));
-
 		if (memmap->map[i].type == E820_ARM) {
 			if (maxpa < end && begin < KMEMSIZE) {
 				maxpa = end;
@@ -559,7 +548,7 @@ static void check_pgdir(void)
 	assert(page_ref(pde2page(boot_pgdir[0])) == 1);
 	free_page(pde2page(boot_pgdir[0]));
 	boot_pgdir[0] = 0;
-	uinfo("check_pgdir succeed!\n");
+	uclean("check_pgdir succeed!\n");
 }
 
 static void check_boot_pgdir(void)
@@ -634,7 +623,7 @@ void print_mem()
 	int i;
 	for (i = 0; i < memmap->nr_map; i++) {
 		u64 begin = memmap->map[i].addr, end = begin + memmap->map[i].size;
-		cprintf("├──memory: size:%08llx(%8lldKB), [%08llx, %08llx], type = %d - %s\n",
+		cprintf("|--memory: size:%08llx(%8lldKB), [%08llx, %08llx], type = %d - %s\n",
 				(u64)memmap->map[i].size,
 				(u64)(memmap->map[i].size/1024),
 				begin, end - 1, memmap->map[i].type, E820MAP_TYPE(memmap->map[i].type));
