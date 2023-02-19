@@ -452,7 +452,7 @@ void vmm_init(void)
 {
 	check_vma_struct();
 	check_pgfault();
-	uinfo("vmm_init succeeded.\n");
+	uclean("vmm_init succeeded.\n");
 }
 
 int mm_map(struct mm_struct *mm, uintptr_t addr, size_t len, uint32_t vm_flags, struct vma_struct **vma_store)

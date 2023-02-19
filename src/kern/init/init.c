@@ -32,35 +32,64 @@ int kern_init(void) __attribute__((noreturn));
 extern char bootstacktop[], bootstack[];
 extern char edata[], end[];
 
+static int kernel_init_step = 0;
 int kern_init(void)
 {
 	memset(edata, 0, end - edata);
 	cons_init();
-
 	cprintf("%s\n", welcome);
-	cprintf("bootstack:0x%x, bootstacktop:0x%x\n", bootstack, bootstacktop);
-	cprintf("edata:0x%x, end:0x%x\n", edata, end);
+
+	printf("[%d] kernel info\n", ++kernel_init_step);
 
 	print_kerninfo();
-	print_stackframe();
+
+	printf("[%d] physical memory info\n", ++kernel_init_step);
+
+	print_mem();
+
+	printf("[%d] pmm init\n", ++kernel_init_step);
 
 	pmm_init();
+
+	printf("[%d] pic init\n", ++kernel_init_step);
+
 	pic_init();
+
+	printf("[%d] idt init\n", ++kernel_init_step);
+
 	idt_init();                 // init interrupt descriptor table
+
 	intr_enable();
-	
+
+	printf("[%d] vmm init\n", ++kernel_init_step);
+
 	vmm_init();
+
+	printf("[%d] schedular init\n", ++kernel_init_step);
+
 	sched_init();
+
+	printf("[%d] process init\n", ++kernel_init_step);
 
 	proc_init();
 
+	printf("[%d] ide init\n", ++kernel_init_step);
+
 	ide_init();
 	//swap_init();
+
+	printf("[%d] file system init\n", ++kernel_init_step);
+
 	fs_init();
 
 	intr_disable();
+
+	printf("[%d] clock init\n", ++kernel_init_step);
+
 	clock_init();
+
 	intr_enable();
 
+	printf("[%d] idle loop\n", ++kernel_init_step);
 	cpu_idle();
 }
