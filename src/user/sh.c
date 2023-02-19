@@ -11,6 +11,7 @@
 
 #define printf(...)                     fprintf(1, __VA_ARGS__)
 #define putc(c)                         printf("%c", c)
+#define uinfo(fmt, args...) printf("[I][%s:%d][%s] " fmt, __FILE__, __LINE__, __FUNCTION__, ##args)
 
 #define BUFSIZE                         4096
 #define WHITESPACE                      " \t\r\n"
@@ -81,7 +82,8 @@ char * user_readline(const char *prompt)
 			i --;
 		}
 		else if (c == '\n' || c == '\r') {
-			putc(c);
+			putc('\r');
+			putc('\n');
 			buffer[i] = '\0';
 			break;
 		}
@@ -219,7 +221,6 @@ runit:
 
 int main(int argc, char **argv)
 {
-	printf("user sh is running!!!");
 	int ret, interactive = 1;
 	if (argc == 2) {
 		if ((ret = reopen(0, argv[1], O_RDONLY)) != 0) {
@@ -239,18 +240,18 @@ int main(int argc, char **argv)
 		shcwd[0] = '\0';
 		int pid;
 		if ((pid = fork()) == 0) {
+			uinfo("pid=%d, cmd=%s\n", pid, buffer);
 			ret = runcmd(buffer);
 			exit(ret);
 		}
 		assert(pid >= 0);
+		uinfo("pid=%d, cmd=%s\n", pid, buffer);
 		if (waitpid(pid, &ret) == 0) {
 			if (ret == 0 && shcwd[0] != '\0') {
 				ret = 0;
 			}
-			if (ret != 0) {
-				printf("error: %d - %e\n", ret, ret);
-			}
 		}
+		uinfo("\n");
 	}
 	return 0;
 }

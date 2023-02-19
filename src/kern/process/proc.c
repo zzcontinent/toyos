@@ -46,10 +46,8 @@ void proc_run(struct proc_struct *proc)
 
 #define __KERNEL_EXECVE(name, path, ...) ({                         \
 		const char *argv[] = {path, ##__VA_ARGS__, NULL};       \
-		cprintf("kernel_execve: pid = %d, name = \"%s\".\n",    \
-				g_current->pid, name);                            \
-				kernel_execve(name, argv);                              \
-				})
+		kernel_execve(name, argv);                              \
+		})
 
 #define KERNEL_EXECVE(x, ...)                   __KERNEL_EXECVE(#x, #x, ##__VA_ARGS__)
 
@@ -477,6 +475,7 @@ void proc_init(void)
 
 int do_exit(int error_code)
 {
+	uclean("exit %e\n", error_code);
 	if (g_current == g_idleproc) {
 		panic("idleproc exit.\n");
 	}
@@ -853,12 +852,16 @@ static int load_icode(int fd, int argc, char **kargv)
 out:
 	return ret;
 bad_cleanup_mmap:
+	uerror("bad_cleanup_mmap\n");
 	exit_mmap(mm);
 bad_elf_cleanup_pgdir:
+	uerror("bad_elf_cleanup_pgdir\n");
 	free_pgdir(mm);
 bad_pgdir_cleanup_mm:
+	uerror("bad_pgdir_cleanup_mm\n");
 	mm_destroy(mm);
 bad_mm:
+	uerror("bad_mm\n");
 	goto out;
 }
 
@@ -903,7 +906,6 @@ int do_execve(const char *name, int argc, const char **argv)
 	udebug("path=%s\n", path);
 	int fd;
 	if ((ret = fd = sysfile_open(path, O_RDONLY)) < 0) {
-		udebug("\n");
 		goto execve_exit;
 	}
 	udebug("\n");

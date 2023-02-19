@@ -10,7 +10,7 @@
  * */
 
 static const char * const error_string[MAXERROR + 1] = {
-	[0]                     NULL,
+	[0]                     "ok",
 	[E_UNSPECIFIED]         "unspecified error",
 	[E_BAD_PROC]            "bad process",
 	[E_INVAL]               "invalid parameter",
@@ -196,7 +196,7 @@ process_precision:
 					err = -err;
 				}
 				if (err > MAXERROR || (p = error_string[err]) == NULL) {
-					printfmt(putch, fd, putdat, "error %d", err);
+					printfmt(putch, fd, putdat, "[%d]", err);
 				} else {
 					printfmt(putch, fd, putdat, "[%d][%s]", err, p);
 				}
