@@ -60,20 +60,12 @@ ALLTARGETS += $(target_bootblock)
 ALLTARGETS += $(target_kernel)
 ALLTARGETS += $(target_os_img)
 ALLTARGETS += $(target_rootfsimg)
-ALLTARGETS += $(target_swapimg)
 
-USER_BINS :=
-USER_SRCDIR := user
-USER_LIBDIR := user/libs
-USER_CFLAGS := $(CFLAGS)
-USER_LDFLAGS := $(LDFLAGS) 
-USER_LDFLAGS += -T tools/user.ld
 
 rootfs_path = $(call to_out_target,disk0/)
 
 QEMUOPTS = -hda $(target_os_img) -drive file=$(target_swapimg),media=disk,cache=writeback -drive file=$(target_rootfsimg),media=disk,cache=writeback -no-reboot
 
-RULE_FILES_INCLUDE := user/user.mk
 #***************************************common function****************************************************/
 include tools/function.mk
 
@@ -103,20 +95,18 @@ $(target_kernel): $(call to_out_obj,kern/init/entry) $(ALLOBJS_kernel) | $(dir $
 	@echo "[LD] [$@] : $^"
 	$(V)$(LD) $(KERNEL_LDFLAGS) -o $@ $^
 
-#***************************************rule user****************************************************/
-$(call rule_compile_files,user,$(call listf_cc,$(USER_SRCDIR)),$(CC),$(USER_CFLAGS))
-$(call rule_compile_files,user_libs,$(call listf_cc,$(USER_LIBDIR)),$(CC),$(USER_CFLAGS))
-$(call rule_link_objs_same_targets,apps,$(ALLOBJS_user),$(ALLOBJS_user_libs),$(LD),$(USER_LDFLAGS))
-
 #***************************************rule images****************************************************/
 $(target_os_img): $(target_bootblock) $(target_kernel) | $(dir $(ALLTARGETS))
 	$(V)dd if=/dev/zero of=$@ count=10000
 	$(V)dd if=$(target_bootblock) of=$@ conv=notrunc
 	$(V)dd if=$(target_kernel) of=$@ seek=1 conv=notrunc
 
-$(target_rootfsimg): $(ALLTARGETS_apps) | $(call to_out_target,mksfs) $(dir $(ALLTARGETS))
+build_user_apps:
+	make -C user
+
+$(target_rootfsimg): build_user_apps $(call to_out_target,mksfs) | $(dir $(ALLTARGETS))
 	$(V)mkdir -p $(rootfs_path)
-	$(V)cp $(ALLTARGETS_apps) $(rootfs_path)
+	$(V)cp $(call listf,user/out/target) $(rootfs_path)
 	$(V)dd if=/dev/zero of=$@ bs=1M count=128
 	$(V)$(call to_out_target,mksfs) $@ $(rootfs_path)
 
@@ -130,8 +120,6 @@ $(call rule_link_objs_hostcc,tools,sign,$(call to_out_obj,tools/sign))
 # +++ mkfs tools +++
 $(call rule_compile_files_hostcc,mksfs,tools/mksfs.c)
 $(call rule_link_objs_hostcc,tools,mksfs,$(call to_out_obj,tools/mksfs))
-
-include $(RULE_FILES_INCLUDE)
 
 #***************************************rule command****************************************************/
 objdump:
@@ -176,11 +164,12 @@ lines:
 
 clean:
 	@-rm -r $(OUT_DIR)/
+	@make -C user clean
 
 log:
 	make clean && make 2>&1 | less -p 'warn|err'
 
-.PHONY: all qemu qemu-nox debug debug-nox monitor lines objdump
+.PHONY: all qemu qemu-nox debug debug-nox monitor lines objdump build_user_apps
 
 #***************************************finish****************************************************/
 $(call rule_finish_all)

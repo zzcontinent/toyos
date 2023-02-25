@@ -15,5 +15,6 @@ tags
 *obj
 *disk0
 src/out
+src/user/out/
 *.out
 src/tmp.log
