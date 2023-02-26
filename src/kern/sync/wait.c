@@ -110,8 +110,7 @@ void wakeup_queue(wait_queue_t *queue, u32 wakeup_flags, bool del)
 			do {
 				wakeup_wait(queue, wait, wakeup_flags, 1);
 			} while ((wait = wait_queue_first(queue)) != NULL);
-		}
-		else {
+		} else {
 			do {
 				wakeup_wait(queue, wait, wakeup_flags, 0);
 			} while ((wait = wait_queue_next(queue, wait)) != NULL);
