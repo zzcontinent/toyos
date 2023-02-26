@@ -1,3 +1,16 @@
+BLACK=\e[30;1m
+RED=\e[31;1m
+GREEN=\e[32;1m
+YELLOW=\e[33;1m
+BLUE=\e[34;1m
+PURPLE=\e[35;1m
+CYAN=\e[36;1m
+WHITE=\e[37;1m
+DONE=\033[0m
+
+CC_COLOR = $(GREEN)
+LD_COLOR = $(CYAN)
+
 SLASH := /
 .SECONDEXPANSION:
 
@@ -34,10 +47,10 @@ define template_complie_file
 ALLOBJS_$(1) += $$(call to_out_obj,$(2))
 ALLOBJS += $$(call to_out_obj,$(2))
 $$(call to_out_dep,$(2)): $(2) | $$$$(dir $$$$@)
-	@echo "[CC] [$$@] : $$^"
+	@echo "$(CC_COLOR)[CC]$(DONE) [$$@] : $$^"
 	$(V)$(3) -I$$(dir $(2)) $(4) -MM $$< -MT "$$(patsubst %.d,%.o,$$@) $$@" > $$@
 $$(call to_out_obj,$(2)): $(2) | $$$$(dir $$$$@)
-	@echo "[CC] [$$@] : $$^"
+	@echo "$(CC_COLOR)[CC]$(DONE) [$$@] : $$^"
 	$(V)$(3) -I$$(dir $(2)) $(4) -c $$< -o $$@
 endef
 
@@ -62,7 +75,7 @@ define template_link_objs
 ALLTARGETS += $$(call to_out_target,$(2))
 ALLTARGETS_$(1) += $$(call to_out_target,$(2))
 $$(call to_out_target,$(2)): $(3) | $$$$(dir $$$$@)
-	@echo "[LD] [$$@] : $$^"
+	@echo "$(LD_COLOR)[LD]$(DONE) [$$@] : $$^"
 	$(V)$(4) $(5) $$^ -o $$@
 endef
 
