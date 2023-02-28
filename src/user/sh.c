@@ -36,8 +36,7 @@ int gettoken(char **p1, char **p2)
 	int token = 'w';
 	if (strchr(SYMBOLS, *s) != NULL) {
 		token = *s, *s ++ = '\0';
-	}
-	else {
+	} else {
 		bool flag = 0;
 		while (*s != '\0' && (flag || strchr(WHITESPACE SYMBOLS, *s) == NULL)) {
 			if (*s == '"') {
@@ -216,13 +215,15 @@ runit:
 		argv[0] = argv0;
 	}
 	argv[argc] = NULL;
-	return __exec(NULL, argv);
+	return __exec(argv[0], argv);
 }
 
 int main(int argc, char **argv)
 {
+	uinfo("\n");
 	int ret, interactive = 1;
 	if (argc == 2) {
+		uinfo("\n");
 		if ((ret = reopen(0, argv[1], O_RDONLY)) != 0) {
 			return ret;
 		}
@@ -240,18 +241,15 @@ int main(int argc, char **argv)
 		shcwd[0] = '\0';
 		int pid;
 		if ((pid = fork()) == 0) {
-			uinfo("pid=%d, cmd=%s\n", pid, buffer);
 			ret = runcmd(buffer);
 			exit(ret);
 		}
 		assert(pid >= 0);
-		uinfo("pid=%d, cmd=%s\n", pid, buffer);
 		if (waitpid(pid, &ret) == 0) {
 			if (ret == 0 && shcwd[0] != '\0') {
 				ret = 0;
 			}
 		}
-		uinfo("\n");
 	}
 	return 0;
 }

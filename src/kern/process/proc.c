@@ -376,6 +376,7 @@ int do_fork(uint32_t clone_flags, uintptr_t stack, struct trapframe *tf)
 		goto bad_fork_cleanup_fs;
 	}
 	copy_thread(proc, stack, tf);
+	set_proc_name(proc, g_current->name);
 
 	bool intr_flag;
 	local_intr_save(intr_flag);
@@ -475,7 +476,6 @@ void proc_init(void)
 
 int do_exit(int error_code)
 {
-	uclean("exit %e\n", error_code);
 	if (g_current == g_idleproc) {
 		panic("idleproc exit.\n");
 	}
@@ -617,6 +617,7 @@ int do_kill(int pid)
 //          - then call scheduler. if process run again, delete timer first.
 int do_sleep(unsigned int time)
 {
+	uclean("[KERN] sleep [%d][%s]\n", g_current->pid, g_current->name);
 	if (time == 0) {
 		return 0;
 	}
@@ -869,7 +870,6 @@ bad_mm:
 //           - call load_icode to setup new memory space accroding binary prog.
 int do_execve(const char *name, int argc, const char **argv)
 {
-	udebug("name=%s, argc=%d, argv=0x%x\n", name, argc, argv);
 	static_assert(EXEC_MAX_ARG_LEN >= FS_MAX_FPATH_LEN);
 	struct mm_struct *mm = g_current->mm;
 	if (!(argc >= 1 && argc <= EXEC_MAX_ARG_NUM)) {
@@ -928,7 +928,6 @@ int do_execve(const char *name, int argc, const char **argv)
 	return 0;
 
 execve_exit:
-	udebug("\n");
 	free_kargv(argc, kargv);
 	do_exit(ret);
 	panic("already exit: %e.\n", ret);
