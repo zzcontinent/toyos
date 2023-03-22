@@ -651,8 +651,7 @@ static int get_device(char *path, char **subpath, struct inode **node_store)
 		if ((ret = vfs_get_bootfs(node_store)) != 0) {
 			return ret;
 		}
-	}
-	else {
+	} else {
 		assert(*path == ':');
 		struct inode *node;
 		if ((ret = vfs_get_curdir(&node)) != 0) {
