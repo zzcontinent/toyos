@@ -22,6 +22,9 @@ extern int cmd_format_print4(int argc, char **argv);
 extern int cmd_format_print2(int argc, char **argv);
 extern int cmd_print_dev_list(int argc, char **argv);
 extern int cmd_kernel_execv(int argc, char **argv);
+extern int cmd_sfs_ls(int argc, char **argv);
+extern int cmd_sfs_read(int argc, char **argv);
+extern int cmd_sfs_write(int argc, char **argv);
 
 #define DEBUG_CONSOLE { \
 	uinfo(""); \

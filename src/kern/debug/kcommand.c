@@ -54,6 +54,9 @@ static struct command commands[COMMAND_MAX] = {
 	{"devs", "print vfs_dev_list", 1, cmd_print_dev_list},
 	{"hi", "hi [index](print history or run history of index)", -1, cmd_history},
 	{"kexec", "kexec(kernel execve) name path args...", -1, cmd_kernel_execv},
+	{"sfs_ls", "sfs_ls path", -1, cmd_sfs_ls},
+	{"sfs_read", "sfs_read file rbuf len", 3, cmd_sfs_read},
+	{"sfs_write", "sfs_write file wbuf len", 3, cmd_sfs_write},
 	{0, 0, 0, 0},
 };
 
@@ -346,6 +349,27 @@ int cmd_history(int argc, char **argv)
 }
 
 int cmd_kernel_execv(int argc, char **argv)
+{
+	const char ** tmp_argv = (const char **)argv;
+	kernel_execve(tmp_argv[1], tmp_argv+1);
+	return CMD_SUCCEED;
+}
+
+int cmd_sfs_ls(int argc, char **argv)
+{
+	const char ** tmp_argv = (const char **)argv;
+	kernel_execve(tmp_argv[1], tmp_argv+1);
+	return CMD_SUCCEED;
+}
+
+int cmd_sfs_read(int argc, char **argv)
+{
+	const char ** tmp_argv = (const char **)argv;
+	kernel_execve(tmp_argv[1], tmp_argv+1);
+	return CMD_SUCCEED;
+}
+
+int cmd_sfs_write(int argc, char **argv)
 {
 	const char ** tmp_argv = (const char **)argv;
 	kernel_execve(tmp_argv[1], tmp_argv+1);

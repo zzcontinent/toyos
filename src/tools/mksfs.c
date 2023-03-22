@@ -182,7 +182,8 @@ struct sfs_entry {
 	char name[SFS_MAX_FNAME_LEN + 1];
 };
 
-static u32 sfs_alloc_ino(struct sfs_fs *sfs) {
+static u32 sfs_alloc_ino(struct sfs_fs *sfs)
+{
 	if (sfs->next_ino < sfs->ninos) {
 		sfs->super.unused_blocks --;
 		return sfs->next_ino ++;
@@ -190,7 +191,8 @@ static u32 sfs_alloc_ino(struct sfs_fs *sfs) {
 	bug("out of disk space.\n");
 }
 
-static struct cache_block * alloc_cache_block(struct sfs_fs *sfs, u32 ino) {
+static struct cache_block * alloc_cache_block(struct sfs_fs *sfs, u32 ino)
+{
 	struct cache_block *cb = safe_malloc(sizeof(struct cache_block));
 	cb->ino = (ino != 0) ? ino : sfs_alloc_ino(sfs);
 	cb->cache = memset(safe_malloc(SFS_BLKSIZE), 0, SFS_BLKSIZE);
@@ -199,7 +201,8 @@ static struct cache_block * alloc_cache_block(struct sfs_fs *sfs, u32 ino) {
 	return cb;
 }
 
-struct cache_block * search_cache_block(struct sfs_fs *sfs, u32 ino) {
+struct cache_block * search_cache_block(struct sfs_fs *sfs, u32 ino)
+{
 	struct cache_block *cb = sfs->blocks[hash32(ino)];
 	while (cb != NULL && cb->ino != ino) {
 		cb = cb->hash_next;
@@ -207,7 +210,8 @@ struct cache_block * search_cache_block(struct sfs_fs *sfs, u32 ino) {
 	return cb;
 }
 
-static struct cache_inode * alloc_cache_inode(struct sfs_fs *sfs, ino_t real, u32 ino, u16 type) {
+static struct cache_inode * alloc_cache_inode(struct sfs_fs *sfs, ino_t real, u32 ino, u16 type)
+{
 	struct cache_inode *ci = safe_malloc(sizeof(struct cache_inode));
 	ci->ino = (ino != 0) ? ino : sfs_alloc_ino(sfs);
 	ci->real = real, ci->nblks = 0, ci->l1 = ci->l2 = NULL;
@@ -219,7 +223,8 @@ static struct cache_inode * alloc_cache_inode(struct sfs_fs *sfs, ino_t real, u3
 	return ci;
 }
 
-struct cache_inode * search_cache_inode(struct sfs_fs *sfs, ino_t real) {
+struct cache_inode * search_cache_inode(struct sfs_fs *sfs, ino_t real)
+{
 	struct cache_inode *ci = sfs->inodes[hash64(real)];
 	while (ci != NULL && ci->real != real) {
 		ci = ci->hash_next;
@@ -227,7 +232,8 @@ struct cache_inode * search_cache_inode(struct sfs_fs *sfs, ino_t real) {
 	return ci;
 }
 
-struct sfs_fs * create_sfs(int imgfd) {
+struct sfs_fs * create_sfs(int imgfd)
+{
 	u32 ninos, next_ino;
 	struct stat *stat = safe_fstat(imgfd);
 	if ((ninos = stat->st_size / SFS_BLKSIZE) > SFS_MAX_NBLKS) {
@@ -259,7 +265,8 @@ struct sfs_fs * create_sfs(int imgfd) {
 	return sfs;
 }
 
-static void subpath_push(struct sfs_fs *sfs, const char *subname) {
+static void subpath_push(struct sfs_fs *sfs, const char *subname)
+{
 	struct subpath *subpath = safe_malloc(sizeof(struct subpath));
 	subpath->subname = safe_strdup(subname);
 	sfs->sp_end->next = subpath;
@@ -268,14 +275,16 @@ static void subpath_push(struct sfs_fs *sfs, const char *subname) {
 	sfs->sp_end = subpath;
 }
 
-static void subpath_pop(struct sfs_fs *sfs) {
+static void subpath_pop(struct sfs_fs *sfs)
+{
 	assert(sfs->sp_root != sfs->sp_end);
 	struct subpath *subpath = sfs->sp_end;
 	sfs->sp_end = sfs->sp_end->prev, sfs->sp_end->next = NULL;
 	free(subpath->subname), free(subpath);
 }
 
-static void subpath_show(FILE *fout, struct sfs_fs *sfs, const char *name) {
+static void subpath_show(FILE *fout, struct sfs_fs *sfs, const char *name)
+{
 	struct subpath *subpath = sfs->sp_root;
 	fprintf(fout, "current is: /");
 	while ((subpath = subpath->next) != NULL) {
@@ -287,7 +296,8 @@ static void subpath_show(FILE *fout, struct sfs_fs *sfs, const char *name) {
 	fprintf(fout, "\n");
 }
 
-static void write_block(struct sfs_fs *sfs, void *data, size_t len, u32 ino) {
+static void write_block(struct sfs_fs *sfs, void *data, size_t len, u32 ino)
+{
 	assert(len <= SFS_BLKSIZE && ino < sfs->ninos);
 	static char buffer[SFS_BLKSIZE];
 	if (len != SFS_BLKSIZE) {
@@ -301,15 +311,18 @@ static void write_block(struct sfs_fs *sfs, void *data, size_t len, u32 ino) {
 	}
 }
 
-static void flush_cache_block(struct sfs_fs *sfs, struct cache_block *cb) {
+static void flush_cache_block(struct sfs_fs *sfs, struct cache_block *cb)
+{
 	write_block(sfs, cb->cache, SFS_BLKSIZE, cb->ino);
 }
 
-static void flush_cache_inode(struct sfs_fs *sfs, struct cache_inode *ci) {
+static void flush_cache_inode(struct sfs_fs *sfs, struct cache_inode *ci)
+{
 	write_block(sfs, &(ci->inode), sizeof(ci->inode), ci->ino);
 }
 
-void close_sfs(struct sfs_fs *sfs) {
+void close_sfs(struct sfs_fs *sfs)
+{
 	static char buffer[SFS_BLKSIZE];
 	u32 i, j, ino = SFS_BLKN_FREEMAP;
 	u32 ninos = sfs->ninos, next_ino = sfs->next_ino;
@@ -347,7 +360,8 @@ void close_sfs(struct sfs_fs *sfs) {
 	}
 }
 
-struct sfs_fs * open_img(const char *imgname) {
+struct sfs_fs * open_img(const char *imgname)
+{
 	const char *expect = ".img", *ext = imgname + strlen(imgname) - strlen(expect);
 	if (ext <= imgname || strcmp(ext, expect) != 0) {
 		bug("invalid .img file name '%s'.\n", imgname);
@@ -377,7 +391,8 @@ void open_link(struct sfs_fs *sfs, struct cache_inode *file, const char *filenam
 #define SFS_L2_NBLKS                            (SFS_BLK_NENTRY * SFS_BLK_NENTRY + SFS_L1_NBLKS)
 #define SFS_LN_NBLKS                            (SFS_MAX_FILE_SIZE / SFS_BLKSIZE)
 
-static void update_cache(struct sfs_fs *sfs, struct cache_block **cbp, u32 *inop) {
+static void update_cache(struct sfs_fs *sfs, struct cache_block **cbp, u32 *inop)
+{
 	u32 ino = *inop;
 	struct cache_block *cb = *cbp;
 	if (ino == 0) {
@@ -391,7 +406,8 @@ static void update_cache(struct sfs_fs *sfs, struct cache_block **cbp, u32 *inop
 	*cbp = cb, *inop = ino;
 }
 
-static void append_block(struct sfs_fs *sfs, struct cache_inode *file, size_t size, u32 ino, const char *filename) {
+static void append_block(struct sfs_fs *sfs, struct cache_inode *file, size_t size, u32 ino, const char *filename)
+{
 	static_assert(SFS_LN_NBLKS <= SFS_L2_NBLKS, "SFS_LN_NBLKS <= SFS_L2_NBLKS");
 	assert(size <= SFS_BLKSIZE);
 	u32 nblks = file->nblks;
@@ -421,7 +437,8 @@ static void append_block(struct sfs_fs *sfs, struct cache_inode *file, size_t si
 	inode->blocks ++;
 }
 
-static void add_entry(struct sfs_fs *sfs, struct cache_inode *current, struct cache_inode *file, const char *name) {
+static void add_entry(struct sfs_fs *sfs, struct cache_inode *current, struct cache_inode *file, const char *name)
+{
 	static struct sfs_entry __entry, *entry = &__entry;
 	assert(current->inode.type == SFS_TYPE_DIR && strlen(name) <= SFS_MAX_FNAME_LEN);
 	entry->ino = file->ino, strcpy(entry->name, name);
@@ -431,7 +448,8 @@ static void add_entry(struct sfs_fs *sfs, struct cache_inode *current, struct ca
 	file->inode.nlinks ++;
 }
 
-static void add_dir(struct sfs_fs *sfs, struct cache_inode *parent, const char *dirname, int curfd, int fd, ino_t real) {
+static void add_dir(struct sfs_fs *sfs, struct cache_inode *parent, const char *dirname, int curfd, int fd, ino_t real)
+{
 	assert(search_cache_inode(sfs, real) == NULL);
 	struct cache_inode *current = alloc_cache_inode(sfs, real, 0, SFS_TYPE_DIR);
 	safe_fchdir(fd), subpath_push(sfs, dirname);
@@ -440,7 +458,8 @@ static void add_dir(struct sfs_fs *sfs, struct cache_inode *parent, const char *
 	add_entry(sfs, parent, current, dirname);
 }
 
-static void add_file(struct sfs_fs *sfs, struct cache_inode *current, const char *filename, int fd, ino_t real) {
+static void add_file(struct sfs_fs *sfs, struct cache_inode *current, const char *filename, int fd, ino_t real)
+{
 	struct cache_inode *file;
 	if ((file = search_cache_inode(sfs, real)) == NULL) {
 		file = alloc_cache_inode(sfs, real, 0, SFS_TYPE_FILE);
@@ -449,13 +468,15 @@ static void add_file(struct sfs_fs *sfs, struct cache_inode *current, const char
 	add_entry(sfs, current, file, filename);
 }
 
-static void add_link(struct sfs_fs *sfs, struct cache_inode *current, const char *filename, ino_t real) {
+static void add_link(struct sfs_fs *sfs, struct cache_inode *current, const char *filename, ino_t real)
+{
 	struct cache_inode *file = alloc_cache_inode(sfs, real, 0, SFS_TYPE_LINK);
 	open_link(sfs, file, filename);
 	add_entry(sfs, current, file, filename);
 }
 
-void open_dir(struct sfs_fs *sfs, struct cache_inode *current, struct cache_inode *parent) {
+void open_dir(struct sfs_fs *sfs, struct cache_inode *current, struct cache_inode *parent)
+{
 	DIR *dir;
 	if ((dir = opendir(".")) == NULL) {
 		open_bug(sfs, NULL, "opendir failed.\n");
@@ -504,7 +525,8 @@ void open_dir(struct sfs_fs *sfs, struct cache_inode *current, struct cache_inod
 	closedir(dir);
 }
 
-void open_file(struct sfs_fs *sfs, struct cache_inode *file, const char *filename, int fd) {
+void open_file(struct sfs_fs *sfs, struct cache_inode *file, const char *filename, int fd)
+{
 	static char buffer[SFS_BLKSIZE];
 	ssize_t ret, last = SFS_BLKSIZE;
 	while ((ret = read(fd, buffer, sizeof(buffer))) != 0) {
@@ -519,7 +541,8 @@ void open_file(struct sfs_fs *sfs, struct cache_inode *file, const char *filenam
 	}
 }
 
-void open_link(struct sfs_fs *sfs, struct cache_inode *file, const char *filename) {
+void open_link(struct sfs_fs *sfs, struct cache_inode *file, const char *filename)
+{
 	static char buffer[SFS_BLKSIZE];
 	u32 ino = sfs_alloc_ino(sfs);
 	ssize_t ret = readlink(filename, buffer, sizeof(buffer));
@@ -530,7 +553,8 @@ void open_link(struct sfs_fs *sfs, struct cache_inode *file, const char *filenam
 	append_block(sfs, file, ret, ino, filename);
 }
 
-int create_img(struct sfs_fs *sfs, const char *home) {
+int create_img(struct sfs_fs *sfs, const char *home)
+{
 	int curfd, homefd;
 	if ((curfd = open(".", O_RDONLY)) < 0) {
 		bug("get current fd failed.\n");
@@ -546,7 +570,8 @@ int create_img(struct sfs_fs *sfs, const char *home) {
 	return 0;
 }
 
-static void static_check(void) {
+static void static_check(void)
+{
 #if defined(__i386__)
 	// IA-32, gcc with -D_FILE_OFFSET_BITS=64
 	static_assert(sizeof(off_t) == 8, "sizeof off_t should be 8 in i386");
@@ -563,7 +588,8 @@ static void static_check(void) {
 	static_assert(SFS_MAX_FILE_SIZE <= 0x80000000UL,"SFS_MAX_FILE_SIZE <= 0x80000000UL");
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
 	static_check();
 	if (argc != 3) {
 		bug("usage: <input *.img> <input dirname>\n");
