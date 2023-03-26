@@ -63,7 +63,7 @@ ALLTARGETS += $(target_os_img)
 ALLTARGETS += $(target_rootfsimg)
 
 
-rootfs_path = $(call to_out_target,disk0/)
+rootfs_path = $(call to_out_target,disk)
 
 QEMUOPTS = -hda $(target_os_img) -drive file=$(target_swapimg),media=disk,cache=writeback -drive file=$(target_rootfsimg),media=disk,cache=writeback -no-reboot
 

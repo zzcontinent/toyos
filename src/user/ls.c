@@ -57,7 +57,6 @@ int lsdir(const char *path)
 		}
 		lsstat(stat, direntp->name);
 	}
-	printf("lsdir: step 4\n");
 	closedir(dirp);
 	return 0; failed
 		:
