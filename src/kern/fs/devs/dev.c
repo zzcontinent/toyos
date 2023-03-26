@@ -146,7 +146,7 @@ void dev_init(void)
 {
 	init_device(stdin);
 	init_device(stdout);
-	init_device(disk0);
+	init_device(disk);
 }
 /* dev_create_inode - Create inode for a vfs-level device. */
 struct inode * dev_create_inode(void)

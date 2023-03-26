@@ -62,7 +62,7 @@ static int user_main(void *arg)
 static int init_main(void *arg)
 {
 	int ret;
-	if ((ret = vfs_set_bootfs("disk0:")) != 0) {
+	if ((ret = vfs_set_bootfs("disk:")) != 0) {
 		panic("set boot fs failed: %e.\n", ret);
 	}
 

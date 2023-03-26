@@ -16,7 +16,7 @@
 void sfs_init(void)
 {
 	int ret;
-	if ((ret = sfs_mount("disk0")) != 0) {
+	if ((ret = sfs_mount("disk")) != 0) {
 		panic("failed: sfs: sfs_mount: %e.\n", ret);
 	}
 }
