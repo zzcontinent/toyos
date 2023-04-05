@@ -261,13 +261,14 @@ int debuginfo_eip(uintptr_t addr, struct eipdebuginfo* info)
 void print_kerninfo(void)
 {
 	extern char etext[], edata[], end[], kern_init[];
-	cprintf("Special kernel symbols:\n");
-	cprintf("  entry  0x%08x (phys)\n", kern_init);
-	cprintf("  etext  0x%08x (phys)\n", etext);
-	cprintf("  edata  0x%08x (phys)\n", edata);
-	cprintf("  end    0x%08x (phys)\n", end);
-	cprintf("Bootstack:0x%x, bootstacktop:0x%x\n", bootstack, bootstacktop);
-	cprintf("Kernel executable memory footprint: %dKB\n", ((u32)end - (u32)kern_init + 1023) / 1024);
+	cprintf("kernel symbols:\n");
+	cprintf("|-entry  0x%08x (phys)\n", kern_init);
+	cprintf("|-etext  0x%08x (phys)\n", etext);
+	cprintf("|-edata  0x%08x (phys)\n", edata);
+	cprintf("|-end    0x%08x (phys)\n", end);
+	cprintf("bootstack:0x%x, bootstacktop:0x%x\n", bootstack, bootstacktop);
+	u32 size = (u32)end - (u32)kern_init;
+	cprintf("kernel size: %d (Bytes)\n", size);
 }
 
 /* *

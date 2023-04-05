@@ -493,7 +493,7 @@ int do_exit(int error_code)
 		}
 		g_current->mm = NULL;
 	}
-	free_proc_files(g_current); //for LAB8
+	free_proc_files(g_current);
 	g_current->state = PROC_ZOMBIE;
 	g_current->exit_code = error_code;
 
