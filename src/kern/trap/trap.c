@@ -119,16 +119,16 @@ bool trap_in_kernel(struct trapframe* tf)
 
 void print_trapframe(struct trapframe* tf)
 {
-	cprintf("trapframe at %p\n", tf);
+	cprintf("trapframe &tf=%p\n", tf);
 	print_regs(tf);
-	cprintf("|-ds        0x04x\n", tf->tf_ds);
-	cprintf("|-es        0x04x\n", tf->tf_es);
-	cprintf("|-fs        0x04x\n", tf->tf_fs);
-	cprintf("|-gs        0x04x\n", tf->tf_gs);
+	cprintf("|-ds        0x%04x\n", tf->tf_ds);
+	cprintf("|-es        0x%04x\n", tf->tf_es);
+	cprintf("|-fs        0x%04x\n", tf->tf_fs);
+	cprintf("|-gs        0x%04x\n", tf->tf_gs);
 	cprintf("|-trap      0x%08x %s\n", tf->tf_trapno, trapname(tf->tf_trapno));
 	cprintf("|-err       0x%08x\n", tf->tf_err);
 	cprintf("|-eip       0x%08x\n", tf->tf_eip);
-	cprintf("|-cs        0x04x\n", tf->tf_cs);
+	cprintf("|-cs        0x%04x\n", tf->tf_cs);
 	cprintf("|-flag      0x%08x ", tf->tf_eflags);
 
 	int i, j;
@@ -138,9 +138,9 @@ void print_trapframe(struct trapframe* tf)
 		}
 	}
 	cprintf("IOPL=%d\n", (tf->tf_eflags & FL_IOPL_MASK) >> 12);
-	cprintf("|-tf_kernel %d\n", trap_in_kernel(tf));
+	cprintf("|-tf_in_kernel %d\n", trap_in_kernel(tf));
 	cprintf("|-esp       0x%08x\n", tf->tf_esp);
-	cprintf("|-ss        0x----%04x\n", tf->tf_ss);
+	cprintf("|-ss        0x%04x\n", tf->tf_ss);
 }
 
 void print_regs(struct trapframe* tf)

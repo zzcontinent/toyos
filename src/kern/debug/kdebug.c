@@ -341,7 +341,7 @@ void print_stackframe(void)
 	int i = 0, j = 0;
 	for (i = 0; t_ebp != 0 && i < STACKFRAME_DEPTH; i++) {
 		print_debuginfo(t_eip - 1);
-		cprintf("|  t_ebp:0x%x t_eip:0x%x args:", i, t_ebp, t_eip);
+		cprintf("|  t_ebp:0x%x t_eip:0x%x args:", t_ebp, t_eip);
 		u32* args = (u32*)t_ebp + 2;
 		for (j = 0; j < 4; j++) {
 			cprintf("0x%08x ", args[j]);
