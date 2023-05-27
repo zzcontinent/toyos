@@ -1,5 +1,5 @@
 #****************************************common***************************************************/
-
+ECHO := echo -e
 GCCPREFIX :=
 QEMU := qemu-system-i386
 V := @
@@ -13,7 +13,7 @@ HOSTCFLAGS := -g -Wall -O2 -D_FILE_OFFSET_BITS=64
 
 GDB := ${GCCPREFIX}gdb
 CC := $(GCCPREFIX)gcc
-CFLAGS := -fno-builtin -fno-PIC -Wall -ggdb -m32 -gstabs -nostdinc
+CFLAGS := -fno-builtin -fno-PIC -Wall -ggdb -m32 -nostdinc
 CFLAGS += $(shell $(CC) -fno-stack-protector -E -x c /dev/null >/dev/null 2>&1 && echo -fno-stack-protector)
 CFLAGS += -I.
 CTYPE := c S
@@ -83,7 +83,7 @@ all: $(target_bootblock) $(target_kernel) $(target_os_img) $(target_rootfsimg)
 $(call rule_compile_files,bootblock,$(bootfiles),$(CC),$(BOOT_CFLAGS) -nostdinc)
 
 $(target_bootblock): $(ALLOBJS_bootblock) | $(call to_out_target,sign) $(dir $(ALLTARGETS))
-	@echo "$(LD_COLOR)[LD]$(DONE) [$@] : $^"
+	@$(ECHO) "$(LD_COLOR)[LD]$(DONE) [$@] : $^"
 	$(V)$(LD) $(BOOT_LDFLAGS) -N  $^ -o $(call to_out_target,boot)
 	$(V)$(OBJCOPY) -S -O binary $(call to_out_target,boot) $(target_bootblock)
 	$(V)$(call to_out_target,sign) $(target_bootblock) $(target_bootblock)
@@ -93,7 +93,7 @@ $(call rule_compile_files,kernel,$(foreach d,$(KSRCDIR),$(call listf_cc,$(d))),$
 $(call rule_compile_files,kernel,$(call listf_cc,$(LIBDIR)),$(CC),$(KERNEL_CFLAGS))
 
 $(target_kernel): $(call to_out_obj,kern/init/entry) $(ALLOBJS_kernel) | $(dir $(ALLTARGETS))
-	@echo "$(LD_COLOR)[LD]$(DONE) [$@] : $^"
+	@$(ECHO) "$(LD_COLOR)[LD]$(DONE) [$@] : $^"
 	$(V)$(LD) $(KERNEL_LDFLAGS) -o $@ $^
 
 #***************************************rule images****************************************************/

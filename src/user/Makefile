@@ -1,4 +1,5 @@
 #****************************************common***************************************************/
+ECHO := echo -e
 GCCPREFIX :=
 QEMU := qemu-system-i386
 V := @
@@ -12,7 +13,7 @@ HOSTCFLAGS := -g -Wall -O2 -D_FILE_OFFSET_BITS=64
 
 GDB := ${GCCPREFIX}gdb
 CC := $(GCCPREFIX)gcc
-CFLAGS := -fno-builtin -fno-PIC -Wall -ggdb -m32 -gstabs -nostdinc
+CFLAGS := -fno-builtin -fno-PIC -Wall -ggdb -m32 -nostdinc
 CFLAGS += $(shell $(CC) -fno-stack-protector -E -x c /dev/null >/dev/null 2>&1 && echo -fno-stack-protector)
 CFLAGS += -I..
 CTYPE := c S
