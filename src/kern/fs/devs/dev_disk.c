@@ -1,4 +1,5 @@
 #include <libs/defs.h>
+#include <libs/types.h>
 #include <kern/mm/mmu.h>
 #include <kern/mm/kmalloc.h>
 #include <kern/sync/sem.h>

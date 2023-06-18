@@ -2,6 +2,7 @@
 #define  __ATOMIC_H__
 
 #include <libs/defs.h>
+#include <libs/types.h>
 
 static inline void set_bit(int nr, volatile void *addr)
 {

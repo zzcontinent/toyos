@@ -1,6 +1,7 @@
 #include <user/libs/ulib.h>
 #include <user/libs/syscall.h>
 #include <libs/string.h>
+#include <libs/types.h>
 #include <libs/stdio.h>
 #include <libs/stdlib.h>
 

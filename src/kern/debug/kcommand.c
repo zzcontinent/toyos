@@ -132,9 +132,9 @@ void kcmd_loop()
 	char promt_buf[64] = {0};
 	while (1) {
 		snprintf(promt_buf, 64, "[sh:%d]$ ", ++index);
-		set_cons_feed(from_loop);
+		set_cons_type(CONS_TYPE_SERIAL_POLL);
 		if ((buf = readline(promt_buf, 1)) != NULL) {
-			set_cons_feed(from_isr);
+			set_cons_type(CONS_TYPE_SERIAL_ISR);
 			//append history
 			append_cmd_history(buf);
 

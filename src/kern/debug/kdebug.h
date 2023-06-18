@@ -4,5 +4,6 @@
 void print_kerninfo(void);
 void print_stackframe(void);
 u32 read_eip(void);
+void delay_cnt(int cnt);
 
 #endif  /* __KDEBUG_H__ */

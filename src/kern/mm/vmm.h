@@ -9,6 +9,7 @@
 #include <libs/defs.h>
 #include <libs/list.h>
 #include <kern/mm/memlayout.h>
+#include <kern/mm/page.h>
 #include <kern/sync/sync.h>
 #include <kern/process/proc.h>
 #include <kern/sync/sem.h>

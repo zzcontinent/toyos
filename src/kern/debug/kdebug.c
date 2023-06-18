@@ -352,3 +352,9 @@ void print_stackframe(void)
 	}
 }
 
+void delay_cnt(int cnt)
+{
+	volatile int cnt1 = cnt;
+	while(cnt1--);
+}
+

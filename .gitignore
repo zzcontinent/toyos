@@ -18,3 +18,5 @@ src/out
 src/user/out/
 *.out
 src/tmp.log
+Session.vim
+*/Session.vim

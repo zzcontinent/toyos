@@ -20,13 +20,14 @@
 #include <kern/fs/fs.h>
 
 //http://patorjk.com/software/taag
-static char *welcome ="\n"
-" ______     ______     ______   \n"
-"/\\___  \\   /\\  __ \\   /\\  ___\\   \n"
-"\\/_/  /__  \\ \\ \\/\\ \\  \\ \\___  \\  \n"
-"  /\\_____\\  \\ \\_____\\  \\/\\_____\\ \n"
-"  \\/_____/   \\/_____/   \\/_____/ \n"
-"                                ";
+static char *hello_msg ="\n"
+"███████╗ █████╗ ███████╗██╗   ██╗ ██████╗ ███████╗\n"
+"██╔════╝██╔══██╗██╔════╝╚██╗ ██╔╝██╔═══██╗██╔════╝\n"
+"█████╗  ███████║███████╗ ╚████╔╝ ██║   ██║███████╗\n"
+"██╔══╝  ██╔══██║╚════██║  ╚██╔╝  ██║   ██║╚════██║\n"
+"███████╗██║  ██║███████║   ██║   ╚██████╔╝███████║\n"
+"╚══════╝╚═╝  ╚═╝╚══════╝   ╚═╝    ╚═════╝ ╚══════╝\n";
+
 
 int kern_init(void) __attribute__((noreturn));
 extern char bootstacktop[], bootstack[];
@@ -38,45 +39,45 @@ int kern_init(void)
 {
 	memset(edata, 0, end - edata);
 	cons_init();
-	cprintf("%s\n", welcome);
+	cprintf("%s\n", hello_msg);
 
-	printf("===[%d/%d] kernel info\n", ++kernel_init_step, kernel_init_step_total);
+	printf("[%d/%d] kernel info\n", ++kernel_init_step, kernel_init_step_total);
 	print_kerninfo();
 
-	printf("===[%d/%d] physical memory info\n", ++kernel_init_step, kernel_init_step_total);
+	printf("[%d/%d] physical memory info\n", ++kernel_init_step, kernel_init_step_total);
 	print_mem();
 
-	printf("===[%d/%d] pmm init\n", ++kernel_init_step, kernel_init_step_total);
+	printf("[%d/%d] pmm init\n", ++kernel_init_step, kernel_init_step_total);
 	pmm_init();
 
-	printf("===[%d/%d] pic init\n", ++kernel_init_step, kernel_init_step_total);
+	printf("[%d/%d] pic init\n", ++kernel_init_step, kernel_init_step_total);
 	pic_init();
 
-	printf("===[%d/%d] idt init\n", ++kernel_init_step, kernel_init_step_total);
+	printf("[%d/%d] idt init\n", ++kernel_init_step, kernel_init_step_total);
 	idt_init();                 // init interrupt descriptor table
 	intr_enable();
 
-	printf("===[%d/%d] vmm init\n", ++kernel_init_step, kernel_init_step_total);
+	printf("[%d/%d] vmm init\n", ++kernel_init_step, kernel_init_step_total);
 	vmm_init();
 
-	printf("===[%d/%d] schedular init\n", ++kernel_init_step, kernel_init_step_total);
+	printf("[%d/%d] scheduler init\n", ++kernel_init_step, kernel_init_step_total);
 	sched_init();
 
-	printf("===[%d/%d] process init\n", ++kernel_init_step, kernel_init_step_total);
+	printf("[%d/%d] process init\n", ++kernel_init_step, kernel_init_step_total);
 	proc_init();
 
-	printf("===[%d/%d] ide init\n", ++kernel_init_step, kernel_init_step_total);
+	printf("[%d/%d] ide init\n", ++kernel_init_step, kernel_init_step_total);
 	ide_init();
 	//swap_init();
 
-	printf("===[%d/%d] file system init\n", ++kernel_init_step, kernel_init_step_total);
+	printf("[%d/%d] file system init\n", ++kernel_init_step, kernel_init_step_total);
 	fs_init();
 	intr_disable();
 
-	printf("===[%d/%d] clock init\n", ++kernel_init_step, kernel_init_step_total);
+	printf("[%d/%d] clock init\n", ++kernel_init_step, kernel_init_step_total);
 	clock_init();
 	intr_enable();
 
-	printf("===[%d/%d] idle loop\n", ++kernel_init_step, kernel_init_step_total);
+	printf("[%d/%d] idle loop\n", ++kernel_init_step, kernel_init_step_total);
 	cpu_idle();
 }

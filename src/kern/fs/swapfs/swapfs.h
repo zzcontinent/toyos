@@ -2,6 +2,7 @@
 #define  __SWAPFS_H__
 
 #include <kern/mm/memlayout.h>
+#include <kern/mm/page.h>
 #include <kern/fs/swapfs/swapfs.h>
 
 void swapfs_init(void);

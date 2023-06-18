@@ -1,6 +1,7 @@
 #ifndef  __ULIB_H__
 #define  __ULIB_H__
 #include <libs/defs.h>
+#include <libs/types.h>
 
 void __warn(const char *file, int line, const char *fmt, ...);
 void __noreturn __panic(const char *file, int line, const char *fmt, ...);

@@ -1,9 +1,9 @@
 #include <libs/libs_all.h>
 #include <kern/driver/console.h>
 #include <kern/debug/assert.h>
+#include <kern/mm/memlayout.h>
 #include <kern/mm/default_pmm.h>
 #include <kern/mm/kmalloc.h>
-#include <kern/mm/memlayout.h>
 #include <kern/mm/mmu.h>
 #include <kern/mm/pmm.h>
 #include <kern/sync/sync.h>

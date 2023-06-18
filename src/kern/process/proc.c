@@ -867,7 +867,7 @@ bad_mm:
 }
 
 // do_execve - call exit_mmap(mm)&free_pgdir(mm) to reclaim memory space of current process
-//           - call load_icode to setup new memory space accroding binary prog.
+//           - call load_icode to setup new memory space according binary prog.
 int do_execve(const char *name, int argc, const char **argv)
 {
 	static_assert(EXEC_MAX_ARG_LEN >= FS_MAX_FPATH_LEN);

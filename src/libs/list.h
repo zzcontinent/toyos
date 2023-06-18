@@ -1,8 +1,8 @@
 #ifndef  __LIST_H__
 #define  __LIST_H__
 
-#ifndef __ASSEMBLER__
 #include <libs/defs.h>
+#include <libs/types.h>
 
 struct list_entry {
 	struct list_entry *prev, *next;
@@ -81,6 +81,5 @@ static inline list_entry_t* list_prev(list_entry_t* listelm)
 	return listelm->prev;
 }
 
-#endif /* __ASSEMBLER__ */
 #endif  /* __LIST_H__ */
 

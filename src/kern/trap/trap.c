@@ -1,6 +1,7 @@
 #include <libs/libs_all.h>
 #include <kern/debug/assert.h>
 #include <kern/driver/clock.h>
+#include <kern/driver/serial.h>
 #include <kern/driver/console.h>
 #include <kern/debug/kdebug.h>
 #include <kern/mm/memlayout.h>
@@ -14,6 +15,7 @@
 #include <kern/mm/vmm.h>
 #include <kern/fs/devs/dev.h>
 #include <kern/debug/kcommand.h>
+#include <kern/driver/pic.h>
 
 #define TICK_NUM 100
 
@@ -205,12 +207,12 @@ void trap_dispatch(struct trapframe* tf)
 			break;
 		case IRQ_OFFSET + IRQ_COM1:
 			//udebug("IRQ_COM1:%d\n", tf->tf_trapno);
-			//serial_intr();
-			//break;
+			if ((get_cons_type() & CONS_TYPE_SERIAL_ISR)) {
+				cons_feed_buf(serial_getc);
+			}
+			break;
 		case IRQ_OFFSET + IRQ_KBD:
 			//udebug("IRQ_KBS:%d\n", tf->tf_trapno);
-			//kbd_intr();
-			serial_intr();
 			break;
 		case IRQ_OFFSET + IRQ_IDE1:
 		case IRQ_OFFSET + IRQ_IDE2:

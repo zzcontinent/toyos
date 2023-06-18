@@ -2,6 +2,7 @@
 #define  __STAT_H__
 
 #include <libs/defs.h>
+#include <libs/types.h>
 
 struct stat {
 	uint32_t st_mode;                   // protection mode and file type

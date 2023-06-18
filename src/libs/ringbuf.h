@@ -1,6 +1,7 @@
 #ifndef  __RINGBUF_H__
 #define  __RINGBUF_H__
 #include <libs/defs.h>
+#include <libs/types.h>
 
 struct ringbuf {
 	u8 * buf;
