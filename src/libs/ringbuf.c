@@ -81,63 +81,41 @@ int rb_dup(struct ringbuf *rb, u8 *rdata, int len)
 	int i = 0;
 	int len_min = rb_used(rb) < len ? rb_used(rb) : len;
 
+	int rpos = rb->rpos;
+
 	for (i=0; i<len_min; i++)
 	{
-		rdata[i] = rb->buf[rb->rpos+i];
+		rdata[i] = rb->buf[rpos];
+		rpos = rb_pos_next(rb, rpos);
 		++ret_r;
 	}
+	uclean("\n[%d]-[%c]\n", len_min, rdata[0]);
 	return ret_r;
 }
 
-#if 0
-static u8 rb_buf[256];
-static u8 buf_w[258] = {[0]=0x12, [255]=0x23, [256]=0x34};
-static u8 buf_r[256];
-
-int test_rb()
+void print_rb(struct ringbuf *rb)
 {
-	struct ringbuf rb;
-	if (rb_init(&rb, rb_buf, 256)) {
-		uerror("rb_init failed\n");
-		return -1;
-	}
-	uclean("rb_buf:0x%x, buf_w:0x%x, buf_r:0x%x\n", rb_buf, buf_w, buf_r);
-
-	if (256 != rb_write(&rb, buf_w, 258)) {
-		uerror("rb_write != 256\n");
-		return -2;
-	}
-
-	if (255 != rb_read(&rb, buf_r, 255)) {
-		uerror("rb_read != 255\n");
-		return -3;
-	}
-
-	if (1 != rb_used(&rb) || 255 != rb_free(&rb)) {
-		uerror("rb_used:%d, rb_free:%d\n", rb_used(&rb), rb_free(&rb));
-		return -4;
-	}
-
-	if (1 != rb_read(&rb, buf_r+255, 1)) {
-		uerror("rb_read != 1\n");
-		return -5;
-	}
-
-	if (0 != rb_used(&rb) || 256 != rb_free(&rb)) {
-		uerror("rb_used:%d, rb_free:%d\n", rb_used(&rb), rb_free(&rb));
-		return -6;
-	}
-
-	int i = 0;
-	for (i=0; i<256; i++)
+	uclean(
+			"rb       : 0x%x\n"
+			"|- buf   : 0x%x\n"
+			"|- len   : %d\n"
+			"|- used  : %d\n"
+			"|- rpos  : %d\n"
+			"`- wpos  : %d\n",
+			rb,
+			rb->buf,
+			rb->len,
+			rb->used,
+			rb->rpos,
+			rb->wpos);
+	int used = rb->used;
+	u8 rpos = rb->rpos;
+	u8 curb;
+	while(used--)
 	{
-		if (buf_w[i] != buf_r[i])
-		{
-			uclean("not same! [%d]: 0x%x vs 0x%x\n", i, buf_w[i], buf_r[i]);
-		}
+		curb = rb->buf[rpos];
+		uclean("0x%x(%c)\n", curb, curb);
+		rpos = (rpos + 1) % rb->len;
 	}
-	return 0;
 }
-
-#endif
 

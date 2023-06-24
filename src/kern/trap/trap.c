@@ -207,9 +207,7 @@ void trap_dispatch(struct trapframe* tf)
 			break;
 		case IRQ_OFFSET + IRQ_COM1:
 			//udebug("IRQ_COM1:%d\n", tf->tf_trapno);
-			if ((get_cons_type() & CONS_TYPE_SERIAL_ISR)) {
-				cons_feed_buf(serial_getc);
-			}
+			cons_isr();
 			break;
 		case IRQ_OFFSET + IRQ_KBD:
 			//udebug("IRQ_KBS:%d\n", tf->tf_trapno);

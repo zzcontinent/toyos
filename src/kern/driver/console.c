@@ -13,19 +13,19 @@
 #define CONSBUFFSIZE 512
 static u8 __g_cbuf[CONSBUFFSIZE];
 static struct ringbuf g_cbuf;
-static int cons_type = CONS_TYPE_SERIAL_POLL;
+static volatile u32 __cons_type = CONS_TYPE_SERIAL_POLL;
 
-void set_cons_type(int type)
+void set_cons_type(u32 type)
 {
-	cons_type = type;
+	__cons_type = type;
 }
 
-int get_cons_type()
+u32 get_cons_type()
 {
-	return cons_type;
+	return __cons_type;
 }
 
-void cons_feed_buf(int (*proc)(void))
+void cons_wait_feed_buf(int (*proc)(void))
 {
 	int c;
 	while ((c = (*proc)()) != -1) {
@@ -35,16 +35,21 @@ void cons_feed_buf(int (*proc)(void))
 	}
 }
 
-void cons_init(int type)
+void cons_init(u32 type)
 {
+	printf("init type:%d\n", type);
 	rb_init(&g_cbuf, __g_cbuf, CONSBUFFSIZE);
+
+	set_cons_type(type);
 	if (type & CONS_TYPE_CGA) {
 		cga_init();
 	}
-	if ((type & CONS_TYPE_SERIAL_POLL) || (type & CONS_TYPE_SERIAL_ISR)) {
+
+	if ((type & CONS_TYPE_SERIAL_POLL) || (type & CONS_TYPE_SERIAL_ISR_DEV_STDIN)) {
 		serial_init();
 	}
-	if ((type & CONS_TYPE_KEYBOARD_POLL) || (type & CONS_TYPE_SERIAL_ISR)) {
+
+	if (type & CONS_TYPE_KEYBOARD_POLL) {
 		kbd_init();
 	}
 	if (!serial_exists) {
@@ -61,7 +66,7 @@ void cons_putc(int c)
 		if (type & CONS_TYPE_CGA) {
 			cga_putc(c);
 		}
-		if ((type & CONS_TYPE_SERIAL_POLL) || (type & CONS_TYPE_SERIAL_ISR)) {
+		if (type & CONS_TYPE_SERIAL_POLL || type & CONS_TYPE_SERIAL_ISR_DEV_STDIN) {
 			serial_putc(c);
 		}
 	}
@@ -76,11 +81,12 @@ int cons_getc(void)
 	{
 		int type = get_cons_type();
 		if ((type & CONS_TYPE_SERIAL_POLL)) {
-			cons_feed_buf(serial_getc);
+			cons_wait_feed_buf(serial_getc);
 		}
 		if (type & CONS_TYPE_KEYBOARD_POLL) {
-			cons_feed_buf(kbd_proc_data);
+			cons_wait_feed_buf(kbd_proc_data);
 		}
+		//always read char form g_cbuf
 		rb_read(&g_cbuf, (u8*)&c, 1);
 	}
 	local_intr_restore(intr_flag);
@@ -98,3 +104,17 @@ int cons_dupc(void)
 	local_intr_restore(intr_flag);
 	return c;
 }
+
+void cons_isr()
+{
+	int type = get_cons_type();
+	udebug("type=0x%x\n", type);
+	if (type & CONS_TYPE_SERIAL_ISR_DEV_STDIN) {
+		cons_wait_feed_buf(serial_getc);
+		dev_stdin_write(cons_getc());
+	}
+	if (type & CONS_TYPE_KEYBOARD_ISR) {
+		cons_wait_feed_buf(kbd_proc_data);
+	}
+}
+

@@ -132,15 +132,12 @@ void kcmd_loop()
 	char promt_buf[64] = {0};
 	while (1) {
 		snprintf(promt_buf, 64, "[sh:%d]$ ", ++index);
-		set_cons_type(CONS_TYPE_SERIAL_POLL);
 		if ((buf = readline(promt_buf, 1)) != NULL) {
-			set_cons_type(CONS_TYPE_SERIAL_ISR);
 			//append history
 			append_cmd_history(buf);
 
 			enum CMD_RETURN_CODE ret_code = runcmd(buf);
-			if (ret_code == CMD_EXIT)
-			{
+			if (ret_code == CMD_EXIT) {
 				cprintf("exit!\n");
 				return;
 			} else if (ret_code == CMD_NOT_SUPPORT) {
@@ -350,6 +347,7 @@ int cmd_history(int argc, char **argv)
 
 int cmd_kernel_execv(int argc, char **argv)
 {
+	set_cons_type(CONS_TYPE_SERIAL_ISR_DEV_STDIN);
 	const char ** tmp_argv = (const char **)argv;
 	kernel_execve(tmp_argv[1], tmp_argv+1);
 	return CMD_SUCCEED;
@@ -357,6 +355,7 @@ int cmd_kernel_execv(int argc, char **argv)
 
 int cmd_sfs_ls(int argc, char **argv)
 {
+	set_cons_type(CONS_TYPE_SERIAL_ISR_DEV_STDIN);
 	const char ** tmp_argv = (const char **)argv;
 	kernel_execve(tmp_argv[1], tmp_argv+1);
 	return CMD_SUCCEED;
@@ -364,6 +363,7 @@ int cmd_sfs_ls(int argc, char **argv)
 
 int cmd_sfs_read(int argc, char **argv)
 {
+	set_cons_type(CONS_TYPE_SERIAL_ISR_DEV_STDIN);
 	const char ** tmp_argv = (const char **)argv;
 	kernel_execve(tmp_argv[1], tmp_argv+1);
 	return CMD_SUCCEED;
@@ -371,6 +371,7 @@ int cmd_sfs_read(int argc, char **argv)
 
 int cmd_sfs_write(int argc, char **argv)
 {
+	set_cons_type(CONS_TYPE_SERIAL_ISR_DEV_STDIN);
 	const char ** tmp_argv = (const char **)argv;
 	kernel_execve(tmp_argv[1], tmp_argv+1);
 	return CMD_SUCCEED;

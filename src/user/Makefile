@@ -34,8 +34,8 @@ OUT_TARGETDIR := $(OUT_DIR)target
 OUT_OBJDIR := $(OUT_DIR)obj
 
 USER_BINS :=
-USER_SRCDIR := .
-USER_LIBDIR := ./libs
+USER_SRCDIR := apps
+USER_LIBDIR := libs
 USER_CFLAGS := $(CFLAGS)
 USER_LDFLAGS := $(LDFLAGS) 
 USER_LDFLAGS += -T ../tools/user.ld

@@ -38,7 +38,7 @@ static int kernel_init_step_total = 12;
 int kern_init(void)
 {
 	memset(edata, 0, end - edata);
-	cons_init();
+	cons_init(CONS_TYPE_SERIAL_POLL);
 	cprintf("%s\n", hello_msg);
 
 	printf("[%d/%d] kernel info\n", ++kernel_init_step, kernel_init_step_total);

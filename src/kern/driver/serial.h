@@ -26,7 +26,7 @@ extern void delay(void);
 extern void serial_putc_sub(int c);
 extern void serial_putc(int c);
 extern int serial_getc(void);
-extern void serial_init(void);
+extern void serial_init();
 extern bool serial_exists;
 
 #endif  /* __SERIAL_H__ */
