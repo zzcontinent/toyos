@@ -13,8 +13,8 @@ HOSTCC := gcc
 HOSTCFLAGS := -g -Wall -O2 -D_FILE_OFFSET_BITS=64
 
 GDB := ${GCCPREFIX}gdb
-CC := $(GCCPREFIX)gcc-11
-CFLAGS := -fno-builtin -fno-PIC -Wall -ggdb -m32 -nostdinc
+CC := $(GCCPREFIX)gcc
+CFLAGS := -fno-builtin -fno-PIC -Wall -ggdb -march=i386 -m32 -nostdinc
 CFLAGS += $(shell $(CC) -fno-stack-protector -E -x c /dev/null >/dev/null 2>&1 && echo -fno-stack-protector)
 CFLAGS += -I.
 CTYPE := c S
