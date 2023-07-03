@@ -41,43 +41,43 @@ int kern_init(void)
 	cons_init(CONS_TYPE_SERIAL_POLL);
 	cprintf("%s\n", hello_msg);
 
-	printf("[%d/%d] kernel info\n", ++kernel_init_step, kernel_init_step_total);
+	printf("==> [%d/%d] kernel info\n", ++kernel_init_step, kernel_init_step_total);
 	print_kerninfo();
 
-	printf("[%d/%d] physical memory info\n", ++kernel_init_step, kernel_init_step_total);
+	printf("==> [%d/%d] physical memory info\n", ++kernel_init_step, kernel_init_step_total);
 	print_mem();
 
-	printf("[%d/%d] pmm init\n", ++kernel_init_step, kernel_init_step_total);
+	printf("==> [%d/%d] pmm init\n", ++kernel_init_step, kernel_init_step_total);
 	pmm_init();
 
-	printf("[%d/%d] pic init\n", ++kernel_init_step, kernel_init_step_total);
+	printf("==> [%d/%d] pic init\n", ++kernel_init_step, kernel_init_step_total);
 	pic_init();
 
-	printf("[%d/%d] idt init\n", ++kernel_init_step, kernel_init_step_total);
+	printf("==> [%d/%d] idt init\n", ++kernel_init_step, kernel_init_step_total);
 	idt_init();                 // init interrupt descriptor table
 	intr_enable();
 
-	printf("[%d/%d] vmm init\n", ++kernel_init_step, kernel_init_step_total);
+	printf("==> [%d/%d] vmm init\n", ++kernel_init_step, kernel_init_step_total);
 	vmm_init();
 
-	printf("[%d/%d] scheduler init\n", ++kernel_init_step, kernel_init_step_total);
+	printf("==> [%d/%d] scheduler init\n", ++kernel_init_step, kernel_init_step_total);
 	sched_init();
 
-	printf("[%d/%d] process init\n", ++kernel_init_step, kernel_init_step_total);
+	printf("==> [%d/%d] process init\n", ++kernel_init_step, kernel_init_step_total);
 	proc_init();
 
-	printf("[%d/%d] ide init\n", ++kernel_init_step, kernel_init_step_total);
+	printf("==> [%d/%d] ide init\n", ++kernel_init_step, kernel_init_step_total);
 	ide_init();
 	//swap_init();
 
-	printf("[%d/%d] file system init\n", ++kernel_init_step, kernel_init_step_total);
+	printf("==> [%d/%d] file system init\n", ++kernel_init_step, kernel_init_step_total);
 	fs_init();
 	intr_disable();
 
-	printf("[%d/%d] clock init\n", ++kernel_init_step, kernel_init_step_total);
+	printf("==> [%d/%d] clock init\n", ++kernel_init_step, kernel_init_step_total);
 	clock_init();
 	intr_enable();
 
-	printf("[%d/%d] idle loop\n", ++kernel_init_step, kernel_init_step_total);
+	printf("==> [%d/%d] idle loop\n", ++kernel_init_step, kernel_init_step_total);
 	cpu_idle();
 }
