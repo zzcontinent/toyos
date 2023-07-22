@@ -40,6 +40,7 @@ int kern_init(void)
 	memset(edata, 0, end - edata);
 	cons_init(CONS_TYPE_SERIAL_POLL);
 	cprintf("%s\n", hello_msg);
+	DEBUG_CONSOLE;
 
 	printf("==> [%d/%d] kernel info\n", ++kernel_init_step, kernel_init_step_total);
 	print_kerninfo();

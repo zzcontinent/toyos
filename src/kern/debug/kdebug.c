@@ -7,6 +7,7 @@
 #include <kern/debug/stab.h>
 #include <kern/sync/sync.h>
 #include <kern/mm/vmm.h>
+#include <kern/driver/serial.h>
 
 #define STACKFRAME_DEPTH 20
 
@@ -354,6 +355,8 @@ void print_stackframe(void)
 void delay_cnt(int cnt)
 {
 	volatile int cnt1 = cnt;
-	while(cnt1--);
+	while(cnt1--){
+		delay();
+	}
 }
 
