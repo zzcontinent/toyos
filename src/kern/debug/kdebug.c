@@ -262,13 +262,13 @@ int debuginfo_eip(uintptr_t addr, struct eipdebuginfo* info)
 void print_kerninfo(void)
 {
 	extern char etext[], edata[], end[], kern_init[];
-	cprintf("entry  0x%08x (phys)\n", kern_init);
-	cprintf("etext  0x%08x (phys)\n", etext);
-	cprintf("edata  0x%08x (phys)\n", edata);
-	cprintf("end    0x%08x (phys)\n", end);
-	cprintf("bootstack:0x%x, bootstacktop:0x%x\n", bootstack, bootstacktop);
+	uclean("entry  0x%08x (phys)\n", kern_init);
+	uclean("etext  0x%08x (phys)\n", etext);
+	uclean("edata  0x%08x (phys)\n", edata);
+	uclean("end    0x%08x (phys)\n", end);
+	uclean("bootstack:0x%x, bootstacktop:0x%x\n", bootstack, bootstacktop);
 	u32 size = (u32)end - (u32)kern_init;
-	cprintf("kernel size: %d (Bytes)\n", size);
+	uclean("kernel size: %d (Bytes)\n", size);
 }
 
 /* *
@@ -279,7 +279,7 @@ void print_debuginfo(uintptr_t eip)
 {
 	struct eipdebuginfo info;
 	if (debuginfo_eip(eip, &info) != 0) {
-		cprintf("|--[unknow]: -- 0x%08x --\n", eip);
+		uclean("|--[unknow]: -- 0x%08x --\n", eip);
 	} else {
 		char fnname[256];
 		int j;
@@ -287,7 +287,7 @@ void print_debuginfo(uintptr_t eip)
 			fnname[j] = info.eip_fn_name[j];
 		}
 		fnname[j] = '\0';
-		cprintf("|--[%s:%d]: %s+%d\n", info.eip_file, info.eip_line,
+		uclean("|--[%s:%d]: %s+%d\n", info.eip_file, info.eip_line,
 				fnname, eip - info.eip_fn_addr);
 	}
 }
@@ -341,12 +341,12 @@ void print_stackframe(void)
 	int i = 0, j = 0;
 	for (i = 0; t_ebp != 0 && i < STACKFRAME_DEPTH; i++) {
 		print_debuginfo(t_eip - 1);
-		cprintf("|  t_ebp:0x%x t_eip:0x%x args:", t_ebp, t_eip);
+		uclean("|  t_ebp:0x%x t_eip:0x%x args:", t_ebp, t_eip);
 		u32* args = (u32*)t_ebp + 2;
 		for (j = 0; j < 4; j++) {
-			cprintf("0x%08x ", args[j]);
+			uclean("0x%08x ", args[j]);
 		}
-		cprintf("\n");
+		uclean("\n");
 		t_eip = ((u32 *)t_ebp)[1];
 		t_ebp = ((u32 *)t_ebp)[0];
 	}

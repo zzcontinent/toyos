@@ -109,11 +109,11 @@ build_user_apps:
 $(target_rootfsimg): build_user_apps $(call to_out_target,mksfs) | $(dir $(ALLTARGETS))
 	$(V)mkdir -p $(rootfs_path)
 	$(V)cp $(call listf,user/out/target) $(rootfs_path)
-	$(V)dd if=/dev/zero of=$@ bs=1M count=128
+	$(V)dd if=/dev/zero of=$@ bs=1M count=8
 	$(V)$(call to_out_target,mksfs) $@ $(rootfs_path)
 
 $(target_swapimg):
-	$(V)dd if=/dev/zero of=$@ bs=1M count=128
+	$(V)dd if=/dev/zero of=$@ bs=1M count=8
 
 #***************************************rule tools****************************************************/
 # +++ sign tools +++
