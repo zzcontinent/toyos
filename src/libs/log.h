@@ -25,8 +25,8 @@
 #define LEVEL_OFF    3
 #define LEVEL_SIMPLE 4
 //#define ULOG_LEVEL LEVEL_SIMPLE
-//#define ULOG_LEVEL LEVEL_DEBUG
 #define ULOG_LEVEL LEVEL_INFO
+//#define ULOG_LEVEL LEVEL_INFO
 //#define ULOG_LEVEL LEVEL_ERROR
 //#define ULOG_LEVEL LEVEL_SIMPLE
 //#define ULOG_LEVEL LEVEL_OFF
@@ -56,12 +56,6 @@ extern int cprintf(const char* fmt, ...);
 #elif ULOG_LEVEL == LEVEL_ERROR
 #define udebug(fmt, args...)
 #define uinfo(fmt, args...)
-#define uerror(fmt, args...) printf("[E][%s:%d][%s] " fmt, __FILE__, __LINE__, __FUNCTION__, ##args)
-#define uclean printf
-#define ulog uinfo
-#elif ULOG_LEVEL == LEVEL_SIMPLE
-#define udebug(fmt, args...) printf("[D][%d][%s] " fmt, __LINE__, __FUNCTION__, ##args)
-#define uinfo(fmt, args...) printf("[I][%d][%s] " fmt, __LINE__, __FUNCTION__, ##args)
 #define uerror(fmt, args...) printf("[E][%s:%d][%s] " fmt, __FILE__, __LINE__, __FUNCTION__, ##args)
 #define uclean printf
 #define ulog uinfo

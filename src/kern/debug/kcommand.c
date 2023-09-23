@@ -48,6 +48,7 @@ static struct command commands[COMMAND_MAX] = {
 	{"fp2", "fp(format print 2byte) addr len break", 4, cmd_format_print2},
 	{"fp", "fp(format print 1byte) addr len break", 4, cmd_format_print1},
 	{"mem", "print memory", 1, cmd_mem},
+	{"mmap", "print memory", 1, cmd_mem},
 	{"page", "print page table", 1, cmd_print_pg},
 	{"alloc", "alloc one page", 1, cmd_alloc_page},
 	{"free", "free [page]", -1, cmd_free_page},

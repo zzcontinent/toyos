@@ -53,7 +53,7 @@ void proc_run(struct proc_struct *proc)
 
 static int user_main(void *arg)
 {
-	//KERNEL_EXECVE(sh);
+	//KERNEL_EXECVE(hello1);
 	while(1)
 		DEBUG_CONSOLE;
 	panic("user_main execve failed.\n");
@@ -952,7 +952,7 @@ void set_priority(uint32_t priority)
 // kernel_execve - do SYS_exec syscall to exec a user program called by user_main kernel_thread
 int kernel_execve(const char *name, const char **argv)
 {
-	uclean("kernel_execve: pid = %d, name = \"%s\"\n", g_current->pid, name);
+	uclean("pid = %d, name = \"%s\"\n", g_current->pid, name);
 	int argc = 0, ret;
 	while (argv[argc] != NULL) {
 		argc ++;

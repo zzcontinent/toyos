@@ -13,6 +13,8 @@
 #include <kern/mm/vmm.h>
 #include <kern/mm/swap.h>
 #include <kern/debug/assert.h>
+#include <kern/debug/kcommand.h>
+#include <kern/driver/console.h>
 
 volatile u32 g_pgfault_num = 0;
 struct mm_struct* g_check_mm_struct;
@@ -241,28 +243,31 @@ int do_pgfault(struct mm_struct *mm, u32 error_code, uintptr_t addr)
 	//try to find a vma which include addr
 	struct vma_struct *vma = find_vma(mm, addr);
 
+	udebug("code:%d\n", error_code);
 	g_pgfault_num++;
 	//If the addr is in the range of a mm's vma?
 	if (vma == NULL || vma->vm_start > addr) {
-		uerror("not valid addr 0x%x, and  can not find it in vma 0x%x\n", addr, vma);
+		print_pgfault_errorcode(error_code);
+		uclean("error code:%d, not valid addr 0x%x, and can not find it in vma 0x%x\n", error_code, addr, vma);
 		goto failed;
 	}
-	//check the error_code
-	switch (error_code & 3) {
-		default:
-			/* error code flag : default is 3 ( W/R=1, P=1): write, present */
-		case 2: /* error code flag : (W/R=1, P=0): write, not present */
+	switch (error_code & (PF_P|PF_W)) {
+		case PF_P | PF_W:
+		case PF_W:
 			if (!(vma->vm_flags & VM_WRITE)) {
-				uerror("do_pgfault failed: error code flag = write AND not present, but the addr's vma cannot write\n");
+				print_pgfault_errorcode(error_code);
+				uclean("write and protection violation, but the addr's vm cannot write\n");
 				goto failed;
 			}
 			break;
-		case 1: /* error code flag : (W/R=0, P=1): read, present */
-			uerror("do_pgfault failed: error code flag = read AND present\n");
+		case PF_P:
+			print_pgfault_errorcode(error_code);
+			uclean("read and protection violation\n");
 			goto failed;
-		case 0: /* error code flag : (W/R=0, P=0): read, not present */
+		case 0:
 			if (!(vma->vm_flags & (VM_READ | VM_EXEC))) {
-				uerror("do_pgfault failed: error code flag = read AND not present, but the addr's vma cannot read or exec\n");
+				uclean("read and not present, but the addr's vm cannot read or exec\n");
+				print_pgfault_errorcode(error_code);
 				goto failed;
 			}
 	}
@@ -317,6 +322,7 @@ int do_pgfault(struct mm_struct *mm, u32 error_code, uintptr_t addr)
 	}
 	ret = 0;
 failed:
+	print_trapframe(g_current->tf);
 	return ret;
 }
 

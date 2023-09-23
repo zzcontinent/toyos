@@ -14,7 +14,7 @@
 static int sys_exit(uint32_t arg[])
 {
 	int error_code = (int)arg[0];
-	uclean("[SYSC] exit [%d][%s] %e\n", g_current->pid, g_current->name, error_code);
+	//uclean("[SYSC] exit [%d][%s] %e\n", g_current->pid, g_current->name, error_code);
 	return do_exit(error_code);
 }
 
@@ -22,7 +22,7 @@ static int sys_fork(uint32_t arg[])
 {
 	struct trapframe *tf = g_current->tf;
 	uintptr_t stack = tf->tf_esp;
-	uclean("[SYSC] fork [%d][%s]\n", g_current->pid, g_current->name);
+	//uclean("[SYSC] fork [%d][%s]\n", g_current->pid, g_current->name);
 	return do_fork(0, stack, tf);
 }
 
@@ -30,7 +30,7 @@ static int sys_wait(uint32_t arg[])
 {
 	int pid = (int)arg[0];
 	int *store = (int *)arg[1];
-	uclean("[SYSC] wait [%d][%s] -> [%d]\n", g_current->pid, g_current->name, pid);
+	//uclean("[SYSC] wait [%d][%s] -> [%d]\n", g_current->pid, g_current->name, pid);
 	return do_wait(pid, store);
 }
 
@@ -39,20 +39,20 @@ static int sys_exec(uint32_t arg[])
 	const char *name = (const char *)arg[0];
 	int argc = (int)arg[1];
 	const char **argv = (const char **)arg[2];
-	uclean("[SYSC] exec [%d][%s] -> [%s]\n", g_current->pid, g_current->name, name);
+	//uclean("[SYSC] exec [%d][%s] -> [%s]\n", g_current->pid, g_current->name, name);
 	return do_execve(name, argc, argv);
 }
 
 static int sys_yield(uint32_t arg[])
 {
-	uclean("[SYSC] yield [%d][%s]\n", g_current->pid, g_current->name);
+	//uclean("[SYSC] yield [%d][%s]\n", g_current->pid, g_current->name);
 	return do_yield();
 }
 
 static int sys_kill(uint32_t arg[])
 {
 	int pid = (int)arg[0];
-	uclean("[SYSC] kill [%d][%s] -> [%d]\n", g_current->pid, g_current->name, pid);
+	//uclean("[SYSC] kill [%d][%s] -> [%d]\n", g_current->pid, g_current->name, pid);
 	return do_kill(pid);
 }
 
@@ -89,11 +89,11 @@ static int sys_set_priority(uint32_t arg[])
 static int sys_sleep(uint32_t arg[])
 {
 	unsigned int time = (unsigned int)arg[0];
-	uclean("[SYSC] sleep [%d][%s] -> [%d]\n", g_current->pid, g_current->name, time);
+	//uclean("[SYSC] sleep [%d][%s] -> [%d]\n", g_current->pid, g_current->name, time);
 	return do_sleep(time);
 }
 
-static int sys_open(uint32_t arg[]) 
+static int sys_open(uint32_t arg[])
 {
 	const char *path = (const char *)arg[0];
 	uint32_t open_flags = (uint32_t)arg[1];

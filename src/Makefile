@@ -132,6 +132,13 @@ objdump:
 		$(OBJDUMP) -t out/target/$${f} 2>/dev/null | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$$$/d' > out/target/$${f}.sym;\
 		[ `cat out/target/$${f}.sym|wc -c` -eq 0 ] && rm out/target/$${f}.sym;\
 	done
+	@-for f in `ls user/out/target`;\
+	do\
+		$(OBJDUMP) -S user/out/target/$${f} 2>/dev/null > user/out/target/$${f}.asm;\
+		[ `cat user/out/target/$${f}.asm|wc -c` -eq 0 ] && rm user/out/target/$${f}.asm;\
+		$(OBJDUMP) -t user/out/target/$${f} 2>/dev/null | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$$$/d' > user/out/target/$${f}.sym;\
+		[ `cat user/out/target/$${f}.sym|wc -c` -eq 0 ] && rm user/out/target/$${f}.sym;\
+	done
 
 
 qemu: $(target_os_img) $(target_swapimg) $(target_rootfsimg)

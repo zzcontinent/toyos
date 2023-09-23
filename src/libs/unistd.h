@@ -6,31 +6,31 @@
 /* syscall number */
 #define SYS_exit            1
 #define SYS_fork            2
-#define SYS_wait            3
-#define SYS_exec            4
-#define SYS_clone           5
-#define SYS_yield           10
-#define SYS_sleep           11
-#define SYS_kill            12
-#define SYS_gettime         17
-#define SYS_getpid          18
-#define SYS_mmap            20
-#define SYS_munmap          21
-#define SYS_shmem           22
-#define SYS_putc            30
-#define SYS_pgdir           31
-#define SYS_open            100
-#define SYS_close           101
-#define SYS_read            102
-#define SYS_write           103
-#define SYS_seek            104
-#define SYS_fstat           110
-#define SYS_fsync           111
-#define SYS_getcwd          121
-#define SYS_getdirentry     128
-#define SYS_dup             130
+#define SYS_wait            7
+#define SYS_exec            11
+#define SYS_clone           120
+#define SYS_yield           158
+#define SYS_sleep           162
+#define SYS_kill            37
+#define SYS_gettime         78
+#define SYS_getpid          20
+#define SYS_mmap            90
+#define SYS_munmap          91
+#define SYS_shmem           395
+#define SYS_putc            189
+#define SYS_pgdir           510
+#define SYS_open            5
+#define SYS_close           6
+#define SYS_read            3
+#define SYS_write           4
+#define SYS_seek            19
+#define SYS_fstat           108
+#define SYS_fsync           118
+#define SYS_getcwd          183
+#define SYS_getdirentry     89
+#define SYS_dup             41
 /* OLNY FOR LAB6 */
-#define SYS_set_priority 255
+#define SYS_set_priority 511
 
 /* SYS_fork flags */
 #define CLONE_VM            0x00000100  // set if VM shared between processes

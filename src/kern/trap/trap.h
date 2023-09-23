@@ -68,11 +68,30 @@ struct trapframe {
  * bit 1 == 0 means read, 1 means write
  * bit 2 == 0 means kernel, 1 means user
  * */
+#define PF_P   1   //bit0, 0: the fault was caused by a not-present page, 1: by a page-level protection violation
+#define PF_W   2   //bit1, 0: the access causing the fault was a read, 1: was a write
+#define PF_U   4   //bit2, 0: the access causing the fault originated when the processor was executing in supervisor mode, 1: in user mode
+
+#define PF_P0   "the fault was caused by a not-present page"
+#define PF_P1   "the fault was caused by a page-level protection violation"
+#define PF_RW0  "the fault was a read"
+#define PF_RW1  "the fault was a write"
+#define PF_SU0  "when the processor was executing in supervisor mode"
+#define PF_SU1  "when the processor was executing in user mode"
+
 #define print_pgfault(tf) do { \
-	udebug("page fault at 0x%08x: %c/%c [%s].\n", rcr2(),\
+	uclean("page fault at 0x%08x: %c/%c [%s].\n", rcr2(),\
 			(tf->tf_err & PTE_U) ? 'U' : 'K',    \
 			(tf->tf_err & PTE_W) ? 'W' : 'R',    \
 			(tf->tf_err & PTE_P) ? "protection fault" : "no page found"); \
+} while(0)
+
+#define print_pgfault_errorcode(err) do { \
+	uclean("page fault at 0x%08x, [%d] [%s] [%s] [%s]\n", rcr2(),\
+			(err), \
+			(err & PF_U) ? PF_SU1 : PF_SU0,    \
+			(err & PF_W) ? PF_RW1 : PF_RW0,    \
+			(err & PF_P) ? PF_P1 : PF_P0); \
 } while(0)
 
 extern void idt_init(void);
