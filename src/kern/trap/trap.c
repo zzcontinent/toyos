@@ -119,6 +119,22 @@ bool trap_in_kernel(struct trapframe* tf)
 	return (tf->tf_cs == (u16)KERNEL_CS);
 }
 
+void print_stackframe_user(u32 t_ebp, u32 t_eip)
+{
+	int i = 0, j = 0;
+	for (i = 0; t_ebp != 0 && i < STACKFRAME_DEPTH; i++) {
+		print_debuginfo(t_eip - 1);
+		uclean("|  t_ebp:0x%x t_eip:0x%x args:", t_ebp, t_eip);
+		u32* args = (u32*)t_ebp + 2;
+		for (j = 0; j < 4; j++) {
+			uclean("0x%08x ", args[j]);
+		}
+		uclean("\n");
+		t_eip = ((u32 *)t_ebp)[1];
+		t_ebp = ((u32 *)t_ebp)[0];
+	}
+}
+
 void print_trapframe(struct trapframe* tf)
 {
 	cprintf("trapframe &tf=%p\n", tf);
@@ -143,6 +159,7 @@ void print_trapframe(struct trapframe* tf)
 	cprintf("|-tf_in_kernel %d\n", trap_in_kernel(tf));
 	cprintf("|-esp       0x%08x\n", tf->tf_esp);
 	cprintf("|-ss        0x%04x\n", tf->tf_ss);
+	print_stackframe_user(tf->tf_regs.reg_ebp, tf->tf_eip);
 }
 
 void print_regs(struct trapframe* tf)
@@ -161,7 +178,7 @@ void print_regs(struct trapframe* tf)
 int pgfault_handler(struct trapframe* tf)
 {
 	if (g_check_mm_struct != NULL) { //used for test check_swap
-		print_pgfault(tf);
+		print_pgfault_err(tf->tf_err);
 	}
 	struct mm_struct* mm = NULL;
 	if (g_check_mm_struct != NULL) {
@@ -170,7 +187,7 @@ int pgfault_handler(struct trapframe* tf)
 	} else {
 		if (g_current == NULL) {
 			print_trapframe(tf);
-			print_pgfault(tf);
+			print_pgfault_err(tf->tf_err);
 			panic("unhandled page fault.\n");
 		}
 		mm = g_current->mm;

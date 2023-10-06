@@ -14,7 +14,7 @@
 static int sys_exit(uint32_t arg[])
 {
 	int error_code = (int)arg[0];
-	//uclean("[SYSC] exit [%d][%s] %e\n", g_current->pid, g_current->name, error_code);
+	uinfo("[SYSC] exit [%d][%s] %e\n", g_current->pid, g_current->name, error_code);
 	return do_exit(error_code);
 }
 
@@ -22,7 +22,7 @@ static int sys_fork(uint32_t arg[])
 {
 	struct trapframe *tf = g_current->tf;
 	uintptr_t stack = tf->tf_esp;
-	//uclean("[SYSC] fork [%d][%s]\n", g_current->pid, g_current->name);
+	uinfo("[SYSC] fork [%d][%s]\n", g_current->pid, g_current->name);
 	return do_fork(0, stack, tf);
 }
 
@@ -30,7 +30,7 @@ static int sys_wait(uint32_t arg[])
 {
 	int pid = (int)arg[0];
 	int *store = (int *)arg[1];
-	//uclean("[SYSC] wait [%d][%s] -> [%d]\n", g_current->pid, g_current->name, pid);
+	uinfo("[SYSC] wait [%d][%s] -> [%d]\n", g_current->pid, g_current->name, pid);
 	return do_wait(pid, store);
 }
 
@@ -39,20 +39,20 @@ static int sys_exec(uint32_t arg[])
 	const char *name = (const char *)arg[0];
 	int argc = (int)arg[1];
 	const char **argv = (const char **)arg[2];
-	//uclean("[SYSC] exec [%d][%s] -> [%s]\n", g_current->pid, g_current->name, name);
+	uinfo("[SYSC] exec [%d][%s] -> [%s]\n", g_current->pid, g_current->name, name);
 	return do_execve(name, argc, argv);
 }
 
 static int sys_yield(uint32_t arg[])
 {
-	//uclean("[SYSC] yield [%d][%s]\n", g_current->pid, g_current->name);
+	uinfo("[SYSC] yield [%d][%s]\n", g_current->pid, g_current->name);
 	return do_yield();
 }
 
 static int sys_kill(uint32_t arg[])
 {
 	int pid = (int)arg[0];
-	//uclean("[SYSC] kill [%d][%s] -> [%d]\n", g_current->pid, g_current->name, pid);
+	uinfo("[SYSC] kill [%d][%s] -> [%d]\n", g_current->pid, g_current->name, pid);
 	return do_kill(pid);
 }
 
@@ -89,7 +89,7 @@ static int sys_set_priority(uint32_t arg[])
 static int sys_sleep(uint32_t arg[])
 {
 	unsigned int time = (unsigned int)arg[0];
-	//uclean("[SYSC] sleep [%d][%s] -> [%d]\n", g_current->pid, g_current->name, time);
+	uinfo("[SYSC] sleep [%d][%s] -> [%d]\n", g_current->pid, g_current->name, time);
 	return do_sleep(time);
 }
 
@@ -97,14 +97,14 @@ static int sys_open(uint32_t arg[])
 {
 	const char *path = (const char *)arg[0];
 	uint32_t open_flags = (uint32_t)arg[1];
-	//uclean("[SYSC] open [%d][%s] -> [%s]\n", g_current->pid, g_current->name, path);
+	uinfo("[SYSC] open [%d][%s] -> [%s]\n", g_current->pid, g_current->name, path);
 	return sysfile_open(path, open_flags);
 }
 
 static int sys_close(uint32_t arg[])
 {
 	int fd = (int)arg[0];
-	//uclean("[SYSC] close [%d][%s] -> fd:[%d]\n", g_current->pid, g_current->name, fd);
+	uinfo("[SYSC] close [%d][%s] -> fd:[%d]\n", g_current->pid, g_current->name, fd);
 	return sysfile_close(fd);
 }
 
@@ -113,7 +113,7 @@ static int sys_read(uint32_t arg[])
 	int fd = (int)arg[0];
 	void *base = (void *)arg[1];
 	size_t len = (size_t)arg[2];
-	//uclean("[SYSC] read [%d][%s] -> fd:[%d]\n", g_current->pid, g_current->name, fd);
+	uinfo("[SYSC] read [%d][%s] -> fd:[%d]\n", g_current->pid, g_current->name, fd);
 	return sysfile_read(fd, base, len);
 }
 
@@ -122,8 +122,15 @@ static int sys_write(uint32_t arg[])
 	int fd = (int)arg[0];
 	void *base = (void *)arg[1];
 	size_t len = (size_t)arg[2];
-	//uclean("[SYSC] write [%d][%s] -> fd:[%d]\n", g_current->pid, g_current->name, fd);
+	uinfo("[SYSC] write [%d][%s] -> fd:[%d]\n", g_current->pid, g_current->name, fd);
 	return sysfile_write(fd, base, len);
+}
+
+static int sys_ioctl(uint32_t arg[])
+{
+	int fd = (int)arg[0];
+	uinfo("[SYSC] ioctl [%d][%s] -> fd:[%d]\n", g_current->pid, g_current->name, fd);
+	return sysfile_ioctl(fd);
 }
 
 static int sys_seek(uint32_t arg[])
@@ -131,7 +138,7 @@ static int sys_seek(uint32_t arg[])
 	int fd = (int)arg[0];
 	off_t pos = (off_t)arg[1];
 	int whence = (int)arg[2];
-	//uclean("[SYSC] seek [%d][%s] -> fd:[%d]\n", g_current->pid, g_current->name, fd);
+	uinfo("[SYSC] seek [%d][%s] -> fd:[%d]\n", g_current->pid, g_current->name, fd);
 	return sysfile_seek(fd, pos, whence);
 }
 
@@ -166,7 +173,7 @@ static int sys_dup(uint32_t arg[])
 {
 	int fd1 = (int)arg[0];
 	int fd2 = (int)arg[1];
-	//uclean("[SYSC] dup [%d][%s] -> fd:[%d-%d]\n", g_current->pid, g_current->name, fd1, fd2);
+	uinfo("[SYSC] dup [%d][%s] -> fd:[%d-%d]\n", g_current->pid, g_current->name, fd1, fd2);
 	return sysfile_dup(fd1, fd2);
 }
 
@@ -187,6 +194,7 @@ static int (*syscalls[])(uint32_t arg[]) = {
 	[SYS_close]             sys_close,
 	[SYS_read]              sys_read,
 	[SYS_write]             sys_write,
+	[SYS_ioctl]             sys_ioctl,
 	[SYS_seek]              sys_seek,
 	[SYS_fstat]             sys_fstat,
 	[SYS_fsync]             sys_fsync,
@@ -203,7 +211,6 @@ void syscall(void) {
 	int num = tf->tf_regs.reg_eax;
 	if (num >= 0 && num < NUM_SYSCALLS) {
 		if (syscalls[num] != NULL) {
-			udebug("syscall:%d\n", num);
 			arg[0] = tf->tf_regs.reg_edx;
 			arg[1] = tf->tf_regs.reg_ecx;
 			arg[2] = tf->tf_regs.reg_ebx;

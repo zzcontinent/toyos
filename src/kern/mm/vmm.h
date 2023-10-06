@@ -22,6 +22,15 @@
 #define VM_EXEC    0x00000004
 #define VM_STACK   0x00000008
 
+#define print_vm_flags(flag) do { \
+	uclean("vm_flags: 0x%x: %s%s%s%s\r\n",                        \
+			flag,                              \
+			(flag & VM_READ) ? "READ " : "",     \
+			(flag & VM_WRITE) ? "WRITE " : "",     \
+			(flag & VM_EXEC) ? "EXEC " : "",      \
+			(flag & VM_STACK) ? "STACK " : "");      \
+} while(0)
+
 struct mm_struct;
 
 struct mm_struct {

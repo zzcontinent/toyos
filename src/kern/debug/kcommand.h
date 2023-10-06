@@ -26,6 +26,7 @@ extern int cmd_kernel_execv(int argc, char **argv);
 extern int cmd_sfs_ls(int argc, char **argv);
 extern int cmd_sfs_read(int argc, char **argv);
 extern int cmd_sfs_write(int argc, char **argv);
+extern void lib_format_print4(uintptr_t src, int len, int line_break);
 
 #define DEBUG_CONSOLE { \
 	set_cons_type(CONS_TYPE_SERIAL_POLL); \

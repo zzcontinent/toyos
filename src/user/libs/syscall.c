@@ -115,6 +115,11 @@ int sys_write(int fd, void *base, size_t len)
 	return syscall(SYS_write, fd, base, len);
 }
 
+int sys_ioctl(const char *path, uint32_t open_flags)
+{
+	return syscall(SYS_ioctl, path, open_flags);
+}
+
 int sys_seek(int fd, off_t pos, int whence)
 {
 	return syscall(SYS_seek, fd, pos, whence);

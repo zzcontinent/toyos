@@ -212,6 +212,24 @@ int cmd_format_print1(int argc, char **argv)
 	return CMD_SUCCEED;
 }
 
+void lib_format_print4(uintptr_t src, int len, int line_break)
+{
+	int i = 0;
+	u32 *addr = (u32*)src;
+	uclean("addr:%x, len:%d\n", src, len);
+	for (i=0; i<len/4; i++)
+	{
+		if (i%line_break == 0) {
+			uclean("0x%04x: ", i*4);
+		}
+
+		uclean("%08x ", addr[i]);
+		if (i%line_break == line_break-1) {
+			uclean("\n");
+		}
+	}
+}
+
 int cmd_format_print2(int argc, char **argv)
 {
 	u16* addr = (u16*)(u32)str2n(argv[1]);

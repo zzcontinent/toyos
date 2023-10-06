@@ -9,7 +9,6 @@
 #include <kern/mm/vmm.h>
 #include <kern/driver/serial.h>
 
-#define STACKFRAME_DEPTH 20
 
 extern const struct stab __STAB_BEGIN__[];   // beginning of stabs table
 extern const struct stab __STAB_END__[];     // end of stabs table

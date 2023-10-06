@@ -22,5 +22,6 @@ extern int sysfile_getdirentry(int fd, struct dirent *direntp);        // get th
 extern int sysfile_dup(int fd1, int fd2);                              // duplicate file
 extern int sysfile_pipe(int *fd_store);                                // build PIPE   
 extern int sysfile_mkfifo(const char *name, uint32_t open_flags);      // build named PIPE
+extern int sysfile_ioctl(int fd);
 
 #endif  /* __SYSFILE_H__ */

@@ -15,13 +15,13 @@
 #define T_ILLOP                 6   // illegal opcode
 #define T_DEVICE                7   // device not available
 #define T_DBLFLT                8   // double fault
-// #define T_COPROC             9   // reserved (not used since 486)
+				    // #define T_COPROC             9   // reserved (not used since 486)
 #define T_TSS                   10  // invalid task switch segment
 #define T_SEGNP                 11  // segment not present
 #define T_STACK                 12  // stack exception
 #define T_GPFLT                 13  // general protection fault
 #define T_PGFLT                 14  // page fault
-// #define T_RES                15  // reserved
+				    // #define T_RES                15  // reserved
 #define T_FPERR                 16  // floating point error
 #define T_ALIGN                 17  // aligment check
 #define T_MCHK                  18  // machine check
@@ -79,19 +79,18 @@ struct trapframe {
 #define PF_SU0  "when the processor was executing in supervisor mode"
 #define PF_SU1  "when the processor was executing in user mode"
 
-#define print_pgfault(tf) do { \
-	uclean("page fault at 0x%08x: %c/%c [%s].\n", rcr2(),\
-			(tf->tf_err & PTE_U) ? 'U' : 'K',    \
-			(tf->tf_err & PTE_W) ? 'W' : 'R',    \
-			(tf->tf_err & PTE_P) ? "protection fault" : "no page found"); \
-} while(0)
-
-#define print_pgfault_errorcode(err) do { \
-	uclean("page fault at 0x%08x, [%d] [%s] [%s] [%s]\n", rcr2(),\
-			(err), \
-			(err & PF_U) ? PF_SU1 : PF_SU0,    \
-			(err & PF_W) ? PF_RW1 : PF_RW0,    \
-			(err & PF_P) ? PF_P1 : PF_P0); \
+#define print_pgfault_err(err) do { \
+	uclean("pgfault: "                         \
+			"1. page fault at 0x%x, "         \
+			"2. code is %d, "                 \
+			"3. %s, "                         \
+			"4. %s, "                         \
+			"5. %s\r\n",                        \
+			rcr2(),                             \
+			(err),                              \
+			(err & PF_U) ? PF_SU1 : PF_SU0,     \
+			(err & PF_W) ? PF_RW1 : PF_RW0,     \
+			(err & PF_P) ? PF_P1 : PF_P0);      \
 } while(0)
 
 extern void idt_init(void);

@@ -147,6 +147,11 @@ out:
 	return ret;
 }
 
+int sysfile_ioctl(int fd)
+{
+	return 0;
+}
+
 /* sysfile_seek - seek file */
 int sysfile_seek(int fd, off_t pos, int whence)
 {
