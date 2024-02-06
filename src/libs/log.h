@@ -14,7 +14,7 @@
 		for (;_i < cnt; _i++) { if (!(expr)) break; if (0 == _i%100) uclean(".");} \
 		if (_i == cnt) uerror("==>[%d/%d] [timeout]\n", _i, cnt); \
 		else uclean("==>[%d/%d]\n", _i, cnt); \
-		_i;\
+		(_i == cnt && cnt > 0);\
 		})
 // ============================================================wait if
 
