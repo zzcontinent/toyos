@@ -215,7 +215,7 @@ runit:
 		argv[0] = argv0;
 	}
 	argv[argc] = NULL;
-	return __exec(argv[0], argv);
+	return sh_exec(argv[0], argv);
 }
 
 int main(int argc, char **argv)

@@ -6,32 +6,50 @@
 /* syscall number */
 #define SYS_exit            1
 #define SYS_fork            2
-#define SYS_wait            7
-#define SYS_exec            11
-#define SYS_clone           120
-#define SYS_yield           158
-#define SYS_sleep           162
-#define SYS_kill            37
-#define SYS_gettime         78
-#define SYS_getpid          20
-#define SYS_mmap            90
-#define SYS_munmap          91
-#define SYS_shmem           395
-#define SYS_putc            189
-#define SYS_pgdir           510
-#define SYS_open            5
-#define SYS_close           6
 #define SYS_read            3
 #define SYS_write           4
+#define SYS_open            5
+#define SYS_close           6
+#define SYS_wait            7
+#define SYS_execve          11
+#define SYS_lseek           19
+#define SYS_getpid          20
+#define SYS_access          33
+#define SYS_kill            37
+#define SYS_dup             41
+#define SYS_brk             45
 #define SYS_ioctl           54
-#define SYS_seek            19
+#define SYS_getdirentry     89
+#define SYS_mmap            90
+#define SYS_munmap          91
 #define SYS_fstat           108
 #define SYS_fsync           118
+#define SYS_mprotect        125
+#define SYS_sched_yield     158
+#define SYS_nanosleep       162
+#define SYS_pread64         180
 #define SYS_getcwd          183
-#define SYS_getdirentry     89
-#define SYS_dup             41
+#define SYS_set_tid_address 258
+#define SYS_timer_settime32 260
+#define SYS_timer_gettime32 261
+#define SYS_clock_settime32 264
+#define SYS_clock_gettime32 265
+#define SYS_openat          295
+#define SYS_set_robust_list 311
+#define SYS_prlimit64       340
+#define SYS_getrandom       355
+#define SYS_arch_prctl      384
+#define SYS_rseq            386
+#define SYS_clock_gettime64 403
+#define SYS_clock_settime64 404
+#define SYS_timer_gettime64 408
+#define SYS_timer_settime64 409
+
+
 /* OLNY FOR LAB6 */
 #define SYS_set_priority 511
+#define SYS_putc         512
+#define SYS_pgdir        513
 
 /* SYS_fork flags */
 #define CLONE_VM            0x00000100  // set if VM shared between processes

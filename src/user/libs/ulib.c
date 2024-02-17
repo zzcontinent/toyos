@@ -74,7 +74,7 @@ void set_priority(uint32_t priority )
 
 int sleep(unsigned int time)
 {
-	return sys_sleep(time);
+	return sys_nanosleep(time);
 }
 
 unsigned int gettime_msec(void)
@@ -82,11 +82,11 @@ unsigned int gettime_msec(void)
 	return (unsigned int)sys_gettime();
 }
 
-int __exec(const char *name, const char **argv)
+int sh_exec(const char *name, const char **argv)
 {
 	int argc = 0;
 	while (argv[argc] != NULL) {
 		argc ++;
 	}
-	return sys_exec(name, argc, argv);
+	return sys_execve(name, argc, argv);
 }

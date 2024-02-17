@@ -31,7 +31,7 @@ int write(int fd, void *base, size_t len)
 
 int seek(int fd, off_t pos, int whence)
 {
-	return sys_seek(fd, pos, whence);
+	return sys_lseek(fd, pos, whence);
 }
 
 int fstat(int fd, struct stat *stat)

@@ -14,7 +14,7 @@
 static int sys_exit(uint32_t arg[])
 {
 	int error_code = (int)arg[0];
-	uinfo("[SYSC] exit [%d][%s] %e\n", g_current->pid, g_current->name, error_code);
+	udebug("[%d][%s] code:%e\n", g_current->pid, g_current->name, error_code);
 	return do_exit(error_code);
 }
 
@@ -22,7 +22,7 @@ static int sys_fork(uint32_t arg[])
 {
 	struct trapframe *tf = g_current->tf;
 	uintptr_t stack = tf->tf_esp;
-	uinfo("[SYSC] fork [%d][%s]\n", g_current->pid, g_current->name);
+	udebug("[%d][%s]\n", g_current->pid, g_current->name);
 	return do_fork(0, stack, tf);
 }
 
@@ -30,7 +30,7 @@ static int sys_wait(uint32_t arg[])
 {
 	int pid = (int)arg[0];
 	int *store = (int *)arg[1];
-	uinfo("[SYSC] wait [%d][%s] -> [%d]\n", g_current->pid, g_current->name, pid);
+	udebug("[%d][%s] pid:[%d]\n", g_current->pid, g_current->name, pid);
 	return do_wait(pid, store);
 }
 
@@ -39,42 +39,30 @@ static int sys_exec(uint32_t arg[])
 	const char *name = (const char *)arg[0];
 	int argc = (int)arg[1];
 	const char **argv = (const char **)arg[2];
-	uinfo("[SYSC] exec [%d][%s] -> [%s]\n", g_current->pid, g_current->name, name);
+	udebug("[%d][%s] name:[%s]\n", g_current->pid, g_current->name, name);
 	return do_execve(name, argc, argv);
 }
 
-static int sys_yield(uint32_t arg[])
+static int sys_sched_yield(uint32_t arg[])
 {
-	uinfo("[SYSC] yield [%d][%s]\n", g_current->pid, g_current->name);
+	udebug("[%d][%s]\n", g_current->pid, g_current->name);
 	return do_yield();
 }
 
 static int sys_kill(uint32_t arg[])
 {
 	int pid = (int)arg[0];
-	uinfo("[SYSC] kill [%d][%s] -> [%d]\n", g_current->pid, g_current->name, pid);
+	udebug("[%d][%s] kill:[%d]\n", g_current->pid, g_current->name, pid);
 	return do_kill(pid);
 }
 
 static int sys_getpid(uint32_t arg[])
 {
+	udebug("[%d][%s]\n", g_current->pid, g_current->name);
 	return g_current->pid;
 }
 
-static int sys_putc(uint32_t arg[])
-{
-	int c = (int)arg[0];
-	cputchar(c);
-	return 0;
-}
-
-static int sys_pgdir(uint32_t arg[])
-{
-	print_pg();
-	return 0;
-}
-
-static int sys_gettime(uint32_t arg[])
+static int sys_clock_gettime32(uint32_t arg[])
 {
 	return (int)g_ticks;
 }
@@ -86,10 +74,10 @@ static int sys_set_priority(uint32_t arg[])
 	return 0;
 }
 
-static int sys_sleep(uint32_t arg[])
+static int sys_nanosleep(uint32_t arg[])
 {
 	unsigned int time = (unsigned int)arg[0];
-	uinfo("[SYSC] sleep [%d][%s] -> [%d]\n", g_current->pid, g_current->name, time);
+	udebug("[%d][%s] time:[%d]\n", g_current->pid, g_current->name, time);
 	return do_sleep(time);
 }
 
@@ -97,14 +85,14 @@ static int sys_open(uint32_t arg[])
 {
 	const char *path = (const char *)arg[0];
 	uint32_t open_flags = (uint32_t)arg[1];
-	uinfo("[SYSC] open [%d][%s] -> [%s]\n", g_current->pid, g_current->name, path);
+	udebug("[%d][%s] path:[%s]\n", g_current->pid, g_current->name, path);
 	return sysfile_open(path, open_flags);
 }
 
 static int sys_close(uint32_t arg[])
 {
 	int fd = (int)arg[0];
-	uinfo("[SYSC] close [%d][%s] -> fd:[%d]\n", g_current->pid, g_current->name, fd);
+	udebug("[%d][%s] fd:[%d]\n", g_current->pid, g_current->name, fd);
 	return sysfile_close(fd);
 }
 
@@ -113,7 +101,7 @@ static int sys_read(uint32_t arg[])
 	int fd = (int)arg[0];
 	void *base = (void *)arg[1];
 	size_t len = (size_t)arg[2];
-	uinfo("[SYSC] read [%d][%s] -> fd:[%d]\n", g_current->pid, g_current->name, fd);
+	udebug("[%d][%s] fd:[%d]\n", g_current->pid, g_current->name, fd);
 	return sysfile_read(fd, base, len);
 }
 
@@ -122,23 +110,15 @@ static int sys_write(uint32_t arg[])
 	int fd = (int)arg[0];
 	void *base = (void *)arg[1];
 	size_t len = (size_t)arg[2];
-	uinfo("[SYSC] write [%d][%s] -> fd:[%d]\n", g_current->pid, g_current->name, fd);
+	udebug("[%d][%s] fd:[%d]\n", g_current->pid, g_current->name, fd);
 	return sysfile_write(fd, base, len);
 }
 
-static int sys_ioctl(uint32_t arg[])
-{
-	int fd = (int)arg[0];
-	uinfo("[SYSC] ioctl [%d][%s] -> fd:[%d]\n", g_current->pid, g_current->name, fd);
-	return sysfile_ioctl(fd);
-}
-
-static int sys_seek(uint32_t arg[])
+static int sys_lseek(uint32_t arg[])
 {
 	int fd = (int)arg[0];
 	off_t pos = (off_t)arg[1];
 	int whence = (int)arg[2];
-	uinfo("[SYSC] seek [%d][%s] -> fd:[%d]\n", g_current->pid, g_current->name, fd);
 	return sysfile_seek(fd, pos, whence);
 }
 
@@ -173,34 +153,56 @@ static int sys_dup(uint32_t arg[])
 {
 	int fd1 = (int)arg[0];
 	int fd2 = (int)arg[1];
-	uinfo("[SYSC] dup [%d][%s] -> fd:[%d-%d]\n", g_current->pid, g_current->name, fd1, fd2);
+	udebug("[%d][%s] fd:[%d->%d]\n", g_current->pid, g_current->name, fd1, fd2);
 	return sysfile_dup(fd1, fd2);
+}
+
+static int sys_ioctl(uint32_t arg[])
+{
+	int fd = (int)arg[0];
+	udebug("[%d][%s] -> fd:[%d]\n", g_current->pid, g_current->name, fd);
+	return sysfile_ioctl(fd);
+}
+
+static int sys_putc(uint32_t arg[])
+{
+	int c = (int)arg[0];
+	cputchar(c);
+	return 0;
+}
+
+static int sys_pgdir(uint32_t arg[])
+{
+	print_pg();
+	return 0;
 }
 
 static int (*syscalls[])(uint32_t arg[]) = {
 	[SYS_exit]              sys_exit,
 	[SYS_fork]              sys_fork,
 	[SYS_wait]              sys_wait,
-	[SYS_exec]              sys_exec,
-	[SYS_yield]             sys_yield,
+	[SYS_execve]            sys_exec,
+	[SYS_sched_yield]       sys_sched_yield,
 	[SYS_kill]              sys_kill,
 	[SYS_getpid]            sys_getpid,
-	[SYS_putc]              sys_putc,
-	[SYS_pgdir]             sys_pgdir,
-	[SYS_gettime]           sys_gettime,
+	[SYS_clock_gettime32]   sys_clock_gettime32,
 	[SYS_set_priority]      sys_set_priority,
-	[SYS_sleep]             sys_sleep,
+	[SYS_nanosleep]         sys_nanosleep,
 	[SYS_open]              sys_open,
 	[SYS_close]             sys_close,
 	[SYS_read]              sys_read,
 	[SYS_write]             sys_write,
+	[SYS_lseek]             sys_lseek,
 	[SYS_ioctl]             sys_ioctl,
-	[SYS_seek]              sys_seek,
 	[SYS_fstat]             sys_fstat,
 	[SYS_fsync]             sys_fsync,
 	[SYS_getcwd]            sys_getcwd,
 	[SYS_getdirentry]       sys_getdirentry,
 	[SYS_dup]               sys_dup,
+
+	//user defined
+	[SYS_putc]              sys_putc,
+	[SYS_pgdir]             sys_pgdir,
 };
 
 #define NUM_SYSCALLS        ((sizeof(syscalls)) / (sizeof(syscalls[0])))

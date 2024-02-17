@@ -617,7 +617,6 @@ int do_kill(int pid)
 //          - then call scheduler. if process run again, delete timer first.
 int do_sleep(unsigned int time)
 {
-	uclean("[KERN] sleep [%d][%s]\n", g_current->pid, g_current->name);
 	if (time == 0) {
 		return 0;
 	}
@@ -961,7 +960,7 @@ int kernel_execve(const char *name, const char **argv)
 	asm volatile (
 			"int %1;"
 			: "=a" (ret)
-			: "i" (T_SYSCALL), "0" (SYS_exec), "d" (name), "c" (argc), "b" (argv)
+			: "i" (T_SYSCALL), "0" (SYS_execve), "d" (name), "c" (argc), "b" (argv)
 			: "memory");
 	return ret;
 }
