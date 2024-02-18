@@ -3,6 +3,7 @@
 
 #include <libs/defs.h>
 #include <libs/types.h>
+#include <kern/debug/kdebug.h>
 
 /* Trap Numbers */
 /* Processor-defined: */
@@ -72,16 +73,16 @@ struct trapframe {
 #define PF_W   2   //bit1, 0: the access causing the fault was a read, 1: was a write
 #define PF_U   4   //bit2, 0: the access causing the fault originated when the processor was executing in supervisor mode, 1: in user mode
 
-#define PF_P0   "the fault was caused by a not-present page"
-#define PF_P1   "the fault was caused by a page-level protection violation"
-#define PF_RW0  "the fault was a read"
-#define PF_RW1  "the fault was a write"
-#define PF_SU0  "when the processor was executing in supervisor mode"
-#define PF_SU1  "when the processor was executing in user mode"
+#define PF_P0   "is a not-present page"
+#define PF_P1   "is a page-level protection violation"
+#define PF_RW0  "is a read"
+#define PF_RW1  "is a write"
+#define PF_SU0  "runing in supervisor mode"
+#define PF_SU1  "runing in user mode"
 
 #define print_pgfault_err(err) do { \
-	uclean("pgfault: "                         \
-			"1. page fault at 0x%x, "         \
+	uclean("page fault reasons:"                         \
+			"1. address at 0x%x, "         \
 			"2. code is %d, "                 \
 			"3. %s, "                         \
 			"4. %s, "                         \
@@ -97,5 +98,12 @@ extern void idt_init(void);
 extern void print_trapframe(struct trapframe *tf);
 extern void print_regs(struct trapframe *tf);
 extern bool trap_in_kernel(struct trapframe *tf);
+extern void print_backtrace(u32 t_ebp, u32 t_eip);
+
+#define TRACE_ON(cond) do {\
+	if (cond) { \
+		print_backtrace(read_ebp(), read_eip()); \
+	} \
+} while(0)
 
 #endif  /* __TRAP_H__ */

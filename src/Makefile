@@ -1,5 +1,5 @@
 #****************************************common***************************************************/
-ECHO = printf "%b\n" 
+ECHO = printf "%b\n"
 
 GCCPREFIX :=
 QEMU := qemu-system-i386
@@ -14,7 +14,7 @@ HOSTCFLAGS := -g -Wall -O2 -D_FILE_OFFSET_BITS=64
 
 GDB := ${GCCPREFIX}gdb
 CC := $(GCCPREFIX)gcc
-CFLAGS := -fno-builtin -fno-PIC -Wall -ggdb -march=i386 -m32 -nostdinc
+CFLAGS := -fno-builtin -fno-PIC -Wall -ggdb -gdwarf -march=i386 -m32 -nostdinc
 CFLAGS += $(shell $(CC) -fno-stack-protector -E -x c /dev/null >/dev/null 2>&1 && echo -fno-stack-protector)
 CFLAGS += -I.
 CTYPE := c S
@@ -47,7 +47,7 @@ BOOT_LDFLAGS := $(LDFLAGS)
 BOOT_LDFLAGS += -T tools/boot.ld
 KERNEL_CFLAGS = $(CFLAGS) $(KERNEL_OPTIMIZE)
 KERNEL_LDFLAGS := $(LDFLAGS)
-KERNEL_LDFLAGS += -T tools/kernel.ld 
+KERNEL_LDFLAGS += -T tools/kernel.ld
 
 bootfiles = $(call listf_cc,boot)
 
@@ -57,7 +57,7 @@ target_os_img = $(call to_out_target,os.img)
 target_rootfsimg = $(call to_out_target,rootfs.img)
 target_swapimg = $(call to_out_target,swap.img)
 
-ALLOBJS = 
+ALLOBJS =
 ALLTARGETS += $(target_bootblock)
 ALLTARGETS += $(target_kernel)
 ALLTARGETS += $(target_os_img)

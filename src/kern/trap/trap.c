@@ -119,12 +119,12 @@ bool trap_in_kernel(struct trapframe* tf)
 	return (tf->tf_cs == (u16)KERNEL_CS);
 }
 
-void print_stackframe_user(u32 t_ebp, u32 t_eip)
+void print_backtrace(u32 t_ebp, u32 t_eip)
 {
 	int i = 0, j = 0;
 	for (i = 0; t_ebp != 0 && i < STACKFRAME_DEPTH; i++) {
-		print_debuginfo(t_eip - 1);
-		uclean("|  t_ebp:0x%x t_eip:0x%x args:", t_ebp, t_eip);
+		print_debuginfo(t_eip - 2);
+		uclean("|  ebp:0x%08x ebp[0]:0x%08x ebp[1]:0x%08x eip:0x%08x args:", t_ebp, ((u32*)t_ebp)[0], ((u32*)t_ebp)[1], t_eip);
 		u32* args = (u32*)t_ebp + 2;
 		for (j = 0; j < 4; j++) {
 			uclean("0x%08x ", args[j]);
@@ -139,15 +139,15 @@ void print_trapframe(struct trapframe* tf)
 {
 	cprintf("trapframe &tf=%p\n", tf);
 	print_regs(tf);
-	cprintf("|-ds        0x%04x\n", tf->tf_ds);
-	cprintf("|-es        0x%04x\n", tf->tf_es);
-	cprintf("|-fs        0x%04x\n", tf->tf_fs);
-	cprintf("|-gs        0x%04x\n", tf->tf_gs);
-	cprintf("|-trap      0x%08x %s\n", tf->tf_trapno, trapname(tf->tf_trapno));
-	cprintf("|-err       0x%08x\n", tf->tf_err);
-	cprintf("|-eip       0x%08x\n", tf->tf_eip);
-	cprintf("|-cs        0x%04x\n", tf->tf_cs);
-	cprintf("|-flag      0x%08x ", tf->tf_eflags);
+	cprintf("|-ds    0x%08x\n", tf->tf_ds);
+	cprintf("|-es    0x%08x\n", tf->tf_es);
+	cprintf("|-fs    0x%08x\n", tf->tf_fs);
+	cprintf("|-gs    0x%08x\n", tf->tf_gs);
+	cprintf("|-trap  0x%08x %s\n", tf->tf_trapno, trapname(tf->tf_trapno));
+	cprintf("|-err   0x%08x\n", tf->tf_err);
+	cprintf("|-eip   0x%08x\n", tf->tf_eip);
+	cprintf("|-cs    0x%08x\n", tf->tf_cs);
+	cprintf("|-flag  0x%08x ", tf->tf_eflags);
 
 	int i, j;
 	for (i = 0, j = 1; i < sizeof(IA32flags) / sizeof(IA32flags[0]); i++, j <<= 1) {
@@ -158,20 +158,20 @@ void print_trapframe(struct trapframe* tf)
 	cprintf("IOPL=%d\n", (tf->tf_eflags & FL_IOPL_MASK) >> 12);
 	cprintf("|-tf_in_kernel %d\n", trap_in_kernel(tf));
 	cprintf("|-esp       0x%08x\n", tf->tf_esp);
-	cprintf("|-ss        0x%04x\n", tf->tf_ss);
-	print_stackframe_user(tf->tf_regs.reg_ebp, tf->tf_eip);
+	cprintf("|-ss        0x%08x\n", tf->tf_ss);
+	print_backtrace(tf->tf_regs.reg_ebp, tf->tf_eip);
 }
 
 void print_regs(struct trapframe* tf)
 {
-	cprintf("|-edi  0x%08x\n", tf->tf_regs.reg_edi);
-	cprintf("|-esi  0x%08x\n", tf->tf_regs.reg_esi);
-	cprintf("|-ebp  0x%08x\n", tf->tf_regs.reg_ebp);
-	cprintf("|-oesp 0x%08x\n", tf->tf_regs.reg_oesp);
-	cprintf("|-ebx  0x%08x\n", tf->tf_regs.reg_ebx);
-	cprintf("|-edx  0x%08x\n", tf->tf_regs.reg_edx);
-	cprintf("|-ecx  0x%08x\n", tf->tf_regs.reg_ecx);
-	cprintf("|-eax  0x%08x\n", tf->tf_regs.reg_eax);
+	cprintf("|-edi   0x%08x\n", tf->tf_regs.reg_edi);
+	cprintf("|-esi   0x%08x\n", tf->tf_regs.reg_esi);
+	cprintf("|-ebp   0x%08x\n", tf->tf_regs.reg_ebp);
+	cprintf("|-oesp  0x%08x\n", tf->tf_regs.reg_oesp);
+	cprintf("|-ebx   0x%08x\n", tf->tf_regs.reg_ebx);
+	cprintf("|-edx   0x%08x\n", tf->tf_regs.reg_edx);
+	cprintf("|-ecx   0x%08x\n", tf->tf_regs.reg_ecx);
+	cprintf("|-eax   0x%08x\n", tf->tf_regs.reg_eax);
 }
 
 
