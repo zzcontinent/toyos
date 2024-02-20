@@ -275,5 +275,4 @@ void trap(struct trapframe* tf)
 			}
 		}
 	}
-	//udebug("trap exit\n");
 }

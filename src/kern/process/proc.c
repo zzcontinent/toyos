@@ -883,11 +883,13 @@ int do_execve(const char *name, int argc, const char **argv)
 
 	int ret = -E_INVAL;
 
+	udebug("\r\n");
 	lock_mm(mm);
 	if (name == NULL) {
 		snprintf(local_name, sizeof(local_name), "<null> %d", g_current->pid);
 	} else {
 		if (!copy_string(mm, local_name, name, sizeof(local_name))) {
+			udebug("\r\n");
 			unlock_mm(mm);
 			return ret;
 		}
@@ -907,7 +909,6 @@ int do_execve(const char *name, int argc, const char **argv)
 	if ((ret = fd = sysfile_open(path, O_RDONLY)) < 0) {
 		goto execve_exit;
 	}
-	udebug("\n");
 
 	if (mm != NULL) {
 		lcr3(boot_cr3);
@@ -918,8 +919,10 @@ int do_execve(const char *name, int argc, const char **argv)
 		}
 		g_current->mm = NULL;
 	}
+	udebug("\r\n");
 	ret= -E_NO_MEM;;
 	if ((ret = load_icode(fd, argc, kargv)) != 0) {
+		udebug("\r\n");
 		goto execve_exit;
 	}
 	free_kargv(argc, kargv);

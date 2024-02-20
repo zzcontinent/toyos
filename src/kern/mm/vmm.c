@@ -222,6 +222,7 @@ bool copy_string(struct mm_struct *mm, char *dst, const char *src, size_t maxn)
 			part = maxn;
 		}
 		if (!is_user_mem(mm, (uintptr_t)src, part, 0)) {
+			panic("mm:0x%x, src:0x%x\r\n", mm, src);
 			return 0;
 		}
 		if ((alen = strnlen(src, part)) < part) {
@@ -229,6 +230,7 @@ bool copy_string(struct mm_struct *mm, char *dst, const char *src, size_t maxn)
 			return 1;
 		}
 		if (part == maxn) {
+			uerror("\r\n");
 			return 0;
 		}
 		memcpy(dst, src, part);

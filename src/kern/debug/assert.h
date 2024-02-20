@@ -8,7 +8,7 @@ void __noreturn __panic(const char* file, int line, const char* fmt, ...);
 
 #define warn(...) __warn(__FILE__, __LINE__, __VA_ARGS__)
 
-#define panic(...) do {WARN_ON(1); __panic(__FILE__, __LINE__, __VA_ARGS__);} while(0)
+#define panic(...) do {uclean("\r\n\r\n===>   PANIC  <===\r\n\r\n");WARN_ON(1); __panic(__FILE__, __LINE__, __VA_ARGS__);} while(0)
 
 #define assert(x)                                            \
 	do {                                                 \

@@ -8,13 +8,14 @@
 #include <kern/trap/trap.h>
 #include <kern/mm/pmm.h>
 #include <kern/debug/assert.h>
+#include <kern/debug/kcommand.h>
 #include <kern/driver/clock.h>
 #include <kern/fs/sysfile.h>
 
 static int sys_exit(uint32_t arg[])
 {
 	int error_code = (int)arg[0];
-	uonly("[pid:%d, proc:%s] args[0x%x, 0x%x, 0x%x, 0x%x, 0x%x]\n", g_current->pid, g_current->name, arg[0], arg[1], arg[2], arg[3], arg[4]);
+	utest("[pid:%d, proc:%s] args[0x%x, 0x%x, 0x%x, 0x%x, 0x%x]\n", g_current->pid, g_current->name, arg[0], arg[1], arg[2], arg[3], arg[4]);
 	return do_exit(error_code);
 }
 
@@ -22,7 +23,7 @@ static int sys_fork(uint32_t arg[])
 {
 	struct trapframe *tf = g_current->tf;
 	uintptr_t stack = tf->tf_esp;
-	uonly("[pid:%d, proc:%s] args[0x%x, 0x%x, 0x%x, 0x%x, 0x%x]\n", g_current->pid, g_current->name, arg[0], arg[1], arg[2], arg[3], arg[4]);
+	utest("[pid:%d, proc:%s] args[0x%x, 0x%x, 0x%x, 0x%x, 0x%x]\n", g_current->pid, g_current->name, arg[0], arg[1], arg[2], arg[3], arg[4]);
 	return do_fork(0, stack, tf);
 }
 
@@ -30,48 +31,48 @@ static int sys_wait(uint32_t arg[])
 {
 	int pid = (int)arg[0];
 	int *store = (int *)arg[1];
-	uonly("[pid:%d, proc:%s] args[0x%x, 0x%x, 0x%x, 0x%x, 0x%x]\n", g_current->pid, g_current->name, arg[0], arg[1], arg[2], arg[3], arg[4]);
+	utest("[pid:%d, proc:%s] args[0x%x, 0x%x, 0x%x, 0x%x, 0x%x]\n", g_current->pid, g_current->name, arg[0], arg[1], arg[2], arg[3], arg[4]);
 	return do_wait(pid, store);
 }
 
-static int sys_exec(uint32_t arg[])
+static int sys_execve(uint32_t arg[])
 {
 	const char *name = (const char *)arg[0];
 	int argc = (int)arg[1];
 	const char **argv = (const char **)arg[2];
-	uonly("[pid:%d, proc:%s] args[0x%x, 0x%x, 0x%x, 0x%x, 0x%x]\n", g_current->pid, g_current->name, arg[0], arg[1], arg[2], arg[3], arg[4]);
+	utest("[pid:%d, proc:%s] args[0x%x, 0x%x, 0x%x, 0x%x, 0x%x]\n", g_current->pid, g_current->name, arg[0], arg[1], arg[2], arg[3], arg[4]);
 	return do_execve(name, argc, argv);
 }
 
 static int sys_sched_yield(uint32_t arg[])
 {
-	uonly("[pid:%d, proc:%s] args[0x%x, 0x%x, 0x%x, 0x%x, 0x%x]\n", g_current->pid, g_current->name, arg[0], arg[1], arg[2], arg[3], arg[4]);
+	utest("[pid:%d, proc:%s] args[0x%x, 0x%x, 0x%x, 0x%x, 0x%x]\n", g_current->pid, g_current->name, arg[0], arg[1], arg[2], arg[3], arg[4]);
 	return do_yield();
 }
 
 static int sys_kill(uint32_t arg[])
 {
 	int pid = (int)arg[0];
-	uonly("[pid:%d, proc:%s] args[0x%x, 0x%x, 0x%x, 0x%x, 0x%x]\n", g_current->pid, g_current->name, arg[0], arg[1], arg[2], arg[3], arg[4]);
+	utest("[pid:%d, proc:%s] args[0x%x, 0x%x, 0x%x, 0x%x, 0x%x]\n", g_current->pid, g_current->name, arg[0], arg[1], arg[2], arg[3], arg[4]);
 	return do_kill(pid);
 }
 
 static int sys_getpid(uint32_t arg[])
 {
-	uonly("[pid:%d, proc:%s] args[0x%x, 0x%x, 0x%x, 0x%x, 0x%x]\n", g_current->pid, g_current->name, arg[0], arg[1], arg[2], arg[3], arg[4]);
+	utest("[pid:%d, proc:%s] args[0x%x, 0x%x, 0x%x, 0x%x, 0x%x]\n", g_current->pid, g_current->name, arg[0], arg[1], arg[2], arg[3], arg[4]);
 	return g_current->pid;
 }
 
 static int sys_clock_gettime32(uint32_t arg[])
 {
-	uonly("[pid:%d, proc:%s] args[0x%x, 0x%x, 0x%x, 0x%x]\n", g_current->pid, g_current->name, arg[0], arg[1], arg[2], arg[3]);
+	utest("[pid:%d, proc:%s] args[0x%x, 0x%x, 0x%x, 0x%x]\n", g_current->pid, g_current->name, arg[0], arg[1], arg[2], arg[3]);
 	return (int)g_ticks;
 }
 
 static int sys_set_priority(uint32_t arg[])
 {
 	uint32_t priority = (uint32_t)arg[0];
-	uonly("[pid:%d, proc:%s] args[0x%x, 0x%x, 0x%x, 0x%x, 0x%x]\n", g_current->pid, g_current->name, arg[0], arg[1], arg[2], arg[3], arg[4]);
+	utest("[pid:%d, proc:%s] args[0x%x, 0x%x, 0x%x, 0x%x, 0x%x]\n", g_current->pid, g_current->name, arg[0], arg[1], arg[2], arg[3], arg[4]);
 	set_priority(priority);
 	return 0;
 }
@@ -79,7 +80,7 @@ static int sys_set_priority(uint32_t arg[])
 static int sys_nanosleep(uint32_t arg[])
 {
 	unsigned int time = (unsigned int)arg[0];
-	uonly("[pid:%d, proc:%s] args[0x%x, 0x%x, 0x%x, 0x%x, 0x%x]\n", g_current->pid, g_current->name, arg[0], arg[1], arg[2], arg[3], arg[4]);
+	utest("[pid:%d, proc:%s] args[0x%x, 0x%x, 0x%x, 0x%x, 0x%x]\n", g_current->pid, g_current->name, arg[0], arg[1], arg[2], arg[3], arg[4]);
 	return do_sleep(time);
 }
 
@@ -87,14 +88,14 @@ static int sys_open(uint32_t arg[])
 {
 	const char *path = (const char *)arg[0];
 	uint32_t open_flags = (uint32_t)arg[1];
-	uonly("[pid:%d, proc:%s] args[0x%x, 0x%x, 0x%x, 0x%x, 0x%x]\n", g_current->pid, g_current->name, arg[0], arg[1], arg[2], arg[3], arg[4]);
+	utest("[pid:%d, proc:%s] args[0x%x, 0x%x, 0x%x, 0x%x, 0x%x]\n", g_current->pid, g_current->name, arg[0], arg[1], arg[2], arg[3], arg[4]);
 	return sysfile_open(path, open_flags);
 }
 
 static int sys_close(uint32_t arg[])
 {
 	int fd = (int)arg[0];
-	uonly("[pid:%d, proc:%s] args[0x%x, 0x%x, 0x%x, 0x%x, 0x%x]\n", g_current->pid, g_current->name, arg[0], arg[1], arg[2], arg[3], arg[4]);
+	utest("[pid:%d, proc:%s] args[0x%x, 0x%x, 0x%x, 0x%x, 0x%x]\n", g_current->pid, g_current->name, arg[0], arg[1], arg[2], arg[3], arg[4]);
 	return sysfile_close(fd);
 }
 
@@ -103,7 +104,7 @@ static int sys_read(uint32_t arg[])
 	int fd = (int)arg[0];
 	void *base = (void *)arg[1];
 	size_t len = (size_t)arg[2];
-	uonly("[pid:%d, proc:%s] args[0x%x, 0x%x, 0x%x, 0x%x, 0x%x]\n", g_current->pid, g_current->name, arg[0], arg[1], arg[2], arg[3], arg[4]);
+	utest("[pid:%d, proc:%s] args[0x%x, 0x%x, 0x%x, 0x%x, 0x%x]\n", g_current->pid, g_current->name, arg[0], arg[1], arg[2], arg[3], arg[4]);
 	return sysfile_read(fd, base, len);
 }
 
@@ -112,7 +113,7 @@ static int sys_write(uint32_t arg[])
 	int fd = (int)arg[0];
 	void *base = (void *)arg[1];
 	size_t len = (size_t)arg[2];
-	uonly("[pid:%d, proc:%s] args[0x%x, 0x%x, 0x%x, 0x%x, 0x%x]\n", g_current->pid, g_current->name, arg[0], arg[1], arg[2], arg[3], arg[4]);
+	utest("[pid:%d, proc:%s] args[0x%x, 0x%x, 0x%x, 0x%x, 0x%x]\n", g_current->pid, g_current->name, arg[0], arg[1], arg[2], arg[3], arg[4]);
 	return sysfile_write(fd, base, len);
 }
 
@@ -122,7 +123,7 @@ static int sys_writev(uint32_t arg[])
 	int fd = (int)arg[0];
 	void *iov = (void *)arg[1];
 	size_t iovcnt = (size_t)arg[2];
-	uonly("[pid:%d, proc:%s] args[0x%x, 0x%x, 0x%x, 0x%x, 0x%x]\n", g_current->pid, g_current->name, arg[0], arg[1], arg[2], arg[3], arg[4]);
+	utest("[pid:%d, proc:%s] args[0x%x, 0x%x, 0x%x, 0x%x, 0x%x]\n", g_current->pid, g_current->name, arg[0], arg[1], arg[2], arg[3], arg[4]);
 	return sysfile_write(fd, iov, iovcnt);
 }
 
@@ -131,7 +132,7 @@ static int sys_lseek(uint32_t arg[])
 	int fd = (int)arg[0];
 	off_t pos = (off_t)arg[1];
 	int whence = (int)arg[2];
-	uonly("[pid:%d, proc:%s] args[0x%x, 0x%x, 0x%x, 0x%x, 0x%x]\n", g_current->pid, g_current->name, arg[0], arg[1], arg[2], arg[3], arg[4]);
+	utest("[pid:%d, proc:%s] args[0x%x, 0x%x, 0x%x, 0x%x, 0x%x]\n", g_current->pid, g_current->name, arg[0], arg[1], arg[2], arg[3], arg[4]);
 	return sysfile_seek(fd, pos, whence);
 }
 
@@ -139,14 +140,14 @@ static int sys_fstat(uint32_t arg[])
 {
 	int fd = (int)arg[0];
 	struct stat *stat = (struct stat *)arg[1];
-	uonly("[pid:%d, proc:%s] args[0x%x, 0x%x, 0x%x, 0x%x, 0x%x]\n", g_current->pid, g_current->name, arg[0], arg[1], arg[2], arg[3], arg[4]);
+	utest("[pid:%d, proc:%s] args[0x%x, 0x%x, 0x%x, 0x%x, 0x%x]\n", g_current->pid, g_current->name, arg[0], arg[1], arg[2], arg[3], arg[4]);
 	return sysfile_fstat(fd, stat);
 }
 
 static int sys_fsync(uint32_t arg[])
 {
 	int fd = (int)arg[0];
-	uonly("[pid:%d, proc:%s] args[0x%x, 0x%x, 0x%x, 0x%x, 0x%x]\n", g_current->pid, g_current->name, arg[0], arg[1], arg[2], arg[3], arg[4]);
+	utest("[pid:%d, proc:%s] args[0x%x, 0x%x, 0x%x, 0x%x, 0x%x]\n", g_current->pid, g_current->name, arg[0], arg[1], arg[2], arg[3], arg[4]);
 	return sysfile_fsync(fd);
 }
 
@@ -154,14 +155,14 @@ static int sys_getcwd(uint32_t arg[])
 {
 	char *buf = (char *)arg[0];
 	size_t len = (size_t)arg[1];
-	uonly("[pid:%d, proc:%s] args[0x%x, 0x%x, 0x%x, 0x%x, 0x%x]\n", g_current->pid, g_current->name, arg[0], arg[1], arg[2], arg[3], arg[4]);
+	utest("[pid:%d, proc:%s] args[0x%x, 0x%x, 0x%x, 0x%x, 0x%x]\n", g_current->pid, g_current->name, arg[0], arg[1], arg[2], arg[3], arg[4]);
 	return sysfile_getcwd(buf, len);
 }
 
 static int sys_getdirentry(uint32_t arg[])
 {
 	int fd = (int)arg[0];
-	uonly("[pid:%d, proc:%s] args[0x%x, 0x%x, 0x%x, 0x%x, 0x%x]\n", g_current->pid, g_current->name, arg[0], arg[1], arg[2], arg[3], arg[4]);
+	utest("[pid:%d, proc:%s] args[0x%x, 0x%x, 0x%x, 0x%x, 0x%x]\n", g_current->pid, g_current->name, arg[0], arg[1], arg[2], arg[3], arg[4]);
 	struct dirent *direntp = (struct dirent *)arg[1];
 	return sysfile_getdirentry(fd, direntp);
 }
@@ -170,20 +171,20 @@ static int sys_dup(uint32_t arg[])
 {
 	int fd1 = (int)arg[0];
 	int fd2 = (int)arg[1];
-	uonly("[pid:%d, proc:%s] args[0x%x, 0x%x, 0x%x, 0x%x, 0x%x]\n", g_current->pid, g_current->name, arg[0], arg[1], arg[2], arg[3], arg[4]);
+	utest("[pid:%d, proc:%s] args[0x%x, 0x%x, 0x%x, 0x%x, 0x%x]\n", g_current->pid, g_current->name, arg[0], arg[1], arg[2], arg[3], arg[4]);
 	return sysfile_dup(fd1, fd2);
 }
 
 static int sys_ioctl(uint32_t arg[])
 {
 	int fd = (int)arg[0];
-	uonly("[pid:%d, proc:%s] args[0x%x, 0x%x, 0x%x, 0x%x, 0x%x]\n", g_current->pid, g_current->name, arg[0], arg[1], arg[2], arg[3], arg[4]);
+	utest("[pid:%d, proc:%s] args[0x%x, 0x%x, 0x%x, 0x%x, 0x%x]\n", g_current->pid, g_current->name, arg[0], arg[1], arg[2], arg[3], arg[4]);
 	return sysfile_ioctl(fd);
 }
 
 static int sys_putc(uint32_t arg[])
 {
-	uonly("[pid:%d, proc:%s] args[0x%x, 0x%x, 0x%x, 0x%x, 0x%x]\n", g_current->pid, g_current->name, arg[0], arg[1], arg[2], arg[3], arg[4]);
+	utest("[pid:%d, proc:%s] args[0x%x, 0x%x, 0x%x, 0x%x, 0x%x]\n", g_current->pid, g_current->name, arg[0], arg[1], arg[2], arg[3], arg[4]);
 	int c = (int)arg[0];
 	cputchar(c);
 	return 0;
@@ -191,7 +192,7 @@ static int sys_putc(uint32_t arg[])
 
 static int sys_pgdir(uint32_t arg[])
 {
-	uonly("[pid:%d, proc:%s] args[0x%x, 0x%x, 0x%x, 0x%x, 0x%x]\n", g_current->pid, g_current->name, arg[0], arg[1], arg[2], arg[3], arg[4]);
+	utest("[pid:%d, proc:%s] args[0x%x, 0x%x, 0x%x, 0x%x, 0x%x]\n", g_current->pid, g_current->name, arg[0], arg[1], arg[2], arg[3], arg[4]);
 	print_pg();
 	return 0;
 }
@@ -200,7 +201,7 @@ static int (*syscalls[])(uint32_t arg[]) = {
 	[SYS_exit]              sys_exit,
 	[SYS_fork]              sys_fork,
 	[SYS_wait]              sys_wait,
-	[SYS_execve]            sys_exec,
+	[SYS_execve]            sys_execve,
 	[SYS_sched_yield]       sys_sched_yield,
 	[SYS_kill]              sys_kill,
 	[SYS_getpid]            sys_getpid,
@@ -233,12 +234,15 @@ void syscall(void) {
 	int num = tf->tf_regs.reg_eax;
 	if (num >= 0 && num < NUM_SYSCALLS) {
 		if (syscalls[num] != NULL) {
-			arg[0] = tf->tf_regs.reg_edx;
+			arg[0] = tf->tf_regs.reg_ebx;
 			arg[1] = tf->tf_regs.reg_ecx;
-			arg[2] = tf->tf_regs.reg_ebx;
-			arg[3] = tf->tf_regs.reg_edi;
-			arg[4] = tf->tf_regs.reg_esi;
-			tf->tf_regs.reg_eax = syscalls[num](arg);
+			arg[2] = tf->tf_regs.reg_edx;
+			arg[3] = tf->tf_regs.reg_esi;
+			arg[4] = tf->tf_regs.reg_edi;
+			uinfo("%d\r\n", num);
+			int ret = syscalls[num](arg);
+			uinfo("%d\r\n", num);
+			tf->tf_regs.reg_eax = ret;
 			return ;
 		}
 	}
