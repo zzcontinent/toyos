@@ -100,7 +100,7 @@ static void sfs_cleanup(struct vfs *fs)
 		}
 	}
 	if (ret != 0) {
-		warn("sfs: sync error: '%s': %e.\n", sfs->super.info, ret);
+		uerror("sfs: sync error: '%s': %e.\n", sfs->super.info, ret);
 	}
 }
 

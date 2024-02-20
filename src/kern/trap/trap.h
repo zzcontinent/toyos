@@ -3,6 +3,8 @@
 
 #include <libs/defs.h>
 #include <libs/types.h>
+#include <libs/log.h>
+#include <libs/x86.h>
 #include <kern/debug/kdebug.h>
 
 /* Trap Numbers */
@@ -100,10 +102,6 @@ extern void print_regs(struct trapframe *tf);
 extern bool trap_in_kernel(struct trapframe *tf);
 extern void print_backtrace(u32 t_ebp, u32 t_eip);
 
-#define TRACE_ON(cond) do {\
-	if (cond) { \
-		print_backtrace(read_ebp(), read_eip()); \
-	} \
-} while(0)
+#define WARN_ON(cond) do { if (cond) {uerror("\r\n"); print_backtrace(read_ebp(), read_eip());} } while(0)
 
 #endif  /* __TRAP_H__ */

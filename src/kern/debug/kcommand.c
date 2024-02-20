@@ -174,7 +174,7 @@ int cmd_kerninfo(int argc, char **argv)
  * */
 int cmd_backtrace(int argc, char **argv)
 {
-	print_stackframe();
+	WARN_ON(1);
 	return CMD_SUCCEED;
 }
 

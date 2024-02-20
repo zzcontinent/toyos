@@ -24,46 +24,46 @@
 #define LEVEL_ERROR  2
 #define LEVEL_ONLY   3
 #define LEVEL_OFF    4
-//#define uonly_LEVEL LEVEL_DEBUG
-//#define uonly_LEVEL LEVEL_INFO
-#define uonly_LEVEL LEVEL_ERROR
-//#define uonly_LEVEL LEVEL_ONLY
-//#define uonly_LEVEL LEVEL_OFF
+//#define ULOG_LEVEL LEVEL_DEBUG
+//#define ULOG_LEVEL LEVEL_INFO
+#define ULOG_LEVEL LEVEL_ERROR
+//#define ULOG_LEVEL LEVEL_ONLY
+//#define ULOG_LEVEL LEVEL_OFF
 
 
 extern int cprintf(const char* fmt, ...);
 #define printf cprintf
 
-#if uonly_LEVEL == LEVEL_OFF
+#if ULOG_LEVEL == LEVEL_OFF
 #define udebug(fmt, args...)
 #define uinfo(fmt, args...)
 #define uerror(fmt, args...)
 #define uclean(fmt, args...)
 #define uonly(fmt, args...)
-#elif uonly_LEVEL == LEVEL_DEBUG
+#elif ULOG_LEVEL == LEVEL_DEBUG
 #define udebug(fmt, args...) printf("[D][%s:%d][%s] " fmt, __FILE__, __LINE__, __FUNCTION__, ##args)
 #define uinfo(fmt, args...) printf("[I][%s:%d][%s] " fmt,  __FILE__, __LINE__, __FUNCTION__, ##args)
 #define uerror(fmt, args...) printf("[E][%s:%d][%s] " fmt, __FILE__, __LINE__, __FUNCTION__, ##args)
 #define uclean printf
 #define uonly(fmt, args...)
-#elif uonly_LEVEL == LEVEL_INFO
+#elif ULOG_LEVEL == LEVEL_INFO
 #define udebug(fmt, args...)
 #define uinfo(fmt, args...) printf("[I][%s:%d][%s] " fmt, __FILE__, __LINE__, __FUNCTION__, ##args)
-#define uerror(fmt, args...) printf("[E][%s;%d][%s] " fmt, __FILE__, __LINE__, __FUNCTION__, ##args)
+#define uerror(fmt, args...) printf("[E][%s:%d][%s] " fmt, __FILE__, __LINE__, __FUNCTION__, ##args)
 #define uclean printf
 #define uonly(fmt, args...)
-#elif uonly_LEVEL == LEVEL_ERROR
+#elif ULOG_LEVEL == LEVEL_ERROR
 #define udebug(fmt, args...)
 #define uinfo(fmt, args...)
 #define uerror(fmt, args...) printf("[E][%s:%d][%s] " fmt, __FILE__, __LINE__, __FUNCTION__, ##args)
 #define uclean printf
 #define uonly(fmt, args...)
-#elif uonly_LEVEL == LEVEL_ONLY
+#elif ULOG_LEVEL == LEVEL_ONLY
 #define udebug(fmt, args...)
 #define uinfo(fmt, args...)
 #define uerror(fmt, args...)
 #define uclean printf
-#define uonly(fmt, args...) printf("[O][%d][%s] " fmt, __LINE__, __FUNCTION__, ##args)
+#define uonly(fmt, args...) printf("[O][%s:%d][%s] " fmt, __FILE__, __LINE__, __FUNCTION__, ##args)
 
 #else
 #define udebug printf

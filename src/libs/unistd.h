@@ -25,6 +25,7 @@
 #define SYS_fstat           108
 #define SYS_fsync           118
 #define SYS_mprotect        125
+#define SYS_writev          146
 #define SYS_sched_yield     158
 #define SYS_nanosleep       162
 #define SYS_pread64         180

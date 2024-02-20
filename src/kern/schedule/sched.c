@@ -63,9 +63,8 @@ void wakeup_proc(struct proc_struct *proc)
 			if (proc != g_current) {
 				sched_class_enqueue(proc);
 			}
-		}
-		else {
-			warn("wakeup runnable process.\n");
+		} else {
+			uerror("wakeup runnable process.\n");
 		}
 	}
 	local_intr_restore(intr_flag);
@@ -153,7 +152,7 @@ void run_timer_list(void)
 					assert(proc->wait_state & WT_INTERRUPTED);
 				}
 				else {
-					warn("process %d's wait_state == 0.\n", proc->pid);
+					uerror("process %d's wait_state == 0.\n", proc->pid);
 				}
 				wakeup_proc(proc);
 				del_timer(timer);

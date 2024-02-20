@@ -122,11 +122,12 @@ bool trap_in_kernel(struct trapframe* tf)
 void print_backtrace(u32 t_ebp, u32 t_eip)
 {
 	int i = 0, j = 0;
+	uclean("backtrace:\r\n");
 	for (i = 0; t_ebp != 0 && i < STACKFRAME_DEPTH; i++) {
-		print_debuginfo(t_eip - 2);
-		uclean("|  ebp:0x%08x ebp[0]:0x%08x ebp[1]:0x%08x eip:0x%08x args:", t_ebp, ((u32*)t_ebp)[0], ((u32*)t_ebp)[1], t_eip);
-		u32* args = (u32*)t_ebp + 2;
-		for (j = 0; j < 4; j++) {
+		print_debuginfo(t_eip - 1);
+		uclean("[%d] eip:0x%08x, ebp:0x%08x, *ebp:", i, t_eip, t_ebp);
+		u32* args = (u32*)t_ebp;
+		for (j = 0; j < 6; j++) {
 			uclean("0x%08x ", args[j]);
 		}
 		uclean("\n");
@@ -157,8 +158,8 @@ void print_trapframe(struct trapframe* tf)
 	}
 	cprintf("IOPL=%d\n", (tf->tf_eflags & FL_IOPL_MASK) >> 12);
 	cprintf("|-tf_in_kernel %d\n", trap_in_kernel(tf));
-	cprintf("|-esp       0x%08x\n", tf->tf_esp);
-	cprintf("|-ss        0x%08x\n", tf->tf_ss);
+	cprintf("|-esp   0x%08x\n", tf->tf_esp);
+	cprintf("|-ss    0x%08x\n", tf->tf_ss);
 	print_backtrace(tf->tf_regs.reg_ebp, tf->tf_eip);
 }
 

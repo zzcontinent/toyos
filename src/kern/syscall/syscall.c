@@ -116,6 +116,16 @@ static int sys_write(uint32_t arg[])
 	return sysfile_write(fd, base, len);
 }
 
+//TODO
+static int sys_writev(uint32_t arg[])
+{
+	int fd = (int)arg[0];
+	void *iov = (void *)arg[1];
+	size_t iovcnt = (size_t)arg[2];
+	uonly("[pid:%d, proc:%s] args[0x%x, 0x%x, 0x%x, 0x%x, 0x%x]\n", g_current->pid, g_current->name, arg[0], arg[1], arg[2], arg[3], arg[4]);
+	return sysfile_write(fd, iov, iovcnt);
+}
+
 static int sys_lseek(uint32_t arg[])
 {
 	int fd = (int)arg[0];
@@ -201,6 +211,7 @@ static int (*syscalls[])(uint32_t arg[]) = {
 	[SYS_close]             sys_close,
 	[SYS_read]              sys_read,
 	[SYS_write]             sys_write,
+	[SYS_writev]            sys_writev,
 	[SYS_lseek]             sys_lseek,
 	[SYS_ioctl]             sys_ioctl,
 	[SYS_fstat]             sys_fstat,
@@ -231,7 +242,6 @@ void syscall(void) {
 			return ;
 		}
 	}
-	TRACE_ON(1);
 	panic("undefined syscall %d, pid = %d, name = %s.\n",
 			num, g_current->pid, g_current->name);
 }
