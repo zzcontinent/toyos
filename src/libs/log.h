@@ -30,7 +30,8 @@
 //#define ULOG_LEVEL LEVEL_TEST
 //#define ULOG_LEVEL LEVEL_OFF
 
-#define ULOG_LEVEL (LEVEL_INFO | LEVEL_TEST)
+//#define ULOG_LEVEL (LEVEL_INFO | LEVEL_TEST)
+#define ULOG_LEVEL (LEVEL_INFO)
 
 
 extern int cprintf(const char* fmt, ...);
@@ -60,7 +61,7 @@ extern int cprintf(const char* fmt, ...);
 #endif
 
 #if ULOG_LEVEL & LEVEL_TEST
-#define utest(fmt, args...) printf("[O][%s:%d][%s] " fmt, __FILE__, __LINE__, __FUNCTION__, ##args)
+#define utest(fmt, args...) printf("[T][%s:%d][%s] " fmt, __FILE__, __LINE__, __FUNCTION__, ##args)
 #endif
 
 #ifndef udebug

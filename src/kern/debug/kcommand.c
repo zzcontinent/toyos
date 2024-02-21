@@ -12,8 +12,8 @@
 
 bool is_kernel_panic(void);
 
-#define COMMAND_MAX    200
-#define MAXARGS         16
+#define COMMAND_MAX    256
+#define MAXARGS         256
 #define WHITESPACE      " \t\n\r"
 #define CMD_HISTORY_MAX    20
 #define CMD_HISTORY_BUF_LEN    256
@@ -368,7 +368,7 @@ int cmd_kernel_execv(int argc, char **argv)
 {
 	set_cons_type(CONS_TYPE_SERIAL_ISR_DEV_STDIN);
 	const char ** tmp_argv = (const char **)argv;
-	kernel_execve(tmp_argv[1], tmp_argv+1);
+	kernel_sys_execve(tmp_argv[1], tmp_argv+1);
 	return CMD_SUCCEED;
 }
 
@@ -376,7 +376,7 @@ int cmd_sfs_ls(int argc, char **argv)
 {
 	set_cons_type(CONS_TYPE_SERIAL_ISR_DEV_STDIN);
 	const char ** tmp_argv = (const char **)argv;
-	kernel_execve(tmp_argv[1], tmp_argv+1);
+	kernel_sys_execve(tmp_argv[1], tmp_argv+1);
 	return CMD_SUCCEED;
 }
 
@@ -384,7 +384,7 @@ int cmd_sfs_read(int argc, char **argv)
 {
 	set_cons_type(CONS_TYPE_SERIAL_ISR_DEV_STDIN);
 	const char ** tmp_argv = (const char **)argv;
-	kernel_execve(tmp_argv[1], tmp_argv+1);
+	kernel_sys_execve(tmp_argv[1], tmp_argv+1);
 	return CMD_SUCCEED;
 }
 
@@ -392,7 +392,7 @@ int cmd_sfs_write(int argc, char **argv)
 {
 	set_cons_type(CONS_TYPE_SERIAL_ISR_DEV_STDIN);
 	const char ** tmp_argv = (const char **)argv;
-	kernel_execve(tmp_argv[1], tmp_argv+1);
+	kernel_sys_execve(tmp_argv[1], tmp_argv+1);
 	return CMD_SUCCEED;
 }
 

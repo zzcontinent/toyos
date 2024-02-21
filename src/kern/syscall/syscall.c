@@ -40,7 +40,6 @@ static int sys_execve(uint32_t arg[])
 	const char *name = (const char *)arg[0];
 	int argc = (int)arg[1];
 	const char **argv = (const char **)arg[2];
-	utest("[pid:%d, proc:%s] args[0x%x, 0x%x, 0x%x, 0x%x, 0x%x]\n", g_current->pid, g_current->name, arg[0], arg[1], arg[2], arg[3], arg[4]);
 	return do_execve(name, argc, argv);
 }
 
@@ -239,9 +238,7 @@ void syscall(void) {
 			arg[2] = tf->tf_regs.reg_edx;
 			arg[3] = tf->tf_regs.reg_esi;
 			arg[4] = tf->tf_regs.reg_edi;
-			uinfo("%d\r\n", num);
 			int ret = syscalls[num](arg);
-			uinfo("%d\r\n", num);
 			tf->tf_regs.reg_eax = ret;
 			return ;
 		}

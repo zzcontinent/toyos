@@ -34,6 +34,8 @@ struct mm_struct* mm_create(void)
 
 		mm->mm_count = 0;
 		sem_init(&(mm->mm_sem), 1);
+	} else {
+		panic("mm_create FAILED!\r\n");
 	}
 	return mm;
 }
@@ -222,7 +224,7 @@ bool copy_string(struct mm_struct *mm, char *dst, const char *src, size_t maxn)
 			part = maxn;
 		}
 		if (!is_user_mem(mm, (uintptr_t)src, part, 0)) {
-			panic("mm:0x%x, src:0x%x\r\n", mm, src);
+			utest("mm=0x%x, src=0x%x, part=0x%x\r\n", mm, src, part);
 			return 0;
 		}
 		if ((alen = strnlen(src, part)) < part) {
@@ -230,7 +232,7 @@ bool copy_string(struct mm_struct *mm, char *dst, const char *src, size_t maxn)
 			return 1;
 		}
 		if (part == maxn) {
-			uerror("\r\n");
+			utest("\r\n");
 			return 0;
 		}
 		memcpy(dst, src, part);
@@ -467,8 +469,8 @@ void vmm_init(void)
 
 int mm_map(struct mm_struct *mm, uintptr_t addr, size_t len, uint32_t vm_flags, struct vma_struct **vma_store)
 {
-	uclean("mm:0x%x, addr:0x%x, len:0x%x, vm_flags:0x%x, vma_struct:0x%x\r\n", mm, addr, len, vm_flags, vma_store);
-	print_vm_flags(vm_flags);
+	udebug("mm:0x%x, addr:0x%x, len:0x%x, vm_flags:0x%x, vma_struct:0x%x\r\n", mm, addr, len, vm_flags, vma_store);
+	//print_vm_flags(vm_flags);
 	uintptr_t start = ROUNDDOWN(addr, PGSIZE), end = ROUNDUP(addr + len, PGSIZE);
 	if (!USER_ACCESS(start, end)) {
 		return -E_INVAL;

@@ -46,14 +46,13 @@ void proc_run(struct proc_struct *proc)
 
 #define __KERNEL_EXECVE(name, path, ...) ({                         \
 		const char *argv[] = {path, ##__VA_ARGS__, NULL};       \
-		kernel_execve(name, argv);                              \
+		kernel_sys_execve(name, argv);                              \
 		})
 
-#define KERNEL_EXECVE(x, ...)                   __KERNEL_EXECVE(#x, #x, ##__VA_ARGS__)
+#define KERNEL_SYS_EXECVE(x, ...)                   __KERNEL_EXECVE(#x, #x, ##__VA_ARGS__)
 
 static int user_main(void *arg)
 {
-	//KERNEL_EXECVE(hello1);
 	while(1)
 		DEBUG_CONSOLE;
 	panic("user_main execve failed.\n");
@@ -664,6 +663,7 @@ failed_nomem:
 	ret = -E_NO_MEM;
 failed_cleanup:
 	free_kargv(i, kargv);
+	utest("ret=%e\r\n", -ret);
 	return ret;
 }
 
@@ -883,13 +883,13 @@ int do_execve(const char *name, int argc, const char **argv)
 
 	int ret = -E_INVAL;
 
-	udebug("\r\n");
+	utest("\r\n");
 	lock_mm(mm);
 	if (name == NULL) {
 		snprintf(local_name, sizeof(local_name), "<null> %d", g_current->pid);
 	} else {
 		if (!copy_string(mm, local_name, name, sizeof(local_name))) {
-			udebug("\r\n");
+			utest("mm=0x%x\r\n", mm);
 			unlock_mm(mm);
 			return ret;
 		}
@@ -904,7 +904,7 @@ int do_execve(const char *name, int argc, const char **argv)
 	files_closeall(g_current->filesp);
 
 	/* sysfile_open will check the first argument path, thus we have to use a user-space pointer, and argv[0] may be incorrect */
-	udebug("path=%s\n", path);
+	utest("path=%s\n", path);
 	int fd;
 	if ((ret = fd = sysfile_open(path, O_RDONLY)) < 0) {
 		goto execve_exit;
@@ -919,10 +919,10 @@ int do_execve(const char *name, int argc, const char **argv)
 		}
 		g_current->mm = NULL;
 	}
-	udebug("\r\n");
+	utest("\r\n");
 	ret= -E_NO_MEM;;
 	if ((ret = load_icode(fd, argc, kargv)) != 0) {
-		udebug("\r\n");
+		utest("\r\n");
 		goto execve_exit;
 	}
 	free_kargv(argc, kargv);
@@ -951,8 +951,8 @@ void set_priority(uint32_t priority)
 	}
 }
 
-// kernel_execve - do SYS_exec syscall to exec a user program called by user_main kernel_thread
-int kernel_execve(const char *name, const char **argv)
+// kernel_sys_execve - do SYS_exec syscall to exec a user program called by user_main kernel_thread
+int kernel_sys_execve(const char *name, const char **argv)
 {
 	uclean("pid = %d, name = \"%s\"\n", g_current->pid, name);
 	int argc = 0, ret;
@@ -963,7 +963,11 @@ int kernel_execve(const char *name, const char **argv)
 	asm volatile (
 			"int %1;"
 			: "=a" (ret)
-			: "i" (T_SYSCALL), "0" (SYS_execve), "d" (name), "c" (argc), "b" (argv)
+			: "i" (T_SYSCALL),
+			"0" (SYS_execve),
+			"b" (name),
+			"c" (argc),
+			"d" (argv)
 			: "memory");
 	return ret;
 }

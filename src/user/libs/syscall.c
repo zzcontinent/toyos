@@ -75,7 +75,6 @@ size_t sys_gettime(void)
 	return syscall(SYS_clock_gettime32);
 }
 
-
 int sys_execve(const char *name, int argc, const char **argv)
 {
 	return syscall(SYS_execve, name, argc, argv);
