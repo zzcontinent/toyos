@@ -399,6 +399,7 @@ bad_fork_cleanup_kstack:
 	free_kstack(proc);
 bad_fork_cleanup_proc:
 	kfree(proc);
+	panic("bad do_fork!\r\n");
 	goto fork_out;
 }
 
@@ -409,7 +410,7 @@ int kernel_thread(int (*fn)(void *), void *arg, uint32_t clone_flags)
 	tf.tf_cs = KERNEL_CS;
 	tf.tf_ds = tf.tf_es = tf.tf_ss = KERNEL_DS;
 	tf.tf_regs.reg_ebx = (uint32_t)fn;
-	tf.tf_regs.reg_edx = (uint32_t)arg;
+	tf.tf_regs.reg_ecx = (uint32_t)arg;
 	tf.tf_eip = (uint32_t)kernel_thread_entry;
 	return do_fork(clone_flags | CLONE_VM, 0, &tf);
 }
@@ -861,7 +862,7 @@ bad_pgdir_cleanup_mm:
 	uerror("bad_pgdir_cleanup_mm\n");
 	mm_destroy(mm);
 bad_mm:
-	uerror("bad_mm\n");
+	panic("bad mm\r\n");
 	goto out;
 }
 
@@ -886,7 +887,7 @@ int do_execve(const char *name, int argc, const char **argv)
 	utest("\r\n");
 	lock_mm(mm);
 	if (name == NULL) {
-		snprintf(local_name, sizeof(local_name), "<null> %d", g_current->pid);
+		snprintf(local_name, sizeof(local_name), "unknown%d", g_current->pid);
 	} else {
 		if (!copy_string(mm, local_name, name, sizeof(local_name))) {
 			utest("mm=0x%x\r\n", mm);

@@ -120,10 +120,17 @@ static int sys_write(uint32_t arg[])
 static int sys_writev(uint32_t arg[])
 {
 	int fd = (int)arg[0];
-	void *iov = (void *)arg[1];
+	struct iovec *iov = (void *)arg[1];
 	size_t iovcnt = (size_t)arg[2];
 	utest("[pid:%d, proc:%s] args[0x%x, 0x%x, 0x%x, 0x%x, 0x%x]\n", g_current->pid, g_current->name, arg[0], arg[1], arg[2], arg[3], arg[4]);
-	return sysfile_write(fd, iov, iovcnt);
+	int i = 0;
+	int ret = 0;
+	for (i=0; i<iovcnt; i++) {
+		//uclean("+++%d\n", i);
+		//uclean("%d, iovcnt=%d, base=0x%x, len=0x%d\n", i, iovcnt, iov[i].iov_base, iov[i].iov_len);
+		ret += sysfile_write(fd, iov[i].iov_base, iov[i].iov_len);
+	}
+	return ret;
 }
 
 static int sys_lseek(uint32_t arg[])
@@ -243,7 +250,7 @@ void syscall(void) {
 			return ;
 		}
 	}
-	panic("undefined syscall %d, pid = %d, name = %s.\n",
+	uerror("undefined syscall %d, pid = %d, name = %s.\n",
 			num, g_current->pid, g_current->name);
 }
 

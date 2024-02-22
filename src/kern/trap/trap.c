@@ -138,7 +138,7 @@ void print_backtrace(u32 t_ebp, u32 t_eip)
 
 void print_trapframe(struct trapframe* tf)
 {
-	cprintf("trapframe &tf=%p\n", tf);
+	cprintf("trapframe tf:%p\n", tf);
 	print_regs(tf);
 	cprintf("|-ds    0x%08x\n", tf->tf_ds);
 	cprintf("|-es    0x%08x\n", tf->tf_es);

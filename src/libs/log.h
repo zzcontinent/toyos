@@ -25,6 +25,7 @@
 #define LEVEL_TEST   8
 
 #define ULOG_LEVEL_MASK (LEVEL_INFO|LEVEL_ERROR)
+//#define ULOG_LEVEL_MASK (LEVEL_TEST|LEVEL_ERROR)
 
 
 extern int cprintf(const char* fmt, ...);
