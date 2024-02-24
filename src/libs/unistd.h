@@ -30,6 +30,7 @@
 #define SYS_nanosleep       162
 #define SYS_pread64         180
 #define SYS_getcwd          183
+#define SYS_exit_group      252
 #define SYS_set_tid_address 258
 #define SYS_timer_settime32 260
 #define SYS_timer_gettime32 261

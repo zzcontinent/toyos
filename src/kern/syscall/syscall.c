@@ -19,6 +19,14 @@ static int sys_exit(uint32_t arg[])
 	return do_exit(error_code);
 }
 
+//TODO
+static int sys_exit_group(uint32_t arg[])
+{
+	int error_code = (int)arg[0];
+	utest("[pid:%d, proc:%s] args[0x%x, 0x%x, 0x%x, 0x%x, 0x%x]\n", g_current->pid, g_current->name, arg[0], arg[1], arg[2], arg[3], arg[4]);
+	return do_exit(error_code);
+}
+
 static int sys_fork(uint32_t arg[])
 {
 	struct trapframe *tf = g_current->tf;
@@ -116,7 +124,6 @@ static int sys_write(uint32_t arg[])
 	return sysfile_write(fd, base, len);
 }
 
-//TODO
 static int sys_writev(uint32_t arg[])
 {
 	int fd = (int)arg[0];
@@ -205,6 +212,7 @@ static int sys_pgdir(uint32_t arg[])
 
 static int (*syscalls[])(uint32_t arg[]) = {
 	[SYS_exit]              sys_exit,
+	[SYS_exit_group]        sys_exit_group,
 	[SYS_fork]              sys_fork,
 	[SYS_wait]              sys_wait,
 	[SYS_execve]            sys_execve,

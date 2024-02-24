@@ -40,6 +40,11 @@ int sys_exit(int error_code)
 	return syscall(SYS_exit, error_code);
 }
 
+int sys_exit_group(int error_code)
+{
+	return syscall(SYS_exit_group, error_code);
+}
+
 int sys_fork(void)
 {
 	return syscall(SYS_fork);
