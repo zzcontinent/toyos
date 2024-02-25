@@ -22,7 +22,7 @@
 #define VM_EXEC    0x00000004
 #define VM_STACK   0x00000008
 
-#define print_vm_flags(flag) do { \
+#define PRINT_VM_FLAGS(flag) do { \
 	uclean("vm_flags: 0x%x: %s%s%s%s\r\n",                        \
 			flag,                              \
 			(flag & VM_READ) ? "READ " : "",     \

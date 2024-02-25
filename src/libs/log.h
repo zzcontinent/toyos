@@ -20,17 +20,19 @@
 
 // ============================================================log
 #define LEVEL_DEBUG  1
-#define LEVEL_INFO   2
-#define LEVEL_ERROR  4
-#define LEVEL_TEST   8
+#define LEVEL_TEST   2
+#define LEVEL_INFO   4
+#define LEVEL_ERROR  8
 
-#define ULOG_LEVEL_MASK (LEVEL_INFO|LEVEL_ERROR)
-//#define ULOG_LEVEL_MASK (LEVEL_TEST|LEVEL_ERROR)
+#ifndef ULOG_LEVEL_MASK
+//#define ULOG_LEVEL_MASK (LEVEL_INFO|LEVEL_ERROR)
+#define ULOG_LEVEL_MASK (LEVEL_ERROR)
+#endif
 
 
 extern int cprintf(const char* fmt, ...);
 #define printf cprintf
-#define ulog(level, fmt, args...) do { if (ULOG_LEVEL_MASK & level) {printf("[L%x][%s:%d][%s] " fmt, level, __FILE__, __LINE__, __FUNCTION__, ##args);} } while(0)
+#define ulog(level, fmt, args...) do { if (ULOG_LEVEL_MASK & level) {printf("[L%x][%d][%s] " fmt, level, __LINE__, __FUNCTION__, ##args);} } while(0)
 
 #define udebug(fmt, args...)  ulog(LEVEL_DEBUG, fmt, ##args)
 #define uinfo(fmt, args...)   ulog(LEVEL_INFO, fmt, ##args)

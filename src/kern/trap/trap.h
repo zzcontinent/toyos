@@ -82,19 +82,23 @@ struct trapframe {
 #define PF_SU0  "runing in supervisor mode"
 #define PF_SU1  "runing in user mode"
 
-#define print_pgfault_err(err) do { \
-	uclean("page fault reasons:"                         \
+#define PRINT_PGFAULT_ERR(err) do { \
+	uerror("page fault reasons:\r\n"               \
 			"1. address at 0x%x, "         \
-			"2. code is %d, "                 \
-			"3. %s, "                         \
-			"4. %s, "                         \
-			"5. %s\r\n",                        \
-			rcr2(),                             \
-			(err),                              \
-			(err & PF_U) ? PF_SU1 : PF_SU0,     \
-			(err & PF_W) ? PF_RW1 : PF_RW0,     \
-			(err & PF_P) ? PF_P1 : PF_P0);      \
+			"2. code is %d, "              \
+			"3. %s, "                      \
+			"4. %s, "                      \
+			"5. %s\r\n",                   \
+			rcr2(),                        \
+			(err),                         \
+			(err & PF_U) ? PF_SU1 : PF_SU0,\
+			(err & PF_W) ? PF_RW1 : PF_RW0,\
+			(err & PF_P) ? PF_P1 : PF_P0); \
 } while(0)
+
+#define PRINT_TRAPFRAME(tf) do {\
+	uerror("");print_trapframe(tf);\
+}while(0)
 
 extern void idt_init(void);
 extern void print_trapframe(struct trapframe *tf);

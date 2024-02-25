@@ -179,7 +179,7 @@ void print_regs(struct trapframe* tf)
 int pgfault_handler(struct trapframe* tf)
 {
 	if (g_check_mm_struct != NULL) { //used for test check_swap
-		print_pgfault_err(tf->tf_err);
+		PRINT_PGFAULT_ERR(tf->tf_err);
 	}
 	struct mm_struct* mm = NULL;
 	if (g_check_mm_struct != NULL) {
@@ -187,8 +187,8 @@ int pgfault_handler(struct trapframe* tf)
 		mm = g_check_mm_struct;
 	} else {
 		if (g_current == NULL) {
-			print_trapframe(tf);
-			print_pgfault_err(tf->tf_err);
+			PRINT_TRAPFRAME(tf);
+			PRINT_PGFAULT_ERR(tf->tf_err);
 			panic("unhandled page fault.\n");
 		}
 		mm = g_current->mm;
@@ -209,8 +209,7 @@ void trap_dispatch(struct trapframe* tf)
 					if (trap_in_kernel(tf)) {
 						panic("handle pgfault failed in kernel mode. ret=%d\n", ret);
 					}
-					cprintf("killed by kernel.\n");
-					cprintf("handle user mode pgfault failed. ret=%d\n", ret);
+					uerror("killed by kernel, %e\n", -ret);
 					do_exit(-E_KILLED);
 				}
 			}
@@ -235,7 +234,7 @@ void trap_dispatch(struct trapframe* tf)
 			/* do nothing */
 			break;
 		default:
-			print_trapframe(tf);
+			PRINT_TRAPFRAME(tf);
 			if (g_current != NULL) {
 				cprintf("unhandled trap.\n");
 				do_exit(-E_KILLED);
