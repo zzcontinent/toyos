@@ -478,6 +478,7 @@ struct page *pgdir_alloc_page(pde_t *pgdir, uintptr_t la, uint32_t perm)
 			free_page(page);
 			return NULL;
 		}
+		//TODO
 #if 0
 		if (swap_init_ok){
 			if(g_check_mm_struct!=NULL) {
@@ -486,10 +487,10 @@ struct page *pgdir_alloc_page(pde_t *pgdir, uintptr_t la, uint32_t perm)
 				assert(page_ref(page) == 1);
 			}
 			else  {  //now current is existed, should fix it in the future
-				swap_map_swappable(current->mm, la, page, 0);
-				//page->pra_vaddr=la;
-				//assert(page_ref(page) == 1);
-				//panic("pgdir_alloc_page: no pages. now current is existed, should fix it in the future\n");
+				swap_map_swappable(g_current->mm, la, page, 0);
+				page->pra_vaddr=la;
+				assert(page_ref(page) == 1);
+				panic("pgdir_alloc_page: no pages. now current is existed, should fix it in the future\n");
 			}
 		}
 #endif

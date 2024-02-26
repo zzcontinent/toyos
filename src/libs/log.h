@@ -32,7 +32,7 @@
 
 extern int cprintf(const char* fmt, ...);
 #define printf cprintf
-#define ulog(level, fmt, args...) do { if (ULOG_LEVEL_MASK & level) {printf("[L%x][%d][%s] " fmt, level, __LINE__, __FUNCTION__, ##args);} } while(0)
+#define ulog(level, fmt, args...) do { if (ULOG_LEVEL_MASK & level) {printf("[L%x][%s:%d][%s] " fmt, level, __FILE__, __LINE__, __FUNCTION__, ##args);} } while(0)
 
 #define udebug(fmt, args...)  ulog(LEVEL_DEBUG, fmt, ##args)
 #define uinfo(fmt, args...)   ulog(LEVEL_INFO, fmt, ##args)
