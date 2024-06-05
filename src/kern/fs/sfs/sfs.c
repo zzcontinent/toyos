@@ -16,7 +16,7 @@
 void sfs_init(void)
 {
 	int ret;
-	if ((ret = sfs_mount("disk0")) != 0) {
+	if ((ret = sfs_mount("disk")) != 0) {
 		panic("failed: sfs: sfs_mount: %e.\n", ret);
 	}
 }
@@ -100,7 +100,7 @@ static void sfs_cleanup(struct vfs *fs)
 		}
 	}
 	if (ret != 0) {
-		warn("sfs: sync error: '%s': %e.\n", sfs->super.info, ret);
+		uerror("sfs: sync error: '%s': %e.\n", sfs->super.info, ret);
 	}
 }
 

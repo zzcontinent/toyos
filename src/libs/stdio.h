@@ -2,6 +2,7 @@
 #define  __STDIO_H__
 #include <libs/defs.h>
 #include <libs/stdarg.h>
+#include <libs/types.h>
 
 extern int cprintf(const char* fmt, ...);
 extern int vcprintf(const char* fmt, va_list ap);

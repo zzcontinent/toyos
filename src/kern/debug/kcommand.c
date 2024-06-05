@@ -12,8 +12,8 @@
 
 bool is_kernel_panic(void);
 
-#define COMMAND_MAX    200
-#define MAXARGS         16
+#define COMMAND_MAX    256
+#define MAXARGS         256
 #define WHITESPACE      " \t\n\r"
 #define CMD_HISTORY_MAX    20
 #define CMD_HISTORY_BUF_LEN    256
@@ -48,6 +48,7 @@ static struct command commands[COMMAND_MAX] = {
 	{"fp2", "fp(format print 2byte) addr len break", 4, cmd_format_print2},
 	{"fp", "fp(format print 1byte) addr len break", 4, cmd_format_print1},
 	{"mem", "print memory", 1, cmd_mem},
+	{"mmap", "print memory", 1, cmd_mem},
 	{"page", "print page table", 1, cmd_print_pg},
 	{"alloc", "alloc one page", 1, cmd_alloc_page},
 	{"free", "free [page]", -1, cmd_free_page},
@@ -132,15 +133,12 @@ void kcmd_loop()
 	char promt_buf[64] = {0};
 	while (1) {
 		snprintf(promt_buf, 64, "[sh:%d]$ ", ++index);
-		set_cons_feed(from_loop);
 		if ((buf = readline(promt_buf, 1)) != NULL) {
-			set_cons_feed(from_isr);
 			//append history
 			append_cmd_history(buf);
 
 			enum CMD_RETURN_CODE ret_code = runcmd(buf);
-			if (ret_code == CMD_EXIT)
-			{
+			if (ret_code == CMD_EXIT) {
 				cprintf("exit!\n");
 				return;
 			} else if (ret_code == CMD_NOT_SUPPORT) {
@@ -176,7 +174,7 @@ int cmd_kerninfo(int argc, char **argv)
  * */
 int cmd_backtrace(int argc, char **argv)
 {
-	print_stackframe();
+	WARN_ON(1);
 	return CMD_SUCCEED;
 }
 
@@ -212,6 +210,24 @@ int cmd_format_print1(int argc, char **argv)
 		}
 	}
 	return CMD_SUCCEED;
+}
+
+void lib_format_print4(uintptr_t src, int len, int line_break)
+{
+	int i = 0;
+	u32 *addr = (u32*)src;
+	uclean("addr:%x, len:%d\n", src, len);
+	for (i=0; i<len/4; i++)
+	{
+		if (i%line_break == 0) {
+			uclean("0x%04x: ", i*4);
+		}
+
+		uclean("%08x ", addr[i]);
+		if (i%line_break == line_break-1) {
+			uclean("\n");
+		}
+	}
 }
 
 int cmd_format_print2(int argc, char **argv)
@@ -350,29 +366,33 @@ int cmd_history(int argc, char **argv)
 
 int cmd_kernel_execv(int argc, char **argv)
 {
+	set_cons_type(CONS_TYPE_SERIAL_ISR_DEV_STDIN);
 	const char ** tmp_argv = (const char **)argv;
-	kernel_execve(tmp_argv[1], tmp_argv+1);
+	kernel_sys_execve(tmp_argv[1], tmp_argv+1);
 	return CMD_SUCCEED;
 }
 
 int cmd_sfs_ls(int argc, char **argv)
 {
+	set_cons_type(CONS_TYPE_SERIAL_ISR_DEV_STDIN);
 	const char ** tmp_argv = (const char **)argv;
-	kernel_execve(tmp_argv[1], tmp_argv+1);
+	kernel_sys_execve(tmp_argv[1], tmp_argv+1);
 	return CMD_SUCCEED;
 }
 
 int cmd_sfs_read(int argc, char **argv)
 {
+	set_cons_type(CONS_TYPE_SERIAL_ISR_DEV_STDIN);
 	const char ** tmp_argv = (const char **)argv;
-	kernel_execve(tmp_argv[1], tmp_argv+1);
+	kernel_sys_execve(tmp_argv[1], tmp_argv+1);
 	return CMD_SUCCEED;
 }
 
 int cmd_sfs_write(int argc, char **argv)
 {
+	set_cons_type(CONS_TYPE_SERIAL_ISR_DEV_STDIN);
 	const char ** tmp_argv = (const char **)argv;
-	kernel_execve(tmp_argv[1], tmp_argv+1);
+	kernel_sys_execve(tmp_argv[1], tmp_argv+1);
 	return CMD_SUCCEED;
 }
 

@@ -1,9 +1,9 @@
 #include <libs/libs_all.h>
 #include <kern/driver/console.h>
 #include <kern/debug/assert.h>
+#include <kern/mm/memlayout.h>
 #include <kern/mm/default_pmm.h>
 #include <kern/mm/kmalloc.h>
-#include <kern/mm/memlayout.h>
 #include <kern/mm/mmu.h>
 #include <kern/mm/pmm.h>
 #include <kern/sync/sync.h>
@@ -478,6 +478,7 @@ struct page *pgdir_alloc_page(pde_t *pgdir, uintptr_t la, uint32_t perm)
 			free_page(page);
 			return NULL;
 		}
+		//TODO
 #if 0
 		if (swap_init_ok){
 			if(g_check_mm_struct!=NULL) {
@@ -486,10 +487,10 @@ struct page *pgdir_alloc_page(pde_t *pgdir, uintptr_t la, uint32_t perm)
 				assert(page_ref(page) == 1);
 			}
 			else  {  //now current is existed, should fix it in the future
-				swap_map_swappable(current->mm, la, page, 0);
-				//page->pra_vaddr=la;
-				//assert(page_ref(page) == 1);
-				//panic("pgdir_alloc_page: no pages. now current is existed, should fix it in the future\n");
+				swap_map_swappable(g_current->mm, la, page, 0);
+				page->pra_vaddr=la;
+				assert(page_ref(page) == 1);
+				panic("pgdir_alloc_page: no pages. now current is existed, should fix it in the future\n");
 			}
 		}
 #endif
@@ -619,11 +620,10 @@ static int get_pgtable_items(size_t left, size_t right, size_t start, uintptr_t*
 void print_mem()
 {
 	struct e820map* memmap = (struct e820map*)(0x8000 + KERNBASE);
-	cprintf("e820map:\n");
 	int i;
 	for (i = 0; i < memmap->nr_map; i++) {
 		u64 begin = memmap->map[i].addr, end = begin + memmap->map[i].size;
-		cprintf("|--memory: size:%08llx(%8lldKB), [%08llx, %08llx], type = %d - %s\n",
+		cprintf("memory: size:%08llx(%8lldKB), [%08llx, %08llx], type = %d - %s\n",
 				(u64)memmap->map[i].size,
 				(u64)(memmap->map[i].size/1024),
 				begin, end - 1, memmap->map[i].type, E820MAP_TYPE(memmap->map[i].type));
@@ -632,7 +632,6 @@ void print_mem()
 
 void print_pg(void)
 {
-	cprintf("--------BEGIN--------\n");
 	size_t left, right = 0, perm;
 	while ((perm = get_pgtable_items(0, NPDEENTRY, right, vpd, &left, &right)) != 0) {
 		cprintf("PDE(%03x) %08x-%08x %08x(%8dKB) %s\n", right - left,
@@ -640,9 +639,8 @@ void print_pg(void)
 				(right - left) * PTSIZE, (right-left) *(PTSIZE/1024), perm2str(perm));
 		size_t l, r = left * NPTEENTRY;
 		while ((perm = get_pgtable_items(left * NPTEENTRY, right * NPTEENTRY, r, vpt, &l, &r)) != 0) {
-			cprintf("  |-- PTE(%05x) %08x-%08x %08x(%8dKB) %s\n", r - l, l * PGSIZE, r * PGSIZE,
+			cprintf("  PTE(%05x) %08x-%08x %08x(%8dKB) %s\n", r - l, l * PGSIZE, r * PGSIZE,
 					(r - l) * PGSIZE, (r-l)*PGSIZE/1024, perm2str(perm));
 		}
 	}
-	cprintf("--------END--------\n");
 }

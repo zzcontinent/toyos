@@ -2,7 +2,7 @@
 .globl kernel_thread_entry
 kernel_thread_entry:        # void kernel_thread(void)
 
-    pushl %edx              # push arg
+    pushl %ecx              # push arg
     call *%ebx              # call fn
 
     pushl %eax              # save the return value of fn(arg)

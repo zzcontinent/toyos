@@ -61,6 +61,7 @@ void pic_init(void)
 	outb(IO_PIC2, 0x11);           // ICW1
 	outb(IO_PIC2 + 1, IRQ_OFFSET + 8); // ICW2
 	outb(IO_PIC2 + 1, IRQ_SLAVE);      // ICW3
+
 	// NB automatic EOI mode does not tend to work on slave
 	// linux source code says it's "to be investigated".
 	outb(IO_PIC2 + 1, 0x3); // ICW4

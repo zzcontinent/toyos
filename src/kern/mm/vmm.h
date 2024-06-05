@@ -9,6 +9,7 @@
 #include <libs/defs.h>
 #include <libs/list.h>
 #include <kern/mm/memlayout.h>
+#include <kern/mm/page.h>
 #include <kern/sync/sync.h>
 #include <kern/process/proc.h>
 #include <kern/sync/sem.h>
@@ -20,6 +21,15 @@
 #define VM_WRITE   0x00000002
 #define VM_EXEC    0x00000004
 #define VM_STACK   0x00000008
+
+#define PRINT_VM_FLAGS(flag) do { \
+	uclean("vm_flags: 0x%x: %s%s%s%s\r\n",                        \
+			flag,                              \
+			(flag & VM_READ) ? "READ " : "",     \
+			(flag & VM_WRITE) ? "WRITE " : "",     \
+			(flag & VM_EXEC) ? "EXEC " : "",      \
+			(flag & VM_STACK) ? "STACK " : "");      \
+} while(0)
 
 struct mm_struct;
 

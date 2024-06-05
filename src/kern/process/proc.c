@@ -46,14 +46,13 @@ void proc_run(struct proc_struct *proc)
 
 #define __KERNEL_EXECVE(name, path, ...) ({                         \
 		const char *argv[] = {path, ##__VA_ARGS__, NULL};       \
-		kernel_execve(name, argv);                              \
+		kernel_sys_execve(name, argv);                              \
 		})
 
-#define KERNEL_EXECVE(x, ...)                   __KERNEL_EXECVE(#x, #x, ##__VA_ARGS__)
+#define KERNEL_SYS_EXECVE(x, ...)                   __KERNEL_EXECVE(#x, #x, ##__VA_ARGS__)
 
 static int user_main(void *arg)
 {
-	//KERNEL_EXECVE(sh);
 	while(1)
 		DEBUG_CONSOLE;
 	panic("user_main execve failed.\n");
@@ -62,7 +61,7 @@ static int user_main(void *arg)
 static int init_main(void *arg)
 {
 	int ret;
-	if ((ret = vfs_set_bootfs("disk0:")) != 0) {
+	if ((ret = vfs_set_bootfs("disk:")) != 0) {
 		panic("set boot fs failed: %e.\n", ret);
 	}
 
@@ -400,6 +399,7 @@ bad_fork_cleanup_kstack:
 	free_kstack(proc);
 bad_fork_cleanup_proc:
 	kfree(proc);
+	panic("bad do_fork!\r\n");
 	goto fork_out;
 }
 
@@ -410,7 +410,7 @@ int kernel_thread(int (*fn)(void *), void *arg, uint32_t clone_flags)
 	tf.tf_cs = KERNEL_CS;
 	tf.tf_ds = tf.tf_es = tf.tf_ss = KERNEL_DS;
 	tf.tf_regs.reg_ebx = (uint32_t)fn;
-	tf.tf_regs.reg_edx = (uint32_t)arg;
+	tf.tf_regs.reg_ecx = (uint32_t)arg;
 	tf.tf_eip = (uint32_t)kernel_thread_entry;
 	return do_fork(clone_flags | CLONE_VM, 0, &tf);
 }
@@ -493,7 +493,7 @@ int do_exit(int error_code)
 		}
 		g_current->mm = NULL;
 	}
-	free_proc_files(g_current); //for LAB8
+	free_proc_files(g_current);
 	g_current->state = PROC_ZOMBIE;
 	g_current->exit_code = error_code;
 
@@ -617,7 +617,6 @@ int do_kill(int pid)
 //          - then call scheduler. if process run again, delete timer first.
 int do_sleep(unsigned int time)
 {
-	uclean("[KERN] sleep [%d][%s]\n", g_current->pid, g_current->name);
 	if (time == 0) {
 		return 0;
 	}
@@ -665,6 +664,7 @@ failed_nomem:
 	ret = -E_NO_MEM;
 failed_cleanup:
 	free_kargv(i, kargv);
+	utest("ret=%e\r\n", -ret);
 	return ret;
 }
 
@@ -862,12 +862,12 @@ bad_pgdir_cleanup_mm:
 	uerror("bad_pgdir_cleanup_mm\n");
 	mm_destroy(mm);
 bad_mm:
-	uerror("bad_mm\n");
+	panic("bad mm\r\n");
 	goto out;
 }
 
 // do_execve - call exit_mmap(mm)&free_pgdir(mm) to reclaim memory space of current process
-//           - call load_icode to setup new memory space accroding binary prog.
+//           - call load_icode to setup new memory space according binary prog.
 int do_execve(const char *name, int argc, const char **argv)
 {
 	static_assert(EXEC_MAX_ARG_LEN >= FS_MAX_FPATH_LEN);
@@ -884,11 +884,13 @@ int do_execve(const char *name, int argc, const char **argv)
 
 	int ret = -E_INVAL;
 
+	utest("\r\n");
 	lock_mm(mm);
 	if (name == NULL) {
-		snprintf(local_name, sizeof(local_name), "<null> %d", g_current->pid);
+		snprintf(local_name, sizeof(local_name), "unknown%d", g_current->pid);
 	} else {
 		if (!copy_string(mm, local_name, name, sizeof(local_name))) {
+			utest("mm=0x%x\r\n", mm);
 			unlock_mm(mm);
 			return ret;
 		}
@@ -903,12 +905,11 @@ int do_execve(const char *name, int argc, const char **argv)
 	files_closeall(g_current->filesp);
 
 	/* sysfile_open will check the first argument path, thus we have to use a user-space pointer, and argv[0] may be incorrect */
-	udebug("path=%s\n", path);
+	utest("path=%s\n", path);
 	int fd;
 	if ((ret = fd = sysfile_open(path, O_RDONLY)) < 0) {
 		goto execve_exit;
 	}
-	udebug("\n");
 
 	if (mm != NULL) {
 		lcr3(boot_cr3);
@@ -919,8 +920,10 @@ int do_execve(const char *name, int argc, const char **argv)
 		}
 		g_current->mm = NULL;
 	}
+	utest("\r\n");
 	ret= -E_NO_MEM;;
 	if ((ret = load_icode(fd, argc, kargv)) != 0) {
+		utest("\r\n");
 		goto execve_exit;
 	}
 	free_kargv(argc, kargv);
@@ -949,10 +952,10 @@ void set_priority(uint32_t priority)
 	}
 }
 
-// kernel_execve - do SYS_exec syscall to exec a user program called by user_main kernel_thread
-int kernel_execve(const char *name, const char **argv)
+// kernel_sys_execve - do SYS_exec syscall to exec a user program called by user_main kernel_thread
+int kernel_sys_execve(const char *name, const char **argv)
 {
-	uclean("kernel_execve: pid = %d, name = \"%s\"\n", g_current->pid, name);
+	uclean("pid = %d, name = \"%s\"\n", g_current->pid, name);
 	int argc = 0, ret;
 	while (argv[argc] != NULL) {
 		argc ++;
@@ -961,7 +964,11 @@ int kernel_execve(const char *name, const char **argv)
 	asm volatile (
 			"int %1;"
 			: "=a" (ret)
-			: "i" (T_SYSCALL), "0" (SYS_exec), "d" (name), "c" (argc), "b" (argv)
+			: "i" (T_SYSCALL),
+			"0" (SYS_execve),
+			"b" (name),
+			"c" (argc),
+			"d" (argv)
 			: "memory");
 	return ret;
 }

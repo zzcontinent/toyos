@@ -1,4 +1,5 @@
 #include <libs/defs.h>
+#include <libs/types.h>
 #include <libs/list.h>
 #include <kern/process/proc.h>
 #include <kern/debug/assert.h>

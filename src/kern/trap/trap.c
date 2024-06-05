@@ -1,6 +1,7 @@
 #include <libs/libs_all.h>
 #include <kern/debug/assert.h>
 #include <kern/driver/clock.h>
+#include <kern/driver/serial.h>
 #include <kern/driver/console.h>
 #include <kern/debug/kdebug.h>
 #include <kern/mm/memlayout.h>
@@ -14,6 +15,7 @@
 #include <kern/mm/vmm.h>
 #include <kern/fs/devs/dev.h>
 #include <kern/debug/kcommand.h>
+#include <kern/driver/pic.h>
 
 #define TICK_NUM 100
 
@@ -117,19 +119,36 @@ bool trap_in_kernel(struct trapframe* tf)
 	return (tf->tf_cs == (u16)KERNEL_CS);
 }
 
+void print_backtrace(u32 t_ebp, u32 t_eip)
+{
+	int i = 0, j = 0;
+	uclean("backtrace:\r\n");
+	for (i = 0; t_ebp != 0 && i < STACKFRAME_DEPTH; i++) {
+		print_debuginfo(t_eip - 1);
+		uclean("[%d] eip:0x%08x, ebp:0x%08x, *ebp:", i, t_eip, t_ebp);
+		u32* args = (u32*)t_ebp;
+		for (j = 0; j < 6; j++) {
+			uclean("0x%08x ", args[j]);
+		}
+		uclean("\n");
+		t_eip = ((u32 *)t_ebp)[1];
+		t_ebp = ((u32 *)t_ebp)[0];
+	}
+}
+
 void print_trapframe(struct trapframe* tf)
 {
-	cprintf("trapframe at %p\n", tf);
+	cprintf("trapframe tf:%p\n", tf);
 	print_regs(tf);
-	cprintf("|-ds        0x04x\n", tf->tf_ds);
-	cprintf("|-es        0x04x\n", tf->tf_es);
-	cprintf("|-fs        0x04x\n", tf->tf_fs);
-	cprintf("|-gs        0x04x\n", tf->tf_gs);
-	cprintf("|-trap      0x%08x %s\n", tf->tf_trapno, trapname(tf->tf_trapno));
-	cprintf("|-err       0x%08x\n", tf->tf_err);
-	cprintf("|-eip       0x%08x\n", tf->tf_eip);
-	cprintf("|-cs        0x04x\n", tf->tf_cs);
-	cprintf("|-flag      0x%08x ", tf->tf_eflags);
+	cprintf("|-ds    0x%08x\n", tf->tf_ds);
+	cprintf("|-es    0x%08x\n", tf->tf_es);
+	cprintf("|-fs    0x%08x\n", tf->tf_fs);
+	cprintf("|-gs    0x%08x\n", tf->tf_gs);
+	cprintf("|-trap  0x%08x %s\n", tf->tf_trapno, trapname(tf->tf_trapno));
+	cprintf("|-err   0x%08x\n", tf->tf_err);
+	cprintf("|-eip   0x%08x\n", tf->tf_eip);
+	cprintf("|-cs    0x%08x\n", tf->tf_cs);
+	cprintf("|-flag  0x%08x ", tf->tf_eflags);
 
 	int i, j;
 	for (i = 0, j = 1; i < sizeof(IA32flags) / sizeof(IA32flags[0]); i++, j <<= 1) {
@@ -138,28 +157,29 @@ void print_trapframe(struct trapframe* tf)
 		}
 	}
 	cprintf("IOPL=%d\n", (tf->tf_eflags & FL_IOPL_MASK) >> 12);
-	cprintf("|-tf_kernel %d\n", trap_in_kernel(tf));
-	cprintf("|-esp       0x%08x\n", tf->tf_esp);
-	cprintf("|-ss        0x----%04x\n", tf->tf_ss);
+	cprintf("|-tf_in_kernel %d\n", trap_in_kernel(tf));
+	cprintf("|-esp   0x%08x\n", tf->tf_esp);
+	cprintf("|-ss    0x%08x\n", tf->tf_ss);
+	print_backtrace(tf->tf_regs.reg_ebp, tf->tf_eip);
 }
 
 void print_regs(struct trapframe* tf)
 {
-	cprintf("|-edi  0x%08x\n", tf->tf_regs.reg_edi);
-	cprintf("|-esi  0x%08x\n", tf->tf_regs.reg_esi);
-	cprintf("|-ebp  0x%08x\n", tf->tf_regs.reg_ebp);
-	cprintf("|-oesp 0x%08x\n", tf->tf_regs.reg_oesp);
-	cprintf("|-ebx  0x%08x\n", tf->tf_regs.reg_ebx);
-	cprintf("|-edx  0x%08x\n", tf->tf_regs.reg_edx);
-	cprintf("|-ecx  0x%08x\n", tf->tf_regs.reg_ecx);
-	cprintf("|-eax  0x%08x\n", tf->tf_regs.reg_eax);
+	cprintf("|-edi   0x%08x\n", tf->tf_regs.reg_edi);
+	cprintf("|-esi   0x%08x\n", tf->tf_regs.reg_esi);
+	cprintf("|-ebp   0x%08x\n", tf->tf_regs.reg_ebp);
+	cprintf("|-oesp  0x%08x\n", tf->tf_regs.reg_oesp);
+	cprintf("|-ebx   0x%08x\n", tf->tf_regs.reg_ebx);
+	cprintf("|-edx   0x%08x\n", tf->tf_regs.reg_edx);
+	cprintf("|-ecx   0x%08x\n", tf->tf_regs.reg_ecx);
+	cprintf("|-eax   0x%08x\n", tf->tf_regs.reg_eax);
 }
 
 
 int pgfault_handler(struct trapframe* tf)
 {
 	if (g_check_mm_struct != NULL) { //used for test check_swap
-		print_pgfault(tf);
+		PRINT_PGFAULT_ERR(tf->tf_err);
 	}
 	struct mm_struct* mm = NULL;
 	if (g_check_mm_struct != NULL) {
@@ -167,8 +187,8 @@ int pgfault_handler(struct trapframe* tf)
 		mm = g_check_mm_struct;
 	} else {
 		if (g_current == NULL) {
-			print_trapframe(tf);
-			print_pgfault(tf);
+			PRINT_TRAPFRAME(tf);
+			PRINT_PGFAULT_ERR(tf->tf_err);
 			panic("unhandled page fault.\n");
 		}
 		mm = g_current->mm;
@@ -189,8 +209,7 @@ void trap_dispatch(struct trapframe* tf)
 					if (trap_in_kernel(tf)) {
 						panic("handle pgfault failed in kernel mode. ret=%d\n", ret);
 					}
-					cprintf("killed by kernel.\n");
-					cprintf("handle user mode pgfault failed. ret=%d\n", ret);
+					uerror("killed by kernel, %e\n", -ret);
 					do_exit(-E_KILLED);
 				}
 			}
@@ -205,19 +224,17 @@ void trap_dispatch(struct trapframe* tf)
 			break;
 		case IRQ_OFFSET + IRQ_COM1:
 			//udebug("IRQ_COM1:%d\n", tf->tf_trapno);
-			//serial_intr();
-			//break;
+			cons_isr();
+			break;
 		case IRQ_OFFSET + IRQ_KBD:
 			//udebug("IRQ_KBS:%d\n", tf->tf_trapno);
-			//kbd_intr();
-			serial_intr();
 			break;
 		case IRQ_OFFSET + IRQ_IDE1:
 		case IRQ_OFFSET + IRQ_IDE2:
 			/* do nothing */
 			break;
 		default:
-			print_trapframe(tf);
+			PRINT_TRAPFRAME(tf);
 			if (g_current != NULL) {
 				cprintf("unhandled trap.\n");
 				do_exit(-E_KILLED);
@@ -257,5 +274,4 @@ void trap(struct trapframe* tf)
 			}
 		}
 	}
-	//udebug("trap exit\n");
 }

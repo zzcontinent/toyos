@@ -7,7 +7,7 @@ ENTRY(_start)
 
 SECTIONS {
     /* Load programs at this address: "." means the current address */
-    . = 0x800020;
+    . = 0x000000;
 
     .text : {
         *(.text .stub .text.* .gnu.linkonce.t.*)
@@ -42,7 +42,7 @@ SECTIONS {
      * string table, and the end of the stabs string table, respectively.
      */
 
-    .stab_info 0x200000 : {
+    .stab_info : {
         LONG(__STAB_BEGIN__);
         LONG(__STAB_END__);
         LONG(__STABSTR_BEGIN__);

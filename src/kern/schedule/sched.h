@@ -1,6 +1,7 @@
 #ifndef  __SCHED_H__
 #define  __SCHED_H__
 #include <libs/defs.h>
+#include <libs/types.h>
 #include <libs/list.h>
 #include <libs/skew_heap.h>
 

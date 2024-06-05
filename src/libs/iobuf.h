@@ -2,6 +2,7 @@
 #define  __IOBUF_H__
 
 #include <libs/defs.h>
+#include <libs/types.h>
 
 struct iobuf {
 	void *io_base;     // the base addr of buffer (used for Rd/Wr)

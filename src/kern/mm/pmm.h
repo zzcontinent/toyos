@@ -2,7 +2,9 @@
 #define  __PMM_H__
 
 #include <libs/defs.h>
+#include <libs/types.h>
 #include <kern/mm/mmu.h>
+#include <kern/mm/page.h>
 #include <kern/mm/memlayout.h>
 #include <libs/atomic.h>
 #include <kern/debug/assert.h>
@@ -136,6 +138,35 @@ static inline int page_ref_dec(struct page* page)
 static inline struct page * kva2page(void *kva) {
 	return pa2page(PADDR(kva));
 }
+
+// some constants for bios interrupt 15h AX = 0xE820
+#define E820MAX 20 // number of entries in E820MAP
+#define E820_ARM 1 // address range memory
+#define E820_ARR 2 // address range reserved
+
+struct e820map {
+	int nr_map;
+	struct {
+		u64 addr;
+		u64 size;
+		u32 type;  // 1:memory, 2:reserved(ROM, memory-mapped device), 3:ACPI Reclaim memory, 4:ACPI NVS memory
+	} __attribute__((packed)) map[E820MAX];
+};
+
+#define E820MAP_TYPE(type)  ({ \
+		char *p_ret = ""; \
+		if (type == 1) \
+		p_ret = "memory"; \
+		else if (type == 2) \
+		p_ret = "reserved(ROM, memory-mapped device)"; \
+		else if (type == 3) \
+		p_ret = "ACPI Reclaim memory"; \
+		else if (type == 4) \
+		p_ret = "ACPI NVS memory"; \
+		else \
+		p_ret = "not defined!"; \
+		p_ret; \
+		})
 
 
 #endif  /* __PMM_H__ */

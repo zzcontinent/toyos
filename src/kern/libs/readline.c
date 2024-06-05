@@ -1,7 +1,7 @@
 #include <libs/libs_all.h>
 
 
-#define READLINE_BUFSIZE 256
+#define READLINE_BUFSIZE 1024
 static char buf[READLINE_BUFSIZE];
 
 char* readline(const char *prompt, int need_print)

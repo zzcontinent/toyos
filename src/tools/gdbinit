@@ -1,20 +1,21 @@
 add-symbol-file out/target/kernel
 add-symbol-file out/obj/boot/bootmain.o
 target remote :1234
-break *0x7c00
-break kern_entry
-break bootmain
-break kern_init
-break default_init
-break default_check
-break basic_check
+#break *0x7c00
+#break kern_entry
+#break bootmain
+#break kern_init
+#break default_init
+#break default_check
+#break basic_check
+break do_pgfault
 
 tui enable
-winheight src 10
 #layout regs
-layout asm
+#layout asm
 layout src
-layout split
+winheight src 15
+#layout split
 
 define hook-stop
 #x /6i $pc-6

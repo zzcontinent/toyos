@@ -2,6 +2,7 @@
 #define  __STAT_H__
 
 #include <libs/defs.h>
+#include <libs/types.h>
 
 struct stat {
 	uint32_t st_mode;                   // protection mode and file type
@@ -10,12 +11,12 @@ struct stat {
 	size_t st_size;                     // file size (bytes)
 };
 
-#define S_IFMT          070000          // mask for type of file
-#define S_IFREG         010000          // ordinary regular file
-#define S_IFDIR         020000          // directory
-#define S_IFLNK         030000          // symbolic link
-#define S_IFCHR         040000          // character device
-#define S_IFBLK         050000          // block device
+#define S_IFMT          0x7000          // mask for type of file
+#define S_IFREG         0x1000          // ordinary regular file
+#define S_IFDIR         0x2000          // directory
+#define S_IFLNK         0x3000          // symbolic link
+#define S_IFCHR         0x4000          // character device
+#define S_IFBLK         0x5000          // block device
 
 #define S_ISREG(mode)                   (((mode) & S_IFMT) == S_IFREG)      // regular file
 #define S_ISDIR(mode)                   (((mode) & S_IFMT) == S_IFDIR)      // directory

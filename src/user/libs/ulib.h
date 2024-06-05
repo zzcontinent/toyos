@@ -1,6 +1,7 @@
 #ifndef  __ULIB_H__
 #define  __ULIB_H__
 #include <libs/defs.h>
+#include <libs/types.h>
 
 void __warn(const char *file, int line, const char *fmt, ...);
 void __noreturn __panic(const char *file, int line, const char *fmt, ...);
@@ -33,7 +34,7 @@ extern int getpid(void);
 extern void print_pgdir(void);
 extern int sleep(unsigned int time);
 extern unsigned int gettime_msec(void);
-extern int __exec(const char *name, const char **argv);
+extern int sh_exec(const char *name, const char **argv);
 
 #define __exec0(name, path, ...)                \
 	({ const char *argv[] = {path, ##__VA_ARGS__, NULL}; __exec(name, argv); })

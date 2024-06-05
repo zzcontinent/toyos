@@ -1,5 +1,14 @@
-#ifndef  __KEYBOARD_H__
-#define  __KEYBOARD_H__
+#ifndef  __KBD_C__
+#define  __KBD_C__
+
+#define NO 0
+#define SHIFT (1 << 0)
+#define CTL (1 << 1)
+#define ALT (1 << 2)
+#define CAPSLOCK (1 << 3)
+#define NUMLOACK (1 << 4)
+#define SCROLLLOCK (1 << 5)
+#define E0ESC (1 << 6)
 
 // Special keycodes
 #define KEY_HOME            0xE0
@@ -80,4 +89,9 @@
 #define KBR_RSTDONE         0xAA    // reset complete
 #define KBR_ECHO            0xEE    // echo response
 
-#endif  /* __KEYBOARD_H__ */
+
+extern void kbd_init(void);
+extern void kbd_intr(void);
+extern int kbd_proc_data(void);
+
+#endif  /* __KBD_C__ */

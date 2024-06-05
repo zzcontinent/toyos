@@ -13,6 +13,8 @@
 #include <kern/mm/vmm.h>
 #include <kern/mm/swap.h>
 #include <kern/debug/assert.h>
+#include <kern/debug/kcommand.h>
+#include <kern/driver/console.h>
 
 volatile u32 g_pgfault_num = 0;
 struct mm_struct* g_check_mm_struct;
@@ -32,6 +34,8 @@ struct mm_struct* mm_create(void)
 
 		mm->mm_count = 0;
 		sem_init(&(mm->mm_sem), 1);
+	} else {
+		panic("mm_create FAILED!\r\n");
 	}
 	return mm;
 }
@@ -220,6 +224,7 @@ bool copy_string(struct mm_struct *mm, char *dst, const char *src, size_t maxn)
 			part = maxn;
 		}
 		if (!is_user_mem(mm, (uintptr_t)src, part, 0)) {
+			utest("mm=0x%x, src=0x%x, part=0x%x\r\n", mm, src, part);
 			return 0;
 		}
 		if ((alen = strnlen(src, part)) < part) {
@@ -227,6 +232,7 @@ bool copy_string(struct mm_struct *mm, char *dst, const char *src, size_t maxn)
 			return 1;
 		}
 		if (part == maxn) {
+			utest("\r\n");
 			return 0;
 		}
 		memcpy(dst, src, part);
@@ -244,25 +250,27 @@ int do_pgfault(struct mm_struct *mm, u32 error_code, uintptr_t addr)
 	g_pgfault_num++;
 	//If the addr is in the range of a mm's vma?
 	if (vma == NULL || vma->vm_start > addr) {
-		uerror("not valid addr 0x%x, and  can not find it in vma 0x%x\n", addr, vma);
+		PRINT_PGFAULT_ERR(error_code);
+		uclean("error code:%d, not valid addr 0x%x, and can not find it in vma 0x%x\n", error_code, addr, vma);
 		goto failed;
 	}
-	//check the error_code
-	switch (error_code & 3) {
-		default:
-			/* error code flag : default is 3 ( W/R=1, P=1): write, present */
-		case 2: /* error code flag : (W/R=1, P=0): write, not present */
+	switch (error_code & (PF_P|PF_W)) {
+		case PF_P | PF_W:
+		case PF_W:
 			if (!(vma->vm_flags & VM_WRITE)) {
-				uerror("do_pgfault failed: error code flag = write AND not present, but the addr's vma cannot write\n");
+				PRINT_PGFAULT_ERR(error_code);
+				uclean("write and protection violation, but the addr's vm cannot write\n");
 				goto failed;
 			}
 			break;
-		case 1: /* error code flag : (W/R=0, P=1): read, present */
-			uerror("do_pgfault failed: error code flag = read AND present\n");
+		case PF_P:
+			PRINT_PGFAULT_ERR(error_code);
+			uclean("read and protection violation\n");
 			goto failed;
-		case 0: /* error code flag : (W/R=0, P=0): read, not present */
+		case 0:
 			if (!(vma->vm_flags & (VM_READ | VM_EXEC))) {
-				uerror("do_pgfault failed: error code flag = read AND not present, but the addr's vma cannot read or exec\n");
+				uclean("read and not present, but the addr's vm cannot read or exec\n");
+				PRINT_PGFAULT_ERR(error_code);
 				goto failed;
 			}
 	}
@@ -316,7 +324,10 @@ int do_pgfault(struct mm_struct *mm, u32 error_code, uintptr_t addr)
 		page->pra_vaddr = addr;
 	}
 	ret = 0;
+	goto succeed;
 failed:
+	PRINT_TRAPFRAME(g_current->tf);
+succeed:
 	return ret;
 }
 
@@ -457,6 +468,8 @@ void vmm_init(void)
 
 int mm_map(struct mm_struct *mm, uintptr_t addr, size_t len, uint32_t vm_flags, struct vma_struct **vma_store)
 {
+	udebug("mm:0x%x, addr:0x%x, len:0x%x, vm_flags:0x%x, vma_struct:0x%x\r\n", mm, addr, len, vm_flags, vma_store);
+	//PRINT_VM_FLAGS(vm_flags);
 	uintptr_t start = ROUNDDOWN(addr, PGSIZE), end = ROUNDUP(addr + len, PGSIZE);
 	if (!USER_ACCESS(start, end)) {
 		return -E_INVAL;

@@ -2,6 +2,7 @@
 #define  __LIBS_ALL_H__
 #include <libs/atomic.h>
 #include <libs/defs.h>
+#include <libs/types.h>
 #include <libs/dirent.h>
 #include <libs/elf.h>
 #include <libs/error.h>

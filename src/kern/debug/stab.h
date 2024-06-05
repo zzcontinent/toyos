@@ -43,11 +43,11 @@
 
 /* Entries in the STABS table are formatted as follows. */
 struct stab {
-    u32 n_strx;        // index into string table of name
-    u8 n_type;         // type of symbol
-    u8 n_other;        // misc info (usually empty)
-    u16 n_desc;        // description field
-    uintptr_t n_value;      // value of symbol
+	u32 n_strx;        // index into string table of name
+	u8 n_type;         // type of symbol
+	u8 n_other;        // misc info (usually empty)
+	u16 n_desc;        // description field
+	uintptr_t n_value;      // value of symbol
 };
 
 #endif /* !__KERN_DEBUG_STAB_H__ */

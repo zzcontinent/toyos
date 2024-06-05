@@ -7,8 +7,8 @@
 #include <kern/debug/stab.h>
 #include <kern/sync/sync.h>
 #include <kern/mm/vmm.h>
+#include <kern/driver/serial.h>
 
-#define STACKFRAME_DEPTH 20
 
 extern const struct stab __STAB_BEGIN__[];   // beginning of stabs table
 extern const struct stab __STAB_END__[];     // end of stabs table
@@ -261,13 +261,13 @@ int debuginfo_eip(uintptr_t addr, struct eipdebuginfo* info)
 void print_kerninfo(void)
 {
 	extern char etext[], edata[], end[], kern_init[];
-	cprintf("Special kernel symbols:\n");
-	cprintf("  entry  0x%08x (phys)\n", kern_init);
-	cprintf("  etext  0x%08x (phys)\n", etext);
-	cprintf("  edata  0x%08x (phys)\n", edata);
-	cprintf("  end    0x%08x (phys)\n", end);
-	cprintf("Bootstack:0x%x, bootstacktop:0x%x\n", bootstack, bootstacktop);
-	cprintf("Kernel executable memory footprint: %dKB\n", ((u32)end - (u32)kern_init + 1023) / 1024);
+	uclean("entry  0x%08x (phys)\n", kern_init);
+	uclean("etext  0x%08x (phys)\n", etext);
+	uclean("edata  0x%08x (phys)\n", edata);
+	uclean("end    0x%08x (phys)\n", end);
+	uclean("bootstack:0x%x, bootstacktop:0x%x\n", bootstack, bootstacktop);
+	u32 size = (u32)end - (u32)kern_init;
+	uclean("kernel size: %d (Bytes)\n", size);
 }
 
 /* *
@@ -277,16 +277,14 @@ void print_kerninfo(void)
 void print_debuginfo(uintptr_t eip)
 {
 	struct eipdebuginfo info;
-	if (debuginfo_eip(eip, &info) != 0) {
-		cprintf("|--[unknow]: -- 0x%08x --\n", eip);
-	} else {
+	if (debuginfo_eip(eip, &info) == 0) {
 		char fnname[256];
 		int j;
 		for (j = 0; j < info.eip_fn_namelen; j++) {
 			fnname[j] = info.eip_fn_name[j];
 		}
 		fnname[j] = '\0';
-		cprintf("|--[%s:%d]: %s+%d\n", info.eip_file, info.eip_line,
+		uclean("|--[%s:%d]: %s+%d\n", info.eip_file, info.eip_line,
 				fnname, eip - info.eip_fn_addr);
 	}
 }
@@ -298,56 +296,11 @@ u32 read_eip(void)
 	return eip;
 }
 
-/* *
- * print_stackframe - print a list of the saved eip values from the nested 'call'
- * instructions that led to the current point of execution
- *
- * The x86 stack pointer, namely esp, points to the lowest location on the stack
- * that is currently in use. Everything below that location in stack is free. Pushing
- * a value onto the stack will invole decreasing the stack pointer and then writing
- * the value to the place that stack pointer pointes to. And popping a value do the
- * opposite.
- *
- * The ebp (base pointer) register, in contrast, is associated with the stack
- * primarily by software convention. On entry to a C function, the function's
- * prologue code normally saves the previous function's base pointer by pushing
- * it onto the stack, and then copies the current esp value into ebp for the duration
- * of the function. If all the functions in a program obey this convention,
- * then at any given point during the program's execution, it is possible to trace
- * back through the stack by following the chain of saved ebp pointers and determining
- * exactly what nested sequence of function calls caused this particular point in the
- * program to be reached. This capability can be particularly useful, for example,
- * when a particular function causes an assert failure or panic because bad arguments
- * were passed to it, but you aren't sure who passed the bad arguments. A stack
- * backtrace lets you find the offending function.
- *
- * The inline function read_ebp() can tell us the value of current ebp. And the
- * non-inline function read_eip() is useful, it can read the value of current eip,
- * since while calling this function, read_eip() can read the caller's eip from
- * stack easily.
- *
- * In print_debuginfo(), the function debuginfo_eip() can get enough information about
- * calling-chain. Finally print_stackframe() will trace and print them for debugging.
- *
- * Note that, the length of ebp-chain is limited. In boot/bootasm.S, before jumping
- * to the kernel entry, the value of ebp has been set to zero, that's the boundary.
- * */
-
-void print_stackframe(void)
+void delay_cnt(int cnt)
 {
-	u32 t_ebp = read_ebp();
-	u32 t_eip = read_eip();
-	int i = 0, j = 0;
-	for (i = 0; t_ebp != 0 && i < STACKFRAME_DEPTH; i++) {
-		print_debuginfo(t_eip - 1);
-		cprintf("|  t_ebp:0x%x t_eip:0x%x args:", i, t_ebp, t_eip);
-		u32* args = (u32*)t_ebp + 2;
-		for (j = 0; j < 4; j++) {
-			cprintf("0x%08x ", args[j]);
-		}
-		cprintf("\n");
-		t_eip = ((u32 *)t_ebp)[1];
-		t_ebp = ((u32 *)t_ebp)[0];
+	volatile int cnt1 = cnt;
+	while(cnt1--){
+		delay();
 	}
 }
 

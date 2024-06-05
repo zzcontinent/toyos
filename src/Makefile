@@ -1,4 +1,5 @@
 #****************************************common***************************************************/
+ECHO = printf "%b\n"
 
 GCCPREFIX :=
 QEMU := qemu-system-i386
@@ -11,11 +12,14 @@ HOSTCC := gcc
 ## HOSTCFLAGS := -g -Wall -m32 -O2 -D_FILE_OFFSET_BITS=64
 HOSTCFLAGS := -g -Wall -O2 -D_FILE_OFFSET_BITS=64
 
+MAKE_EX :=
+
 GDB := ${GCCPREFIX}gdb
 CC := $(GCCPREFIX)gcc
-CFLAGS := -fno-builtin -fno-PIC -Wall -ggdb -m32 -gstabs -nostdinc
+CFLAGS := -fno-builtin -fno-PIC -Wall -ggdb -gdwarf -march=i386 -m32 -nostdinc
 CFLAGS += $(shell $(CC) -fno-stack-protector -E -x c /dev/null >/dev/null 2>&1 && echo -fno-stack-protector)
 CFLAGS += -I.
+CFLAGS += $(MAKE_EX)
 CTYPE := c S
 
 LD := $(GCCPREFIX)ld
@@ -46,7 +50,7 @@ BOOT_LDFLAGS := $(LDFLAGS)
 BOOT_LDFLAGS += -T tools/boot.ld
 KERNEL_CFLAGS = $(CFLAGS) $(KERNEL_OPTIMIZE)
 KERNEL_LDFLAGS := $(LDFLAGS)
-KERNEL_LDFLAGS += -T tools/kernel.ld 
+KERNEL_LDFLAGS += -T tools/kernel.ld
 
 bootfiles = $(call listf_cc,boot)
 
@@ -56,14 +60,14 @@ target_os_img = $(call to_out_target,os.img)
 target_rootfsimg = $(call to_out_target,rootfs.img)
 target_swapimg = $(call to_out_target,swap.img)
 
-ALLOBJS = 
+ALLOBJS =
 ALLTARGETS += $(target_bootblock)
 ALLTARGETS += $(target_kernel)
 ALLTARGETS += $(target_os_img)
 ALLTARGETS += $(target_rootfsimg)
 
 
-rootfs_path = $(call to_out_target,disk0/)
+rootfs_path = $(call to_out_target,disk)
 
 QEMUOPTS = -hda $(target_os_img) -drive file=$(target_swapimg),media=disk,cache=writeback -drive file=$(target_rootfsimg),media=disk,cache=writeback -no-reboot
 
@@ -83,7 +87,7 @@ all: $(target_bootblock) $(target_kernel) $(target_os_img) $(target_rootfsimg)
 $(call rule_compile_files,bootblock,$(bootfiles),$(CC),$(BOOT_CFLAGS) -nostdinc)
 
 $(target_bootblock): $(ALLOBJS_bootblock) | $(call to_out_target,sign) $(dir $(ALLTARGETS))
-	@echo "$(LD_COLOR)[LD]$(DONE) [$@] : $^"
+	@$(ECHO) "$(LD_COLOR)[LD]$(DONE) [$@] : $^"
 	$(V)$(LD) $(BOOT_LDFLAGS) -N  $^ -o $(call to_out_target,boot)
 	$(V)$(OBJCOPY) -S -O binary $(call to_out_target,boot) $(target_bootblock)
 	$(V)$(call to_out_target,sign) $(target_bootblock) $(target_bootblock)
@@ -93,7 +97,7 @@ $(call rule_compile_files,kernel,$(foreach d,$(KSRCDIR),$(call listf_cc,$(d))),$
 $(call rule_compile_files,kernel,$(call listf_cc,$(LIBDIR)),$(CC),$(KERNEL_CFLAGS))
 
 $(target_kernel): $(call to_out_obj,kern/init/entry) $(ALLOBJS_kernel) | $(dir $(ALLTARGETS))
-	@echo "$(LD_COLOR)[LD]$(DONE) [$@] : $^"
+	@$(ECHO) "$(LD_COLOR)[LD]$(DONE) [$@] : $^"
 	$(V)$(LD) $(KERNEL_LDFLAGS) -o $@ $^
 
 #***************************************rule images****************************************************/
@@ -108,11 +112,11 @@ build_user_apps:
 $(target_rootfsimg): build_user_apps $(call to_out_target,mksfs) | $(dir $(ALLTARGETS))
 	$(V)mkdir -p $(rootfs_path)
 	$(V)cp $(call listf,user/out/target) $(rootfs_path)
-	$(V)dd if=/dev/zero of=$@ bs=1M count=128
+	$(V)dd if=/dev/zero of=$@ bs=1M count=8
 	$(V)$(call to_out_target,mksfs) $@ $(rootfs_path)
 
 $(target_swapimg):
-	$(V)dd if=/dev/zero of=$@ bs=1M count=128
+	$(V)dd if=/dev/zero of=$@ bs=1M count=8
 
 #***************************************rule tools****************************************************/
 # +++ sign tools +++
@@ -130,6 +134,13 @@ objdump:
 		[ `cat out/target/$${f}.asm|wc -c` -eq 0 ] && rm out/target/$${f}.asm;\
 		$(OBJDUMP) -t out/target/$${f} 2>/dev/null | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$$$/d' > out/target/$${f}.sym;\
 		[ `cat out/target/$${f}.sym|wc -c` -eq 0 ] && rm out/target/$${f}.sym;\
+	done
+	@-for f in `ls user/out/target`;\
+	do\
+		$(OBJDUMP) -S user/out/target/$${f} 2>/dev/null > user/out/target/$${f}.asm;\
+		[ `cat user/out/target/$${f}.asm|wc -c` -eq 0 ] && rm user/out/target/$${f}.asm;\
+		$(OBJDUMP) -t user/out/target/$${f} 2>/dev/null | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$$$/d' > user/out/target/$${f}.sym;\
+		[ `cat user/out/target/$${f}.sym|wc -c` -eq 0 ] && rm user/out/target/$${f}.sym;\
 	done
 
 

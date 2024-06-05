@@ -87,6 +87,6 @@ extern int do_kill(int pid);
 extern void set_priority(uint32_t priority);
 extern int do_sleep(unsigned int time);
 extern void forkrets(struct trapframe *tf);
-extern int kernel_execve(const char *name, const char **argv);
+extern int kernel_sys_execve(const char *name, const char **argv);
 
 #endif  /* __PROC_H__ */

@@ -14,63 +14,30 @@
 		for (;_i < cnt; _i++) { if (!(expr)) break; if (0 == _i%100) uclean(".");} \
 		if (_i == cnt) uerror("==>[%d/%d] [timeout]\n", _i, cnt); \
 		else uclean("==>[%d/%d]\n", _i, cnt); \
-		_i;\
+		(_i == cnt && cnt > 0);\
 		})
 // ============================================================wait if
 
 // ============================================================log
-#define LEVEL_DEBUG  0
-#define LEVEL_INFO   1
-#define LEVEL_ERROR  2
-#define LEVEL_OFF    3
-#define LEVEL_SIMPLE 4
-//#define ULOG_LEVEL LEVEL_SIMPLE
-//#define ULOG_LEVEL LEVEL_DEBUG
-#define ULOG_LEVEL LEVEL_INFO
-//#define ULOG_LEVEL LEVEL_ERROR
-//#define ULOG_LEVEL LEVEL_SIMPLE
-//#define ULOG_LEVEL LEVEL_OFF
+#define LEVEL_DEBUG  1
+#define LEVEL_TEST   2
+#define LEVEL_INFO   4
+#define LEVEL_ERROR  8
+
+#ifndef ULOG_LEVEL_MASK
+//#define ULOG_LEVEL_MASK (LEVEL_INFO|LEVEL_ERROR)
+#define ULOG_LEVEL_MASK (LEVEL_ERROR)
+#endif
 
 
 extern int cprintf(const char* fmt, ...);
 #define printf cprintf
+#define ulog(level, fmt, args...) do { if (ULOG_LEVEL_MASK & level) {printf("[L%x][%s:%d][%s] " fmt, level, __FILE__, __LINE__, __FUNCTION__, ##args);} } while(0)
 
-#if ULOG_LEVEL == LEVEL_OFF
-#define udebug(fmt, args...)
-#define uinfo(fmt, args...)
-#define uerror(fmt, args...)
-#define uclean(fmt, args...)
-#define ulog(fmt, args...)
-#elif ULOG_LEVEL == LEVEL_DEBUG
-#define udebug(fmt, args...) printf("[D][%s:%d][%s] " fmt, __FILE__, __LINE__, __FUNCTION__, ##args)
-#define uinfo(fmt, args...) printf("[I][%s:%d][%s] " fmt, __FILE__, __LINE__, __FUNCTION__, ##args)
-#define uerror(fmt, args...) printf("[E][%s:%d][%s] " fmt, __FILE__, __LINE__, __FUNCTION__, ##args)
-#define uclean printf
-#define ulog uinfo
-#elif ULOG_LEVEL == LEVEL_INFO
-#define udebug(fmt, args...)
-#define uinfo(fmt, args...) printf("[I][%s:%d][%s] " fmt, __FILE__, __LINE__, __FUNCTION__, ##args)
-#define uerror(fmt, args...) printf("[E][%s:%d][%s] " fmt, __FILE__, __LINE__, __FUNCTION__, ##args)
-#define uclean printf
-#define ulog uinfo
-#elif ULOG_LEVEL == LEVEL_ERROR
-#define udebug(fmt, args...)
-#define uinfo(fmt, args...)
-#define uerror(fmt, args...) printf("[E][%s:%d][%s] " fmt, __FILE__, __LINE__, __FUNCTION__, ##args)
-#define uclean printf
-#define ulog uinfo
-#elif ULOG_LEVEL == LEVEL_SIMPLE
-#define udebug(fmt, args...) printf("[D][%d][%s] " fmt, __LINE__, __FUNCTION__, ##args)
-#define uinfo(fmt, args...) printf("[I][%d][%s] " fmt, __LINE__, __FUNCTION__, ##args)
-#define uerror(fmt, args...) printf("[E][%s:%d][%s] " fmt, __FILE__, __LINE__, __FUNCTION__, ##args)
-#define uclean printf
-#define ulog uinfo
-#else
-#define udebug printf
-#define uinfo printf
-#define uerror printf
-#define uclean printf
-#define ulog printf
-#endif
+#define udebug(fmt, args...)  ulog(LEVEL_DEBUG, fmt, ##args)
+#define uinfo(fmt, args...)   ulog(LEVEL_INFO, fmt, ##args)
+#define uerror(fmt, args...)  ulog(LEVEL_ERROR, fmt, ##args)
+#define uclean(fmt, args...)  printf(fmt, ##args)
+#define utest(fmt, args...)   ulog(LEVEL_TEST, fmt, ##args)
 
 #endif  /* __LOG_H__ */
